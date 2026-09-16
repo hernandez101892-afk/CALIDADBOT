@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Inspector de Calidad - Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--tg-theme-bg-color, #f4f6f9);
+      color: var(--tg-theme-text-color, #222);
+      margin: 0; padding: 16px;
+    }
+    .card {
+      background: var(--tg-theme-secondary-bg-color, #ffffff);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+    }
+    h2 { margin-top: 0; color: #206095; font-size: 1.2rem; }
+    label { font-weight: 600; font-size: 0.85rem; display: block; margin-top: 10px; margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px;
+      border: 1px solid #ccc; font-size: 0.95rem; margin-bottom: 8px;
+    }
+    .row { display: flex; gap: 10px; }
+    .col { flex: 1; }
+    .btn {
+      width: 100%; background: #0088cc; color: #fff; font-weight: bold;
+      padding: 12px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
+      margin-top: 12px; text-align: center;
+    }
+    .btn-qr { background: #28a745; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>📋 Registro de Inspección</h2>
+    
+    <button class="btn btn-qr" onclick="scanQR()">📷 Escanear QR de Rack / Lote</button>
+
+    <label>Orden de Compra / Trabajo (OC):</label>
+    <input type="text" id="orden" placeholder="Ej. OC085553">
+
+    <label>Número de Parte:</label>
+    <select id="parte">
+      <option value="741000412">741000412 - C-PLT-ASY 19X21 08VL PTP</option>
+      <option value="201101">201101 - High Runner Bins</option>
+      <option value="201201">201201 - High Runner Toasters</option>
+    </select>
+
+    <div class="row">
+      <div class="col">
+        <label>Origen (Línea):</label>
+        <select id="origen">
+          <option value="204122">204122 (Foundry)</option>
+          <option value="204141">204141 (Assembly 41)</option>
+          <option value="204126">204126 (Finishing)</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Rack Destino (RE1Q01):</label>
+        <select id="destino">
+          <option value="F4RWK">F4RWK (Rework Foundry)</option>
+          <option value="NC">NC (Non Conformance)</option>
+          <option value="QA LAB">QA LAB (Auditoría)</option>
+          <option value="MERHENRWK">MERHENRWK (Hopper)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Piezas en Rack:</label>
+        <input type="number" id="qty_rack" value="50">
+      </div>
+      <div class="col">
+        <label>Buenos:</label>
+        <input type="number" id="buenos" value="47">
+      </div>
+      <div class="col">
+        <label>Malos:</label>
+        <input type="number" id="malos" value="3">
+      </div>
+    </div>
+
+    <label>Disposición:</label>
+    <select id="disposicion" onchange="toggleScrapReason()">
+      <option value="RETRABAJAR">🛠 RETRABAJAR</option>
+      <option value="SCRAP">🗑 SCRAP (Desecho Definitivo)</option>
+    </select>
+
+    <div id="scrap_container" style="display: none;">
+      <label style="color: #dc3545;">Motivo de Scrap (Obligatorio):</label>
+      <select id="motivo_scrap">
+        <option value="GRIETAS EN FUNDICION">GRIETAS EN FUNDICION</option>
+        <option value="POROSIDAD PROFUNDA">POROSIDAD PROFUNDA</option>
+        <option value="DIMENSION CHICA NO RECUPERABLE">DIMENSION CHICA NO RECUPERABLE</option>
+        <option value="DAÑO MECANICO SEVERO">DAÑO MECANICO SEVERO</option>
+      </select>
+    </div>
+
+    <label>Estampa de Inspector:</label>
+    <input type="text" id="estampa" value="e2" placeholder="Ej. e2">
+
+    <button class="btn" onclick="sendToBot()">✅ GUARDAR REGISTRO</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    function toggleScrapReason() {
+      const disp = document.getElementById("disposicion").value;
+      document.getElementById("scrap_container").style.display = (disp === "SCRAP") ? "block" : "none";
+    }
+
+    function scanQR() {
+      tg.showScanQrPopup({ text: "Apunta al código QR del Rack / Lote" }, function(text) {
+        if (text) {
+          document.getElementById("orden").value = text;
+          tg.closeScanQrPopup();
+        }
+      });
+    }
+
+    function sendToBot() {
+      const payload = {
+        orden: document.getElementById("orden").value || "OC_PENDIENTE",
+        parte: document.getElementById("parte").value,
+        origen: document.getElementById("origen").value,
+        destino: document.getElementById("destino").value,
+        qty_rack: parseInt(document.getElementById("qty_rack").value) || 0,
+        buenos: parseInt(document.getElementById("buenos").value) || 0,
+        malos: parseInt(document.getElementById("malos").value) || 0,
+        disposicion: document.getElementById("disposicion").value,
+        motivo_scrap: document.getElementById("disposicion").value === "SCRAP" ? document.getElementById("motivo_scrap").value : "N/A",
+        estampa: document.getElementById("estampa").value
+      };
+
+      tg.sendData(JSON.stringify(payload));
+    }
+  </script>
+</body>
+</html>
