@@ -2,67 +2,109 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control de Calidad - App Web PWA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Control de Calidad - App Web PWA Móvil</title>
+
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="theme-color" content="#1e3c72">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CalidadBot">
+
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
   <style>
-    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .header-bg { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 20px 0; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .card-custom { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-    .btn-primary-custom { background-color: #2a5298; border: none; font-weight: 600; padding: 12px; border-radius: 8px; }
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+    .header-bg { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 18px 0; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .card-custom { border-radius: 14px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .btn-primary-custom { background-color: #2a5298; border: none; font-weight: 600; padding: 14px; border-radius: 10px; font-size: 1.05rem; }
     .btn-primary-custom:hover { background-color: #1e3c72; }
-    .preview-img { max-height: 180px; object-fit: cover; border-radius: 8px; border: 2px dashed #0d6efd; padding: 4px; display: none; }
+    .preview-img { max-height: 180px; object-fit: cover; border-radius: 10px; border: 2px dashed #0d6efd; padding: 4px; display: none; }
     .badge-status { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; }
+    
+    /* Firma Digital Canvas */
+    #canvasFirma { border: 2px dashed #a0aec0; border-radius: 8px; background: #ffffff; cursor: crosshair; touch-action: none; width: 100%; height: 140px; }
+    
+    /* Contenedor del escáner QR */
+    #qr-reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; }
+    
+    /* Indicador de conexión Offline/Online */
+    .net-status { position: fixed; bottom: 12px; right: 12px; z-index: 9999; border-radius: 30px; font-size: 0.8rem; padding: 6px 14px; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
   </style>
 </head>
 <body>
 
+  <!-- Estado de red Offline/Online -->
+  <div id="netStatusBadge" class="net-status bg-success text-white">
+    <i class="fa-solid fa-wifi me-1"></i> Conectado (En Línea)
+  </div>
+
   <!-- Encabezado Principal -->
   <div class="header-bg text-center">
     <div class="container">
-      <h2 class="fw-bold mb-1"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad en Planta</h2>
-      <p class="mb-0 opacity-75">Captura de Incidencias, Evidencia Fotográfica y Registro Directo</p>
+      <h2 class="fw-bold mb-1 fs-3"><i class="fa-solid fa-mobile-screen-button me-2"></i>Calidad Móvil PWA</h2>
+      <p class="mb-0 opacity-75 small">Escáner QR, Cámara, Firma, GPS y Modo Offline en Planta</p>
     </div>
   </div>
 
   <div class="container pb-5">
     
-    <!-- Configuración del Proxy (Seguridad Total - Sin pedir Tokens a Inspectores) -->
-    <div class="card card-custom mb-4">
-      <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-        <span><i class="fa-solid fa-shield-halved text-success me-2"></i>Estado del Servidor Seguro (Proxy Google)</span>
-        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfig">
-          <i class="fa-solid fa-gear"></i> Ajustes URL Proxy
+    <!-- Configuración del Proxy Google Apps Script -->
+    <div class="card card-custom mb-3">
+      <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center py-2">
+        <span class="small text-success"><i class="fa-solid fa-shield-halved me-1"></i>Conexión Directa a GitHub</span>
+        <button class="btn btn-sm btn-outline-secondary py-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfig">
+          <i class="fa-solid fa-gear me-1"></i> URL Proxy
         </button>
       </div>
-      <div class="collapse show" id="collapseConfig">
+      <div class="collapse" id="collapseConfig">
         <div class="card-body bg-light">
-          <label class="form-label fw-bold small text-muted">URL del Proxy de Google Apps Script (terminada en /exec):</label>
-          <input type="text" id="proxyUrl" class="form-control form-control-sm" placeholder="https://script.google.com/macros/s/AKfycbwoDCxvDp_Mv7qFypv7fWNhq0azzUvcvItVtHGnCwFHMECEsZsZcitmjX4tdXpzSMVS/exec" value="">
-          <div class="form-text small">Ingresa la URL de tu implementación de Google Apps Script. Se guarda automáticamente en este teléfono.</div>
+          <label class="form-label fw-bold small text-muted">URL del Web App de Google Apps Script:</label>
+          <input type="text" id="proxyUrl" class="form-control form-control-sm" 
+                 value="https://script.google.com/macros/s/AKfycbwoDCxvDp_Mv7qFypv7fWNhq0azzUvcvItVtHGnCwFHMECEsZsZcitmjX4tdXpzSMVS/exec">
         </div>
       </div>
     </div>
 
     <div class="row">
-      <!-- FORMULARIO DE CAPTURA -->
+      <!-- FORMULARIO PRINCIPAL DE INSPECCIÓN MÓVIL -->
       <div class="col-lg-7">
         <div class="card card-custom">
           <div class="card-body p-4">
-            <h5 class="card-title fw-bold text-primary mb-4"><i class="fa-solid fa-pen-to-square me-2"></i>Nuevo Registro de Calidad</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title fw-bold text-primary mb-0"><i class="fa-solid fa-clipboard-check me-2"></i>Inspección de Calidad</h5>
+              <button type="button" class="btn btn-sm btn-outline-primary" id="btnCargarCatalogos">
+                <i class="fa-solid fa-rotate me-1"></i> Cargar Catálogos
+              </button>
+            </div>
             
             <form id="calidadForm">
               <div class="row g-3">
-                <div class="col-md-6">
-                  <label class="form-label fw-semibold">Folio / Orden de Control *</label>
-                  <input type="text" id="folio_oc" class="form-control" placeholder="Ej: OC-98412" required>
+                
+                <!-- BOTÓN DE ESCÁNER QR CÁMARA MÓVIL -->
+                <div class="col-12">
+                  <button type="button" id="btnScanQR" class="btn btn-warning w-100 fw-bold text-dark py-2">
+                    <i class="fa-solid fa-qrcode me-2"></i> Escanear Código QR / Código de Barras
+                  </button>
+                  <div id="qr-reader" class="mt-2"></div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Tipo de Envío</label>
+                  <label class="form-label fw-semibold small">Folio / Orden de Control *</label>
+                  <div class="input-group">
+                    <input type="text" id="folio_oc" class="form-control" placeholder="Ej: OC-98412" required>
+                    <button class="btn btn-outline-secondary" type="button" id="btnGenFolio"><i class="fa-solid fa-dice"></i></button>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold small">Tipo de Envío</label>
                   <select id="tipo_envio" class="form-select">
                     <option value="Proceso" selected>Proceso</option>
                     <option value="Cliente Interno">Cliente Interno</option>
@@ -71,97 +113,138 @@
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Almacén Origen</label>
-                  <input type="text" id="almacen_origen" class="form-control" value="204122">
+                  <label class="form-label fw-semibold small">Almacén Origen</label>
+                  <select id="almacen_origen" class="form-select">
+                    <option value="204122">204122 - Foundry</option>
+                  </select>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Locación Origen</label>
+                  <label class="form-label fw-semibold small">Locación Origen</label>
                   <input type="text" id="locacion_origen" class="form-control" value="F4RWK">
                 </div>
 
                 <div class="col-md-8">
-                  <label class="form-label fw-semibold">Número / Código de Parte *</label>
-                  <input type="text" id="parte" class="form-control" placeholder="Ej: 741000412" required>
+                  <label class="form-label fw-semibold small">Número / Código de Parte *</label>
+                  <input type="text" id="parte" list="partesList" class="form-control" placeholder="Escribe o selecciona número de parte" required>
+                  <datalist id="partesList">
+                    <option value="741000135 - C-PLT-ASY 19X21 08VL PTP">
+                    <option value="741000136 - C-PLT-ASY 19X21 6VLV 3+2+1">
+                    <option value="741000412 - C-PLT 13X20 06CR PR BARB">
+                  </datalist>
                 </div>
 
                 <div class="col-md-4">
-                  <label class="form-label fw-semibold">Cantidad</label>
-                  <input type="number" id="cantidad" class="form-control" value="50" min="1">
+                  <label class="form-label fw-semibold small">Cantidad</label>
+                  <input type="number" id="cantidad" class="form-control" value="1" min="1">
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">Estampa</label>
-                  <input type="text" id="estampa" class="form-control" value="e2">
+                  <label class="form-label fw-semibold small">Estampa Inspector</label>
+                  <select id="estampa" class="form-select">
+                    <option value="e2">e2 - Estampa Calidad</option>
+                  </select>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-semibold">No Conformancia / Defecto</label>
+                  <label class="form-label fw-semibold small">No Conformancia / Defecto</label>
                   <select id="no_conformancia" class="form-select">
                     <option value="FUGA EN FITTING">FUGA EN FITTING</option>
                     <option value="POROSIDAD EN CUERPO">POROSIDAD EN CUERPO</option>
                     <option value="MAL ROSCADO">MAL ROSCADO</option>
                     <option value="GOLPE EN SELLADO">GOLPE EN SELLADO</option>
-                    <option value="DIMENSION FUERA DE ESPECIFICACION">DIMENSION FUERA DE ESPECIFICACION</option>
                   </select>
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label fw-semibold">Detalle de No Conformancia</label>
-                  <textarea id="detalle_nc" class="form-control" rows="2" placeholder="Describa el defecto detectado..."></textarea>
+                  <label class="form-label fw-semibold small">Detalle de No Conformancia</label>
+                  <textarea id="detalle_nc" class="form-control" rows="2" placeholder="Observaciones detalladas..."></textarea>
                 </div>
 
                 <div class="col-md-4">
-                  <label class="form-label fw-semibold">Operador</label>
+                  <label class="form-label fw-semibold small">Operador</label>
                   <input type="text" id="operador" class="form-control" placeholder="Ej: Juan Perez">
                 </div>
 
                 <div class="col-md-4">
-                  <label class="form-label fw-semibold">Turno</label>
+                  <label class="form-label fw-semibold small">Turno</label>
                   <select id="turno" class="form-select">
+                    <option value="LJNC">TURNO 1</option>
+                    <option value="VSD2">TURNO 2</option>
                     <option value="VSD1">VSD1</option>
                     <option value="LJDA">LJDA</option>
-                    <option value="TURNO 1">LJNC</option>
-                    <option value="TURNO 2">VSD2</option>
                   </select>
                 </div>
 
                 <div class="col-md-4">
-                  <label class="form-label fw-semibold">Área</label>
+                  <label class="form-label fw-semibold small">Área</label>
                   <input type="text" id="area" class="form-control" value="Coil pack">
                 </div>
 
-                <!-- CAMARA Y FOTO DE EVIDENCIA -->
+                <!-- UBICACIÓN GPS DEL MÓVIL -->
                 <div class="col-12">
-                  <label class="form-label fw-semibold"><i class="fa-solid fa-camera me-1"></i>Fotografía de Evidencia</label>
-                  <input type="file" id="fotoInput" class="form-control" accept="image/*" capture="environment">
-                  <div class="mt-2 text-center">
-                    <img id="imgPreview" class="preview-img img-fluid" alt="Vista previa">
+                  <label class="form-label fw-semibold small"><i class="fa-solid fa-location-dot text-danger me-1"></i> Coordenadas GPS en Planta</label>
+                  <div class="input-group input-group-sm">
+                    <input type="text" id="gpsCoords" class="form-control" placeholder="Presiona para capturar ubicación..." readonly>
+                    <button type="button" id="btnGPS" class="btn btn-outline-danger"><i class="fa-solid fa-crosshairs"></i> Capturar GPS</button>
                   </div>
                 </div>
 
+                <!-- CÁMARA MÓVIL FOTO EVIDENCIA -->
+                <div class="col-12">
+                  <label class="form-label fw-semibold small"><i class="fa-solid fa-camera text-primary me-1"></i>Fotografía de Evidencia (Cámara Trasera)</label>
+                  <input type="file" id="fotoInput" class="form-control" accept="image/*" capture="environment">
+                  <div class="mt-2 text-center">
+                    <img id="imgPreview" class="preview-img img-fluid" alt="Vista previa de foto">
+                  </div>
+                </div>
+
+                <!-- FIRMA DIGITAL TÁCTIL CON EL DEDO -->
+                <div class="col-12">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-semibold small mb-0"><i class="fa-solid fa-signature me-1"></i>Firma Digital del Inspector / Operador</label>
+                    <button type="button" id="btnLimpiarFirma" class="btn btn-link btn-sm text-danger p-0 text-decoration-none">Limpiar</button>
+                  </div>
+                  <canvas id="canvasFirma"></canvas>
+                </div>
+
                 <div class="col-12 mt-4">
-                  <button type="submit" id="btnGuardar" class="btn btn-primary-custom w-100 text-white">
-                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> Enviar Registro y Fotografía
+                  <button type="submit" id="btnGuardar" class="btn btn-primary-custom w-100 text-white shadow">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> Enviar Registro y Evidencia
                   </button>
                 </div>
+
               </div>
             </form>
           </div>
         </div>
       </div>
 
-      <!-- PANEL LATERAL DE ENLACES Y REGISTROS RECIENTES -->
+      <!-- PANEL LATERAL DE HISTORIAL Y COLA OFFLINE -->
       <div class="col-lg-5">
         
-        <!-- ACCESOS DIRECTOS -->
+        <!-- REGISTROS PENDIENTES DE SINCRO OFFLINE -->
+        <div class="card card-custom mb-3 border-warning">
+          <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-box-archive me-2"></i>Cola de Registros Offline</span>
+            <span id="badgeOfflineCount" class="badge bg-dark">0</span>
+          </div>
+          <div class="card-body p-2">
+            <button id="btnSincroOffline" class="btn btn-sm btn-outline-dark w-100 mb-2" disabled>
+              <i class="fa-solid fa-arrows-rotate me-1"></i> Sincronizar Registros Pendientes
+            </button>
+            <div id="offlineList" class="small text-muted text-center py-2">No hay registros pendientes de envío.</div>
+          </div>
+        </div>
+
+        <!-- ACCESOS DIRECTOS GITHUB -->
         <div class="card card-custom text-center p-3 mb-3">
-          <h6 class="fw-bold mb-3"><i class="fa-solid fa-folder-open text-warning me-2"></i>Consultar Registros en GitHub</h6>
+          <h6 class="fw-bold mb-3 small"><i class="fa-solid fa-folder-open text-warning me-2"></i>Repositorio de Registros</h6>
           <div class="d-grid gap-2">
-            <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS" target="_blank" class="btn btn-outline-dark text-start">
-              <i class="fa-brands fa-github me-2"></i> Ver Archivos CSV en GitHub
+            <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS" target="_blank" class="btn btn-outline-dark btn-sm text-start">
+              <i class="fa-brands fa-github me-2"></i> Ver Registros CSV en GitHub
             </a>
-            <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="btn btn-outline-primary text-start">
+            <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="btn btn-outline-primary btn-sm text-start">
               <i class="fa-solid fa-images me-2"></i> Ver Galería de Fotos en GitHub
             </a>
           </div>
@@ -170,12 +253,12 @@
         <!-- RESUMEN LOCAL DE CAPTURAS -->
         <div class="card card-custom">
           <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-            <span><i class="fa-solid fa-clock-rotate-left me-2"></i>Historial de Capturas</span>
+            <span><i class="fa-solid fa-clock-rotate-left me-2"></i>Historial Reciente</span>
             <span id="contadorLocal" class="badge bg-secondary">0</span>
           </div>
           <div class="card-body p-0">
             <ul id="listaHistorial" class="list-group list-group-flush">
-              <li class="list-group-item text-center text-muted py-4">No hay registros capturados en esta sesión</li>
+              <li class="list-group-item text-center text-muted py-4 small">No hay registros en esta sesión</li>
             </ul>
           </div>
         </div>
@@ -189,8 +272,101 @@
 
   <script>
     let fotoBase64 = "";
+    let html5QrcodeScanner = null;
+    let colaOffline = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
 
-    // Previsualización de la foto seleccionada
+    // =========================================================================
+    // 1. FIRMA DIGITAL CANVAS TÁCTIL
+    // =========================================================================
+    const canvas = document.getElementById('canvasFirma');
+    const ctx = canvas.getContext('2d');
+    let dibujando = false;
+
+    function ajustarCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      ctx.strokeStyle = "#1e3c72";
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
+    }
+    window.addEventListener('resize', ajustarCanvas);
+    setTimeout(ajustarCanvas, 300);
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    canvas.addEventListener('mousedown', (e) => { dibujando = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('mousemove', (e) => { if (dibujando) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } });
+    canvas.addEventListener('mouseup', () => dibujando = false);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); dibujando = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (dibujando) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } });
+    canvas.addEventListener('touchend', () => dibujando = false);
+
+    document.getElementById('btnLimpiarFirma').addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // =========================================================================
+    // 2. ESCÁNER DE CÓDIGO QR / BARRAS CON LA CÁMARA MÓVIL
+    // =========================================================================
+    document.getElementById('btnScanQR').addEventListener('click', function() {
+      const qrReaderDiv = document.getElementById('qr-reader');
+      if (qrReaderDiv.style.display === 'block') {
+        if (html5QrcodeScanner) html5QrcodeScanner.clear();
+        qrReaderDiv.style.display = 'none';
+        this.innerHTML = '<i class="fa-solid fa-qrcode me-2"></i> Escanear Código QR / Código de Barras';
+        return;
+      }
+
+      qrReaderDiv.style.display = 'block';
+      this.innerHTML = '<i class="fa-solid fa-xmark me-2"></i> Detener Cámara Escáner';
+
+      html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } });
+      html5QrcodeScanner.render((decodedText) => {
+        // Al detectar un código QR o de barra
+        if (decodedText.startsWith("OC-") || decodedText.startsWith("FOL-")) {
+          document.getElementById('folio_oc').value = decodedText;
+        } else if (decodedText.length >= 8 && !isNaN(decodedText)) {
+          document.getElementById('parte').value = decodedText;
+        } else {
+          document.getElementById('folio_oc').value = decodedText;
+        }
+        alert("✅ Código detectado por la cámara: " + decodedText);
+        html5QrcodeScanner.clear();
+        qrReaderDiv.style.display = 'none';
+        document.getElementById('btnScanQR').innerHTML = '<i class="fa-solid fa-qrcode me-2"></i> Escanear Código QR / Código de Barras';
+      });
+    });
+
+    // =========================================================================
+    // 3. CAPTURA DE GEOLOCALIZACIÓN GPS
+    // =========================================================================
+    document.getElementById('btnGPS').addEventListener('click', function() {
+      if ("geolocation" in navigator) {
+        this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Obteniendo...';
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const coords = pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
+          document.getElementById('gpsCoords').value = coords;
+          this.innerHTML = '<i class="fa-solid fa-check text-success"></i> Capturado';
+        }, (err) => {
+          alert("⚠️ No se pudo obtener la ubicación GPS: " + err.message);
+          this.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Capturar GPS';
+        });
+      } else {
+        alert("⚠️ Tu navegador móvil no soporta GPS.");
+      }
+    });
+
+    // GENERAR FOLIO ALEATORIO
+    document.getElementById('btnGenFolio').addEventListener('click', () => {
+      document.getElementById('folio_oc').value = "OC-" + Math.floor(100000 + Math.random() * 900000);
+    });
+
+    // FOTO EVIDENCIA PREVISUALIZACIÓN
     document.getElementById('fotoInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -205,24 +381,74 @@
       }
     });
 
-    // Guardar/Cargar URL del Proxy
+    // PROXY URL PERSISTENCIA
     const proxyInput = document.getElementById('proxyUrl');
-    proxyInput.value = localStorage.getItem('PROXY_URL') || "";
     proxyInput.addEventListener('change', () => localStorage.setItem('PROXY_URL', proxyInput.value));
 
-    // Envío del Formulario
+    // =========================================================================
+    // 4. MODO OFFLINE / ONLINE Y SINCRONIZACIÓN AUTOMÁTICA
+    // =========================================================================
+    function actualizarEstadoRed() {
+      const badge = document.getElementById('netStatusBadge');
+      if (navigator.onLine) {
+        badge.className = "net-status bg-success text-white";
+        badge.innerHTML = '<i class="fa-solid fa-wifi me-1"></i> Conectado (En Línea)';
+        sincronizarColaOffline();
+      } else {
+        badge.className = "net-status bg-danger text-white";
+        badge.innerHTML = '<i class="fa-solid fa-plane me-1"></i> Sin Conexión (Modo Offline)';
+      }
+    }
+    window.addEventListener('online', actualizarEstadoRed);
+    window.addEventListener('offline', actualizarEstadoRed);
+
+    function actualizarColaOfflineUI() {
+      document.getElementById('badgeOfflineCount').innerText = colaOffline.length;
+      const btn = document.getElementById('btnSincroOffline');
+      const div = document.getElementById('offlineList');
+      if (colaOffline.length > 0) {
+        btn.disabled = !navigator.onLine;
+        div.innerHTML = colaOffline.map((item, idx) => `
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span><strong>${item.folio_oc}</strong> (${item.parte})</span>
+            <span class="badge bg-warning text-dark">Pendiente</span>
+          </div>
+        `).join('');
+      } else {
+        btn.disabled = true;
+        div.innerHTML = 'No hay registros pendientes de envío.';
+      }
+    }
+    actualizarColaOfflineUI();
+
+    async function sincronizarColaOffline() {
+      if (colaOffline.length === 0 || !navigator.onLine) return;
+      const proxyUrl = proxyInput.value.trim();
+      
+      for (let i = colaOffline.length - 1; i >= 0; i--) {
+        const payload = colaOffline[i];
+        try {
+          const res = await fetch(proxyUrl, { method: 'POST', body: JSON.stringify(payload) });
+          const resData = await res.json();
+          if (resData.status === "ok") {
+            agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia, "Sincronizado Offline");
+            colaOffline.splice(i, 1);
+          }
+        } catch(e) { break; }
+      }
+      localStorage.setItem('COLA_OFFLINE', JSON.stringify(colaOffline));
+      actualizarColaOfflineUI();
+    }
+    document.getElementById('btnSincroOffline').addEventListener('click', sincronizarColaOffline);
+
+    // =========================================================================
+    // 5. ENVÍO DEL FORMULARIO CON SOPORTE OFFLINE Y FIRMA
+    // =========================================================================
     document.getElementById('calidadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      
-      const proxyUrl = proxyInput.value.trim();
-      if (!proxyUrl || !proxyUrl.startsWith("https://script.google.com")) {
-        alert("⚠️ Por favor pega la URL de tu implementación de Google Apps Script (debe empezar por https://script.google.com y terminar en /exec).");
-        return;
-      }
 
-      const btn = document.getElementById('btnGuardar');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Guardando en GitHub...';
+      const proxyUrl = proxyInput.value.trim();
+      const firmaB64 = canvas.toDataURL();
 
       const payload = {
         folio_oc: document.getElementById('folio_oc').value.trim(),
@@ -237,52 +463,67 @@
         operador: document.getElementById('operador').value,
         turno: document.getElementById('turno').value,
         area: document.getElementById('area').value,
-        foto_b64: fotoBase64
+        gps: document.getElementById('gpsCoords').value,
+        foto_b64: fotoBase64,
+        firma_b64: firmaB64
       };
 
-      try {
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
+      if (!navigator.onLine) {
+        colaOffline.push(payload);
+        localStorage.setItem('COLA_OFFLINE', JSON.stringify(colaOffline));
+        actualizarColaOfflineUI();
+        alert("📲 ¡Estás sin conexión! El registro se guardó en la memoria de tu teléfono y se enviará automáticamente a GitHub cuando recuperes señal.");
+        document.getElementById('calidadForm').reset();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('imgPreview').style.display = 'none';
+        fotoBase64 = "";
+        return;
+      }
 
+      const btn = document.getElementById('btnGuardar');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Guardando en GitHub...';
+
+      try {
+        const response = await fetch(proxyUrl, { method: 'POST', body: JSON.stringify(payload) });
         const resData = await response.json();
 
         if (resData.status === "ok") {
-          alert("✅ ¡Registro y Fotografía guardados con éxito en tu repositorio de GitHub!\n\nLink Foto: " + resData.foto);
+          alert("✅ ¡Registro, Foto y Firma guardados exitosamente en GitHub!
+
+Link Foto: " + resData.foto);
           agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia, "Guardado en GitHub");
           document.getElementById('calidadForm').reset();
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
           document.getElementById('imgPreview').style.display = 'none';
           fotoBase64 = "";
         } else {
-          alert("⚠️ Respuesta del Servidor: " + (resData.mensaje || "Error desconocido"));
-          agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia, "Error Servidor");
+          alert("⚠️ Respuesta del Servidor: " + (resData.mensaje || "Error al guardar"));
         }
-
       } catch (err) {
-        alert("❌ Ocurrió un error al conectar con Google Apps Script. Asegúrate de haber publicado como 'Aplicación web' con acceso a 'Cualquier persona'.\n\nDetalle: " + err.message);
-        agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia, "Error Conexión");
+        alert("❌ Error de comunicación. Se guardará en la cola offline.");
+        colaOffline.push(payload);
+        localStorage.setItem('COLA_OFFLINE', JSON.stringify(colaOffline));
+        actualizarColaOfflineUI();
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i> Enviar Registro y Fotografía';
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i> Enviar Registro y Evidencia';
       }
     });
 
     function agregarAlHistorial(folio, parte, defecto, estado) {
       const lista = document.getElementById('listaHistorial');
-      if (lista.children[0] && lista.children[0].innerText.includes("No hay registros")) {
-        lista.innerHTML = "";
-      }
+      if (lista.children[0] && lista.children[0].innerText.includes("No hay registros")) lista.innerHTML = "";
 
       const item = document.createElement('li');
       item.className = "list-group-item d-flex justify-content-between align-items-center";
-      const isOk = estado.includes("Guardado");
+      const isOk = estado.includes("Guardado") || estado.includes("Sincronizado");
       item.innerHTML = `
         <div>
           <strong class="text-primary">${folio}</strong> - Parte: ${parte}<br>
           <small class="text-muted">${defecto}</small>
         </div>
-        <span class="badge ${isOk ? 'bg-success' : 'bg-danger'} badge-status">${estado}</span>
+        <span class="badge ${isOk ? 'bg-success' : 'bg-warning text-dark'} badge-status">${estado}</span>
       `;
       lista.insertBefore(item, lista.firstChild);
 
