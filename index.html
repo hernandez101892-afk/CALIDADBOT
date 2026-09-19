@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad y Disposición - Planta</title>
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d6efd">
   <!-- Bootstrap 5 CSS -->
@@ -12,42 +12,52 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- HTML5 QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- SheetJS para Excel Multi-Hoja (.xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .header-title { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; padding: 15px; border-radius: 0 0 15px 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .card { border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .header-title { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; padding: 16px; border-radius: 0 0 16px 16px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+    .card { border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.06); margin-bottom: 20px; }
     .card-header { font-weight: bold; border-radius: 12px 12px 0 0 !important; }
     .btn-custom { border-radius: 8px; font-weight: 600; padding: 10px 18px; }
     #reader { width: 100%; border-radius: 10px; overflow: hidden; }
     #canvasFirma { border: 2px dashed #ccc; border-radius: 8px; background: #fff; cursor: crosshair; width: 100%; height: 140px; }
-    .badge-offline { background-color: #ffc107; color: #000; font-weight: bold; padding: 5px 10px; border-radius: 20px; }
-    .badge-online { background-color: #198754; color: #fff; font-weight: bold; padding: 5px 10px; border-radius: 20px; }
-    .nav-pills .nav-link { font-weight: bold; border-radius: 10px; margin-right: 5px; }
-    .nav-pills .nav-link.active { background-color: #0d6efd; }
+    .badge-offline { background-color: #ffc107; color: #000; font-weight: bold; padding: 6px 12px; border-radius: 20px; }
+    .badge-online { background-color: #198754; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 20px; }
+    .nav-pills .nav-link { font-weight: bold; border-radius: 10px; margin-right: 4px; padding: 10px 14px; font-size: 0.92rem; }
+    .nav-pills .nav-link.active { background-color: #0d6efd; box-shadow: 0 4px 8px rgba(13,110,253,0.3); }
     .record-card { cursor: pointer; transition: all 0.2s ease; border-left: 5px solid #0d6efd; }
-    .record-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .record-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
+    .status-badge { font-size: 0.8rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+    .table-responsive { max-height: 500px; overflow-y: auto; }
   </style>
 </head>
 <body>
 
   <!-- ENCABEZADO Y ESTADO DE RED -->
   <div class="header-title text-center">
-    <h3 class="m-0"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad y Disposición</h3>
-    <small id="netStatus" class="badge-online mt-2 d-inline-block"><i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa)</small>
+    <h3 class="m-0 fw-bold"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad, Disposición y Catálogos</h3>
+    <small id="netStatus" class="badge-online mt-2 d-inline-block"><i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa + Persistencia Local)</small>
   </div>
 
-  <div class="container mb-5">
+  <div class="container-fluid px-3 px-md-4 mb-5">
 
     <!-- NAVEGACIÓN POR PESTAÑAS -->
-    <ul class="nav nav-pills nav-justified mb-3" id="mainTabs" role="tablist">
+    <ul class="nav nav-pills nav-justified mb-3 shadow-sm bg-white p-2 rounded-3" id="mainTabs" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="tab-registro-btn" data-bs-toggle="pill" data-bs-target="#tab-registro" type="button" role="tab"><i class="fa-solid fa-plus-circle me-1"></i> 1. Nuevo Registro</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-disposicion-btn" data-bs-toggle="pill" data-bs-target="#tab-disposicion" type="button" role="tab" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-list-check me-1"></i> 2. Disposición de NC</button>
+        <button class="nav-link" id="tab-ver-registros-btn" data-bs-toggle="pill" data-bs-target="#tab-ver-registros" type="button" role="tab" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-table-list me-1"></i> 2. Ver Registros</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-archivos-btn" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button" role="tab"><i class="fa-file-excel me-1"></i> 3. Excel y Fotos</button>
+        <button class="nav-link" id="tab-disposicion-btn" data-bs-toggle="pill" data-bs-target="#tab-disposicion" type="button" role="tab" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-gavel me-1"></i> 3. Disposición NC</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-import-export-btn" data-bs-toggle="pill" data-bs-target="#tab-import-export" type="button" role="tab"><i class="fa-solid fa-file-import me-1"></i> 4. Importar / Exportar</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-archivos-btn" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button" role="tab"><i class="fa-file-excel me-1"></i> 5. Excel y Fotos</button>
       </li>
     </ul>
 
@@ -70,11 +80,11 @@
         <!-- FORMULARIO DE REGISTRO -->
         <form id="formCalidad" onsubmit="guardarRegistro(event)">
           <div class="card">
-            <div class="card-header bg-primary text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Datos de la Inspección</div>
+            <div class="card-header bg-primary text-white"><i class="fa-solid fa-pen-to-square me-2"></i>Datos de Inspección</div>
             <div class="card-body">
               
               <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Tipo de Registro:</label>
                   <select class="form-select" id="tipo_envio" required>
                     <option value="Proceso" selected>Proceso / Recibo</option>
@@ -83,63 +93,63 @@
                   </select>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Folio / Orden de Control (OC):</label>
                   <input type="text" class="form-control" id="folio_oc" placeholder="Ej: OC-984512" required>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Almacén Origen:</label>
                   <input type="text" class="form-control" id="almacen_origen" list="dl_almacenes" placeholder="Ej: 204122" value="204122" required>
                   <datalist id="dl_almacenes"></datalist>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Locación / Ubicación:</label>
                   <input type="text" class="form-control" id="locacion_origen" placeholder="Ej: F4RWK" value="F4RWK" required>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Área / Proceso:</label>
                   <input type="text" class="form-control" id="area" list="dl_areas" placeholder="Ej: Calidad / Foundry" value="Calidad" required>
                   <datalist id="dl_areas"></datalist>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Número de Parte:</label>
                   <input type="text" class="form-control" id="parte" list="dl_partes" placeholder="Ej: 741000135" required>
                   <datalist id="dl_partes"></datalist>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Cantidad de Piezas:</label>
                   <input type="number" class="form-control" id="cantidad" value="1" min="1" required>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Estampa / Inspector:</label>
                   <input type="text" class="form-control" id="estampa" list="dl_estampas" placeholder="Ej: e2" value="e2">
                   <datalist id="dl_estampas"></datalist>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">No Conformancia (Defecto Principal):</label>
                   <input type="text" class="form-control" id="no_conformancia" list="dl_defectos" placeholder="Selecciona o escribe el defecto" required>
                   <datalist id="dl_defectos"></datalist>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Detalle NC / Causa:</label>
                   <input type="text" class="form-control" id="detalle_nc" list="dl_defectos_sec" placeholder="Detalle secundario o causa">
                   <datalist id="dl_defectos_sec"></datalist>
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Operador / Inspector Responsable:</label>
                   <input type="text" class="form-control" id="operador" placeholder="Nombre del inspector/operador" value="Inspector">
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Turno:</label>
                   <select class="form-select" id="turno">
                     <option value="1" selected>Turno 1</option>
@@ -149,12 +159,12 @@
                 </div>
               </div>
 
-              <!-- FOTOGRAFÍA -->
+              <!-- FOTOGRAFÍAS -->
               <div class="mt-4">
                 <label class="form-label fw-bold"><i class="fa-solid fa-camera me-1"></i>Fotografía de Evidencia:</label>
                 <input type="file" id="foto_input" accept="image/*" capture="environment" class="form-control form-control-sm" onchange="procesarFoto(event)">
                 <div class="text-center mt-2">
-                  <img id="fotoPreview" style="max-height: 180px; display:none;" class="img-thumbnail rounded">
+                  <img id="fotoPreview" style="max-height: 180px; display:none;" class="img-thumbnail rounded shadow-sm">
                 </div>
               </div>
 
@@ -172,27 +182,91 @@
 
           <!-- BOTÓN ENVIAR -->
           <div class="text-center mb-4">
-            <button type="submit" id="btnSubmit" class="btn btn-success btn-lg btn-custom w-100 shadow-sm"><i class="fa-solid fa-paper-plane me-2"></i>Enviar Registro y Fotografía</button>
+            <button type="submit" id="btnSubmit" class="btn btn-success btn-lg btn-custom w-100 shadow-sm"><i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente</button>
           </div>
         </form>
 
       </div>
 
 
-      <!-- PESTAÑA 2: DISPOSICIÓN Y CIERRE DE INCIDENCIAS -->
+      <!-- PESTAÑA 2: VER REGISTROS PERSISTENTES -->
+      <div class="tab-pane fade" id="tab-ver-registros" role="tabpanel">
+        
+        <div class="card">
+          <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span><i class="fa-solid fa-database me-2"></i>Histórico Persistente de Registros (<span id="cantRegistrosPersistentes">0</span>)</span>
+            <div>
+              <button class="btn btn-sm btn-outline-light me-1" onclick="sincronizarConGitHub()"><i class="fa-solid fa-rotate me-1"></i>Sincronizar GitHub</button>
+              <button class="btn btn-sm btn-danger" onclick="limpiarRegistrosLocales()"><i class="fa-solid fa-trash me-1"></i>Vaciar Local</button>
+            </div>
+          </div>
+          <div class="card-body">
+            
+            <!-- BUSCADOR Y FILTROS -->
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                  <input type="text" id="searchRegistros" class="form-control" placeholder="Buscar por Folio, Parte, Almacén, Defecto u Operador..." onkeyup="filtrarTablaRegistros()">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <select id="filterTipo" class="form-select" onchange="filtrarTablaRegistros()">
+                  <option value="ALL">Todos los Tipos</option>
+                  <option value="Proceso">Proceso / Recibo</option>
+                  <option value="Contención">Contención / Sorteo</option>
+                  <option value="Rechazo">Rechazo</option>
+                  <option value="Evaluación y Disposición">Disposición</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <button class="btn btn-primary w-100 fw-bold" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-sync me-1"></i>Refrescar Vista</button>
+              </div>
+            </div>
+
+            <!-- TABLA DE REGISTROS -->
+            <div class="table-responsive">
+              <table class="table table-hover table-striped align-middle border">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Folio / OC</th>
+                    <th>Tipo</th>
+                    <th>Fecha / Hora</th>
+                    <th>Parte</th>
+                    <th>Cant.</th>
+                    <th>Almacén / Área</th>
+                    <th>No Conformancia</th>
+                    <th>Operador</th>
+                    <th>Estatus</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyRegistros">
+                  <!-- Se llena dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- PESTAÑA 3: DISPOSICIÓN Y CIERRE DE INCIDENCIAS -->
       <div class="tab-pane fade" id="tab-disposicion" role="tabpanel">
         
         <div class="card">
           <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <span><i class="fa-solid fa-list-check me-2"></i>Listado de Incidencias Registradas para Disposición</span>
-            <button class="btn btn-sm btn-light" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Actualizar</button>
+            <span><i class="fa-solid fa-gavel me-2"></i>Seleccionar Registro para Disposición</span>
+            <button class="btn btn-sm btn-light" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Actualizar Lista</button>
           </div>
           <div class="card-body">
-            <p class="text-muted small m-0 mb-3">Toca cualquier registro de la lista para abrir su módulo de evaluación y asignarle su disposición final (Scrap, Retrabajo, Usar Así, Devolución o 5-Porqués).</p>
+            <p class="text-muted small m-0 mb-3">Haz clic en el botón <strong>"Evaluar Disposición"</strong> de cualquier registro para abrir la evaluación de 3 Pasos (Destino, Sorteo, Causa Raíz 5-Porqués).</p>
 
             <div id="loadingRegistros" class="text-center py-4" style="display:none;">
               <div class="spinner-border text-primary" role="status"></div>
-              <p class="mt-2 text-muted">Cargando registros desde GitHub...</p>
+              <p class="mt-2 text-muted">Cargando lista de incidencias...</p>
             </div>
 
             <div id="listaIncidencias" class="row">
@@ -202,8 +276,11 @@
         </div>
 
         <!-- FORMULARIO DE EVALUACIÓN / DISPOSICIÓN -->
-        <div class="card mt-3" id="panelEvaluacionDisposicion" style="display:none;">
-          <div class="card-header bg-warning text-dark"><i class="fa-solid fa-gavel me-2"></i>Módulo de Disposición de Calidad: <span id="dispFolioTitulo" class="fw-bold"></span></div>
+        <div class="card mt-3 shadow-lg border-warning" id="panelEvaluacionDisposicion" style="display:none;">
+          <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-gavel me-2"></i>Módulo de Disposición de Calidad: <strong id="dispFolioTitulo"></strong></span>
+            <button type="button" class="btn-close" onclick="cerrarPanelDisposicion()"></button>
+          </div>
           <div class="card-body">
             
             <form id="formDisposicion" onsubmit="guardarDisposicion(event)">
@@ -254,15 +331,16 @@
               <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-3 me-1"></i>Paso 3: Causa Raíz y Acción Correctiva</h6>
               <div class="mb-3">
                 <label class="form-label fw-bold">Causa Raíz Identificada (5-Porqués):</label>
-                <textarea class="form-control" id="disp_causa_raiz" rows="2" placeholder="Describa brevemente la causa raíz..."></textarea>
+                <textarea class="form-control" id="disp_causa_raiz" rows="2" placeholder="Describa la causa raíz..."></textarea>
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold">Acción Correctiva Implementada:</label>
                 <textarea class="form-control" id="disp_accion_correctiva" rows="2" placeholder="Acción correctiva o preventiva..."></textarea>
               </div>
 
-              <div class="text-center mt-4">
-                <button type="submit" class="btn btn-warning btn-lg btn-custom w-100 fw-bold"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Disposición en Registro</button>
+              <div class="text-center mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-warning btn-lg btn-custom flex-grow-1 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Disposición en Registro</button>
+                <button type="button" class="btn btn-secondary btn-lg btn-custom" onclick="cerrarPanelDisposicion()">Cancelar</button>
               </div>
 
             </form>
@@ -273,76 +351,129 @@
       </div>
 
 
-      <!-- PESTAÑA 3: ARCHIVOS Y EXCEL -->
+      <!-- PESTAÑA 4: IMPORTAR Y EXPORTAR CATÁLOGOS Y REGISTROS -->
+      <div class="tab-pane fade" id="tab-import-export" role="tabpanel">
+        
+        <div class="row g-4">
+          
+          <!-- EXPORTAR DATO -->
+          <div class="col-md-6">
+            <div class="card h-100 border-primary shadow-sm">
+              <div class="card-header bg-primary text-white"><i class="fa-solid fa-file-export me-2"></i>Exportar Catálogos y Registros</div>
+              <div class="card-body d-flex flex-column justify-content-between">
+                <div>
+                  <p class="text-muted small">Descarga copias de seguridad de tus catálogos locales y registros en formato Excel Multi-Hoja (.xlsx), CSV o JSON.</p>
+                  
+                  <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-file-excel me-1 text-success"></i>Libro de Catálogos Completo (Excel .xlsx Multi-Hoja):</h6>
+                  <button class="btn btn-success fw-bold w-100 mb-3 shadow-sm" onclick="exportarCatalogosExcelXLSX()"><i class="fa-solid fa-file-excel me-2"></i>Descargar Plantilla / Libro de Catálogos Completo (.xlsx)</button>
+
+                  <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-list-check me-1 text-primary"></i>Exportación Individual por Catálogo:</h6>
+                  <div class="row g-2 mb-3">
+                    <div class="col-7">
+                      <select id="exp_cat_individual_tipo" class="form-select form-select-sm">
+                        <option value="almacenes">Almacenes</option>
+                        <option value="areas">Áreas</option>
+                        <option value="partes">Partes</option>
+                        <option value="estampas">Estampas</option>
+                        <option value="defectos">Defectos (NC)</option>
+                        <option value="defectosSecundarios">Defectos Secundarios</option>
+                        <option value="medidas">Medidas</option>
+                      </select>
+                    </div>
+                    <div class="col-5">
+                      <button class="btn btn-outline-primary btn-sm w-100" onclick="exportarCatIndividualCSV()"><i class="fa-solid fa-download me-1"></i>CSV</button>
+                    </div>
+                  </div>
+
+                  <h6 class="fw-bold text-dark mt-3"><i class="fa-solid fa-database me-1 text-success"></i>Exportar Registros Persistentes:</h6>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-outline-success btn-sm w-50 fw-bold" onclick="exportarRegistrosCSV()"><i class="fa-solid fa-file-csv me-1"></i>Registros (CSV sep=,)</button>
+                    <button class="btn btn-outline-secondary btn-sm w-50 fw-bold" onclick="exportarRegistrosJSON()"><i class="fa-solid fa-code me-1"></i>Registros (JSON)</button>
+                  </div>
+                </div>
+                <div class="mt-4 alert alert-info small m-0">
+                  <i class="fa-solid fa-circle-info me-1"></i>El libro Excel Multi-Hoja (.xlsx) genera 7 pestañas independientes listas para ser editadas e importadas nuevamente.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- IMPORTAR DATO -->
+          <div class="col-md-6">
+            <div class="card h-100 border-success shadow-sm">
+              <div class="card-header bg-success text-white"><i class="fa-solid fa-file-import me-2"></i>Importar Catálogos y Registros</div>
+              <div class="card-body">
+                <p class="text-muted small">Carga un libro de Excel (.xlsx), CSV o JSON para actualizar las sugerencias de los catálogos o restaurar un historial de registros previo.</p>
+
+                <div class="mb-3 p-3 border rounded bg-light">
+                  <label class="form-label fw-bold text-success"><i class="fa-solid fa-file-excel me-1"></i>1. Importar Catálogos Maestros (Excel / CSV / JSON):</label>
+                  <select id="imp_cat_tipo_selector" class="form-select form-select-sm mb-2">
+                    <option value="xlsx_multi" selected>Libro de Excel Completo Multi-Hoja (.xlsx) [RECOMENDADO]</option>
+                    <option value="almacenes">Almacenes (CSV/JSON)</option>
+                    <option value="areas">Áreas (CSV/JSON)</option>
+                    <option value="partes">Partes (CSV/JSON)</option>
+                    <option value="estampas">Estampas (CSV/JSON)</option>
+                    <option value="defectos">Defectos Principales (CSV/JSON)</option>
+                    <option value="defectosSecundarios">Defectos Secundarios (CSV/JSON)</option>
+                    <option value="medidas">Medidas (CSV/JSON)</option>
+                    <option value="todos_json">Todos los Catálogos (JSON)</option>
+                  </select>
+                  <input type="file" id="fileImportCatalogos" accept=".xlsx,.csv,.json" class="form-control form-control-sm mb-2">
+                  <button class="btn btn-success btn-sm w-100 fw-bold" onclick="importarCatalogos()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Catálogo(s)</button>
+                </div>
+
+                <hr>
+
+                <div class="mb-3 p-3 border rounded bg-light">
+                  <label class="form-label fw-bold text-primary"><i class="fa-solid fa-database me-1"></i>2. Cargar Archivo de Registros Históricos (CSV / JSON):</label>
+                  <input type="file" id="fileImportRegistros" accept=".csv,.json" class="form-control form-control-sm mb-2">
+                  <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="importarRegistros()"><i class="fa-solid fa-upload me-1"></i>Importar Registros al Almacén Local</button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PESTAÑA 5: ARCHIVOS Y EXCEL -->
       <div class="tab-pane fade" id="tab-archivos" role="tabpanel">
         
         <div class="card">
-          <div class="card-header bg-success text-white"><i class="fa-solid fa-file-excel me-2"></i>Abrir y Editar con Microsoft Excel</div>
+          <div class="card-header bg-success text-white"><i class="fa-file-excel me-2"></i>Enlaces a Archivos y Reportes Excel</div>
           <div class="card-body">
-            <p class="text-muted small">Elige la opción que prefieras para abrir o conectar tus registros directamente con Microsoft Excel:</p>
+            <p class="text-muted small">Todos los registros y fotografías enviados desde la app se consolidan en tu repositorio central de GitHub:</p>
 
-            <div class="d-grid gap-3 mb-4">
-              
-              <!-- OPCIÓN 1: Protocolo directo ms-excel -->
-              <a href="ms-excel:ofe|u|https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" class="btn btn-success btn-lg text-start p-3 shadow-sm">
-                <div class="d-flex align-items-center">
-                  <i class="fa-solid fa-file-excel fs-1 me-3"></i>
-                  <div>
-                    <div class="fw-bold fs-6"><i class="fa-solid fa-bolt text-warning me-1"></i>1. Abrir Directo en la App de Microsoft Excel</div>
-                    <div class="small opacity-75">Ejecuta directamente la aplicación Excel instalada en tu teléfono o PC.</div>
-                  </div>
+            <div class="list-group mb-3">
+              <a href="ms-excel:ofe|u|https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-light fw-bold text-success">
+                <div>
+                  <i class="fa-solid fa-file-excel text-success me-2 fs-5"></i>
+                  <strong>Abrir Directo en la App de Microsoft Excel</strong>
+                  <div class="small text-muted font-normal">Ejecuta la app de Excel instalada en tu dispositivo usando el protocolo nativo ms-excel.</div>
                 </div>
+                <span class="badge bg-success rounded-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
               </a>
 
-              <!-- OPCIÓN 2: Descargar CSV con BOM para Excel -->
-              <button type="button" onclick="descargarCsvParaExcel()" class="btn btn-primary btn-lg text-start p-3 shadow-sm">
-                <div class="d-flex align-items-center">
-                  <i class="fa-solid fa-file-arrow-down fs-1 me-3"></i>
-                  <div>
-                    <div class="fw-bold fs-6"><i class="fa-solid fa-download me-1"></i>2. Descargar Archivo .CSV Formateado para Excel</div>
-                    <div class="small opacity-75">Descarga instantánea con formato especial para acentos y columnas en Excel.</div>
-                  </div>
+              <a href="https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" download="registro_incidencias.csv" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                  <i class="fa-solid fa-download text-primary me-2 fs-5"></i>
+                  <strong>Descargar CSV Formateado (sep=,)</strong>
+                  <div class="small text-muted">Descarga directa compatible con Excel en español e inglés.</div>
                 </div>
-              </button>
-
-              <!-- OPCIÓN 3: Excel Online Visor -->
-              <a href="https://view.officeapps.live.com/op/view.aspx?src=https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" target="_blank" class="btn btn-outline-success text-start p-3">
-                <div class="d-flex align-items-center">
-                  <i class="fa-solid fa-globe fs-2 me-3"></i>
-                  <div>
-                    <div class="fw-bold">3. Visualizar en Excel Web Online (Microsoft Office)</div>
-                    <div class="small text-muted">Abre el visor oficial de Microsoft Office directamente en el navegador.</div>
-                  </div>
-                </div>
+                <span class="badge bg-primary rounded-pill"><i class="fa-solid fa-download"></i></span>
               </a>
 
-              <!-- OPCIÓN 4: Ver en GitHub -->
-              <a href="https://github.com/hernandez101892-afk/CALIDADBOT/blob/main/ARCHIVOS/registro_incidencias.csv" target="_blank" class="btn btn-outline-secondary text-start p-2">
-                <i class="fa-brands fa-github me-2"></i>Ver archivo fuente en la web de GitHub
-              </a>
-
-              <!-- GALERÍA DE FOTOS -->
-              <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="btn btn-outline-warning text-dark text-start p-2">
-                <i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia
-              </a>
-
-            </div>
-
-            <!-- INSTRUCCIONES CONEXIÓN VIVA EN EXCEL DE ESCRITORIO -->
-            <div class="card bg-light border-success mb-3">
-              <div class="card-body">
-                <h6 class="fw-bold text-success"><i class="fa-solid fa-plug me-2"></i>Conexión en Vivo desde Excel en PC (Sin descargar):</h6>
-                <ol class="small mb-2 ps-3">
-                  <li>Abre Microsoft Excel en tu computadora.</li>
-                  <li>Ve a la pestaña <strong>Datos</strong> ➔ <strong>Obtener datos</strong> ➔ <strong>Desde la web</strong>.</li>
-                  <li>Pega esta URL exacta:</li>
-                </ol>
-                <div class="input-group input-group-sm mb-2">
-                  <input type="text" id="urlCsvExcel" class="form-control" value="https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" readonly>
-                  <button class="btn btn-outline-primary" type="button" onclick="copiarUrlExcel()"><i class="fa-solid fa-copy me-1"></i>Copiar URL</button>
+              <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div>
+                  <i class="fa-solid fa-images text-warning me-2 fs-5"></i>
+                  <strong>Galería de Fotografías de Evidencia</strong>
+                  <div class="small text-muted">Acceder a todas las fotos almacenadas en GitHub.</div>
                 </div>
-                <small class="text-muted">Cada vez que presiones <strong>"Actualizar todo"</strong> en Excel, traerá los nuevos registros enviados desde los celulares.</small>
-              </div>
+                <span class="badge bg-warning text-dark rounded-pill"><i class="fa-solid fa-folder-open"></i></span>
+              </a>
             </div>
 
             <!-- CONFIGURACIÓN PROXY -->
@@ -357,26 +488,43 @@
 
       </div>
 
-      </div>
-
     </div>
 
+  </div>
+
+  <!-- MODAL PARA VER DETALLE / FOTO -->
+  <div class="modal fade" id="modalDetalleRegistro" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold" id="modalDetalleTitulo">Detalle del Registro</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalDetalleCuerpo">
+          <!-- Se llena dinámicamente -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-warning fw-bold" id="btnModalIrDisposicion"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT APP WEB V9 -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V13 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbwoDCxvDp_Mv7qFypv7fWNhq0azzUvcvItVtHGnCwFHMECEsZsZcitmjX4tdXpzSMVS/exec";
     
     let fotoBase64 = "";
     let html5QrCode = null;
     let isQrScanning = false;
-    let registrosCargados = [];
+    let registrosPersistentes = [];
 
-    // CATÁLOGOS LOCALES DE SUGERENCIAS
-    const catalogosLocal = {
+    // CATÁLOGOS LOCALES BASE (Fallback / Editable)
+    let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS')) || {
       almacenes: [
         { numero: "201101", nombre: "High Runner Bins - Line 1" },
         { numero: "201102", nombre: "High Runner Bins - Line 2" },
@@ -444,6 +592,12 @@
         { codigo: "g", nombre: "EXCESO DE PASTA EN DRENAJE" },
         { codigo: "h", nombre: "RAEABA DE ALUMINIO EN LINEAS DE SALIDA" },
         { codigo: "i", nombre: "ROSCA DEL DRENAJE TAPADA CON PASTA" }
+      ],
+      medidas: [
+        { nombre: "CHICA", valor: "1/8" },
+        { nombre: "MED", valor: "1/4" },
+        { nombre: "GRANDE", valor: "1/2" },
+        { nombre: "ESTÁNDAR", valor: "3/8" }
       ]
     };
 
@@ -453,8 +607,10 @@
       proxyInput.addEventListener('change', () => localStorage.setItem('PROXY_URL', proxyInput.value));
 
       inicializarFirmaCanvas();
-      cargarCatalogosDesdeGitHub();
+      cargarCatalogosFormulario();
+      cargarRegistrosPersistentesLocales();
       actualizarEstadoRed();
+      
       window.addEventListener('online', actualizarEstadoRed);
       window.addEventListener('offline', actualizarEstadoRed);
     });
@@ -463,14 +619,15 @@
       const netBadge = document.getElementById('netStatus');
       if (navigator.onLine) {
         netBadge.className = 'badge-online mt-2 d-inline-block';
-        netBadge.innerHTML = '<i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa)';
+        netBadge.innerHTML = '<i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa + Persistencia Local)';
         sincronizarColaOffline();
       } else {
         netBadge.className = 'badge-offline mt-2 d-inline-block';
-        netBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>Sin Conexión (Modo Offline - Guardando Local)';
+        netBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>Sin Conexión (Modo Offline - Guardando en Memoria Persistente)';
       }
     }
 
+    // CARGAR Y POBLAR CATALOGOS
     function poblarDatalist(idList, items) {
       const dl = document.getElementById(idList);
       if (!dl) return;
@@ -482,7 +639,7 @@
       });
     }
 
-    async function cargarCatalogosDesdeGitHub() {
+    function cargarCatalogosFormulario() {
       poblarDatalist("dl_almacenes", catalogosLocal.almacenes.map(x => `${x.numero} - ${x.nombre}`));
       poblarDatalist("dl_areas", catalogosLocal.areas.map(x => `${x.codigo} - ${x.nombre}`));
       poblarDatalist("dl_partes", catalogosLocal.partes.map(x => `${x.codigo} - ${x.descripcion}`));
@@ -491,7 +648,7 @@
       poblarDatalist("dl_defectos_sec", catalogosLocal.defectosSecundarios.map(x => `${x.codigo} - ${x.nombre}`));
     }
 
-    // LÓGICA DE ESCÁNER QR
+    // ESCÁNER QR
     function toggleQrScanner() {
       const container = document.getElementById('qrReaderContainer');
       if (isQrScanning) {
@@ -518,7 +675,7 @@
       }
     }
 
-    // CANVAS DE FIRMA DIGITAL
+    // CANVAS FIRMA
     let isDrawing = false;
     let canvas, ctx;
 
@@ -568,16 +725,47 @@
       reader.readAsDataURL(file);
     }
 
-    // ENVIAR REGISTRO DE INSPECCIÓN
+    // MANEJO DE REGISTROS PERSISTENTES LOCALES
+    function cargarRegistrosPersistentesLocales() {
+      const stored = localStorage.getItem('CALIDAD_REGISTROS');
+      if (stored) {
+        try {
+          registrosPersistentes = JSON.parse(stored);
+        } catch(e) { registrosPersistentes = []; }
+      }
+      actualizarContadorPersistente();
+    }
+
+    function guardarRegistroPersistenteLocal(nuevoReg) {
+      const index = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio) === (nuevoReg.folio_oc || nuevoReg.folio));
+      if (index >= 0) {
+        registrosPersistentes[index] = nuevoReg;
+      } else {
+        registrosPersistentes.unshift(nuevoReg);
+      }
+      localStorage.setItem('CALIDAD_REGISTROS', JSON.stringify(registrosPersistentes));
+      actualizarContadorPersistente();
+    }
+
+    function actualizarContadorPersistente() {
+      const elem = document.getElementById('cantRegistrosPersistentes');
+      if (elem) elem.innerText = registrosPersistentes.length;
+    }
+
+    // ENVIAR REGISTRO
     async function guardarRegistro(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
 
+      const nowStr = new Date().toLocaleString();
+      const folio = document.getElementById('folio_oc').value.trim();
+
       const payload = {
+        folio_oc: folio,
         tipo_envio: document.getElementById('tipo_envio').value,
-        folio_oc: document.getElementById('folio_oc').value,
+        fecha: nowStr,
         almacen_origen: document.getElementById('almacen_origen').value,
         locacion_origen: document.getElementById('locacion_origen').value,
         area: document.getElementById('area').value,
@@ -588,21 +776,27 @@
         detalle_nc: document.getElementById('detalle_nc').value,
         operador: document.getElementById('operador').value,
         turno: document.getElementById('turno').value,
-        foto_b64: fotoBase64
+        foto_b64: fotoBase64,
+        estatus: "Abierto / Pendiente"
       };
+
+      // Guardar inmediatamente en almacenamiento persistente local
+      guardarRegistroPersistenteLocal(payload);
 
       if (!navigator.onLine) {
         let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
         cola.push(payload);
         localStorage.setItem('COLA_OFFLINE', JSON.stringify(cola));
-        alert("Sin conexión. Registro guardado localmente en tu teléfono. Se sincronizará automáticamente al tener internet.");
+        alert("Registro guardado localmente de forma PERSISTENTE en la App Web. Se sincronizará con GitHub al recuperar conexión.");
         resetForm();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
         return;
       }
 
       await enviarPayloadProxy(payload);
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar Registro y Fotografía';
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
     }
 
     async function enviarPayloadProxy(payload) {
@@ -621,10 +815,10 @@
 " + resJson.mensaje);
           resetForm();
         } else {
-          alert("Respuesta del Servidor: " + resJson.mensaje);
+          alert("Guardado localmente. Servidor respondió: " + resJson.mensaje);
         }
       } catch (err) {
-        alert("Error de Conexión: " + err.toString());
+        alert("Registro guardado localmente. Error de servidor: " + err.toString());
       }
     }
 
@@ -644,89 +838,211 @@
         await enviarPayloadProxy(item);
       }
       localStorage.removeItem('COLA_OFFLINE');
-      alert("¡Sincronización completada! Se enviaron todos los registros pendientes guardados en el teléfono.");
+      alert("¡Sincronización completada! Se enviaron todos los registros pendientes.");
     }
 
-    // CARGAR Y DISPONER REGISTROS DESDE GITHUB (TAB 2)
+    // RENDERIZAR TABLA DE VER REGISTROS (PESTAÑA 2)
+    function renderizarTablaRegistros() {
+      const tbody = document.getElementById('tbodyRegistros');
+      tbody.innerHTML = "";
+
+      if (registrosPersistentes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No hay registros almacenados. Crea un nuevo registro o sincroniza con GitHub.</td></tr>`;
+        return;
+      }
+
+      registrosPersistentes.forEach((reg, index) => {
+        const tr = document.createElement('tr');
+        
+        let estatusClass = 'bg-primary';
+        if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') estatusClass = 'bg-danger';
+        if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') estatusClass = 'bg-warning text-dark';
+        if (reg.no_conformancia === 'DISPOSICIÓN REGISTRADA') estatusClass = 'bg-success';
+
+        tr.innerHTML = `
+          <td class="fw-bold text-primary">${reg.folio_oc || reg.folio || 'N/A'}</td>
+          <td><span class="badge ${estatusClass}">${reg.tipo_envio || reg.tipo || 'Proceso'}</span></td>
+          <td class="small text-muted">${reg.fecha || 'Reciente'}</td>
+          <td class="fw-bold">${reg.parte || '-'}</td>
+          <td>${reg.cantidad || '1'}</td>
+          <td class="small">${reg.almacen_origen || reg.almacen || ''} / ${reg.area || ''}</td>
+          <td class="text-danger fw-bold small">${reg.no_conformancia || '-'}</td>
+          <td class="small">${reg.operador || 'Inspector'}</td>
+          <td><span class="badge bg-secondary">${reg.estatus || 'Activo'}</span></td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-warning fw-bold shadow-sm me-1" onclick="irADisposicionDesdeFolio('${reg.folio_oc || reg.folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
+            <button class="btn btn-sm btn-outline-info" onclick="verDetalleModal('${reg.folio_oc || reg.folio}')" title="Ver Detalle"><i class="fa-solid fa-eye"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      actualizarContadorPersistente();
+    }
+
+    function filtrarTablaRegistros() {
+      const query = document.getElementById('searchRegistros').value.toLowerCase();
+      const filterTipo = document.getElementById('filterTipo').value;
+      const rows = document.querySelectorAll('#tbodyRegistros tr');
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        const matchesQuery = text.includes(query);
+        const matchesTipo = filterTipo === 'ALL' || text.includes(filterTipo.toLowerCase());
+
+        if (matchesQuery && matchesTipo) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    // NAVEGAR DIRECTAMENTE A PESTAÑA DISPOSICIÓN CON EL FOLIO SELECCIONADO
+    function irADisposicionDesdeFolio(folio) {
+      const tabBtn = document.getElementById('tab-disposicion-btn');
+      const tab = new bootstrap.Tab(tabBtn);
+      tab.show();
+
+      seleccionarRegistroParaDisposicion(folio);
+    }
+
+    // MODAL DETALLE
+    function verDetalleModal(folio) {
+      const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
+      if (!reg) return;
+
+      document.getElementById('modalDetalleTitulo').innerText = `Detalle del Registro: ${reg.folio_oc || reg.folio}`;
+      
+      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2" style="max-height:250px;">` : '<p class="text-muted italic">Sin foto adjunta</p>';
+      
+      document.getElementById('modalDetalleCuerpo').innerHTML = `
+        <div class="row g-2">
+          <div class="col-6"><strong>Folio:</strong> ${reg.folio_oc || reg.folio}</div>
+          <div class="col-6"><strong>Tipo:</strong> ${reg.tipo_envio || reg.tipo}</div>
+          <div class="col-6"><strong>Número de Parte:</strong> ${reg.parte}</div>
+          <div class="col-6"><strong>Cantidad:</strong> ${reg.cantidad} pzas</div>
+          <div class="col-6"><strong>Almacén:</strong> ${reg.almacen_origen || reg.almacen} (${reg.locacion_origen || ''})</div>
+          <div class="col-6"><strong>Área:</strong> ${reg.area}</div>
+          <div class="col-6"><strong>No Conformancia:</strong> <span class="text-danger fw-bold">${reg.no_conformancia}</span></div>
+          <div class="col-6"><strong>Detalle:</strong> ${reg.detalle_nc}</div>
+          <div class="col-6"><strong>Inspector/Operador:</strong> ${reg.operador} (Turno ${reg.turno})</div>
+          <div class="col-6"><strong>Estampa:</strong> ${reg.estampa}</div>
+        </div>
+        <hr>
+        <div class="text-center">
+          <h6>Fotografía de Evidencia:</h6>
+          ${fotoHtml}
+        </div>
+      `;
+
+      document.getElementById('btnModalIrDisposicion').onclick = () => {
+        const modalEl = document.getElementById('modalDetalleRegistro');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        irADisposicionDesdeFolio(folio);
+      };
+
+      const myModal = new bootstrap.Modal(document.getElementById('modalDetalleRegistro'));
+      myModal.show();
+    }
+
+    // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN
     async function cargarRegistrosGitHub() {
       const container = document.getElementById('listaIncidencias');
       const loading = document.getElementById('loadingRegistros');
       container.innerHTML = "";
       loading.style.display = "block";
 
+      if (registrosPersistentes.length > 0) {
+        renderizarTarjetasDisposicion(registrosPersistentes);
+      }
+
       const csvUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv?t=" + Date.now();
 
       try {
         const res = await fetch(csvUrl);
-        if (!res.ok) throw new Error("No se pudo cargar el archivo CSV de GitHub");
+        if (res.ok) {
+          const text = await res.text();
+          const lineas = text.split("
+").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+          
+          if (lineas.length > 1) {
+            const remotos = lineas.slice(1).map((line, index) => {
+              const cols = line.split(",").map(c => c.replace(/^"|"$/g, '').trim());
+              return {
+                folio: cols[0] || 'N/A',
+                tipo: cols[1] || 'Proceso',
+                fecha: cols[2] || '',
+                almacen: cols[3] || '',
+                locacion: cols[4] || '',
+                parte: cols[5] || '',
+                cantidad: cols[6] || '1',
+                estampa: cols[7] || '',
+                no_conformancia: cols[8] || '',
+                detalle_nc: cols[9] || '',
+                operador: cols[10] || '',
+                turno: cols[11] || '',
+                area: cols[12] || '',
+                foto_b64: cols[13] || ''
+              };
+            });
 
-        const text = await res.text();
-        const lineas = text.split("\n").filter(l => l.trim().length > 0);
-        
-        if (lineas.length <= 1) {
-          container.innerHTML = '<div class="alert alert-info text-center">No hay registros de incidencias acumulados aún.</div>';
-          loading.style.display = "none";
-          return;
+            remotos.forEach(r => guardarRegistroPersistenteLocal(r));
+            renderizarTarjetasDisposicion(registrosPersistentes);
+          }
         }
+      } catch (err) {
+        console.log("Usando base persistente local para lista de disposición");
+      }
 
-        registrosCargados = lineas.slice(1).map((line, index) => {
-          const cols = line.split(",").map(c => c.replace(/^"|"$/g, '').trim());
-          return {
-            id: index,
-            folio: cols[0] || 'N/A',
-            tipo: cols[1] || 'Proceso',
-            fecha: cols[2] || '',
-            almacen: cols[3] || '',
-            locacion: cols[4] || '',
-            parte: cols[5] || '',
-            cantidad: cols[6] || '1',
-            estampa: cols[7] || '',
-            no_conformancia: cols[8] || '',
-            detalle_nc: cols[9] || '',
-            operador: cols[10] || '',
-            turno: cols[11] || '',
-            area: cols[12] || '',
-            foto: cols[13] || ''
-          };
-        });
+      loading.style.display = "none";
+    }
 
-        loading.style.display = "none";
+    function renderizarTarjetasDisposicion(lista) {
+      const container = document.getElementById('listaIncidencias');
+      container.innerHTML = "";
 
-        // Renderizar Tarjetas
-        registrosCargados.reverse().forEach(reg => {
-          const cardHtml = `
-            <div class="col-md-6 col-lg-4 mb-3">
-              <div class="card record-card p-3 shadow-sm" onclick="seleccionarRegistroParaDisposicion('${reg.folio}')">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="badge bg-primary">${reg.folio}</span>
-                  <span class="badge bg-secondary">${reg.tipo}</span>
-                </div>
-                <h6 class="fw-bold mb-1">Parte: ${reg.parte} (${reg.cantidad} pzas)</h6>
-                <p class="small text-danger m-0 fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>NC: ${reg.no_conformancia}</p>
-                <div class="small text-muted mt-2 d-flex justify-content-between">
-                  <span><i class="fa-solid fa-location-dot me-1"></i>${reg.almacen} - ${reg.area}</span>
-                  <span><i class="fa-solid fa-user me-1"></i>${reg.operador}</span>
-                </div>
+      if (lista.length === 0) {
+        container.innerHTML = '<div class="alert alert-info text-center w-100">No hay registros acumulados. Crea un nuevo registro en la Pestaña 1.</div>';
+        return;
+      }
+
+      lista.forEach(reg => {
+        const folio = reg.folio_oc || reg.folio;
+        const cardHtml = `
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card record-card p-3 shadow-sm border-start border-4 border-primary">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-primary fw-bold">${folio}</span>
+                <span class="badge bg-secondary">${reg.tipo_envio || reg.tipo || 'Proceso'}</span>
+              </div>
+              <h6 class="fw-bold mb-1 text-dark">Parte: ${reg.parte} (${reg.cantidad} pzas)</h6>
+              <p class="small text-danger m-0 fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>${reg.no_conformancia}</p>
+              <div class="small text-muted mt-2 d-flex justify-content-between">
+                <span><i class="fa-solid fa-location-dot me-1"></i>${reg.almacen_origen || reg.almacen || ''}</span>
+                <span><i class="fa-solid fa-user me-1"></i>${reg.operador || 'Inspector'}</span>
+              </div>
+              <div class="mt-3 border-top pt-2 text-center">
+                <button class="btn btn-sm btn-warning w-100 fw-bold shadow-sm" onclick="seleccionarRegistroParaDisposicion('${folio}')"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
               </div>
             </div>
-          `;
-          container.innerHTML += cardHtml;
-        });
-
-      } catch (err) {
-        loading.style.display = "none";
-        container.innerHTML = `<div class="alert alert-danger text-center">Error al conectar con GitHub: ${err.message}</div>`;
-      }
+          </div>
+        `;
+        container.innerHTML += cardHtml;
+      });
     }
 
     function seleccionarRegistroParaDisposicion(folio) {
-      const reg = registrosCargados.find(r => r.folio === folio);
-      if (!reg) return;
-
-      document.getElementById('panelEvaluacionDisposicion').style.display = 'block';
-      document.getElementById('dispFolioTitulo').innerText = `${reg.folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
+      const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
       
+      document.getElementById('panelEvaluacionDisposicion').style.display = 'block';
+      document.getElementById('dispFolioTitulo').innerText = `${folio} - ${reg ? reg.parte : ''}`;
       document.getElementById('panelEvaluacionDisposicion').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cerrarPanelDisposicion() {
+      document.getElementById('panelEvaluacionDisposicion').style.display = 'none';
     }
 
     async function guardarDisposicion(e) {
@@ -736,45 +1052,284 @@
       const payloadDisposicion = {
         tipo_envio: "Evaluación y Disposición",
         folio_oc: folio,
+        fecha: new Date().toLocaleString(),
         no_conformancia: "DISPOSICIÓN REGISTRADA",
         detalle_nc: `Destino: ${document.getElementById('disp_destino').value} | Buenas: ${document.getElementById('disp_piezas_buenas').value} | Malas: ${document.getElementById('disp_piezas_malas').value} | Causa Raíz: ${document.getElementById('disp_causa_raiz').value}`,
         operador: "Inspector de Calidad",
+        estatus: document.getElementById('disp_estatus').value,
         foto_b64: ""
       };
 
-      await enviarPayloadProxy(payloadDisposicion);
-      document.getElementById('panelEvaluacionDisposicion').style.display = 'none';
+      guardarRegistroPersistenteLocal(payloadDisposicion);
+
+      if (navigator.onLine) {
+        await enviarPayloadProxy(payloadDisposicion);
+      } else {
+        alert("Disposición guardada en la memoria local persistente de la App Web.");
+      }
+
+      cerrarPanelDisposicion();
+      renderizarTablaRegistros();
       cargarRegistrosGitHub();
     }
 
-    async function descargarCsvParaExcel() {
-      const csvUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv?t=" + Date.now();
-      try {
-        const res = await fetch(csvUrl);
-        if (!res.ok) throw new Error("No se pudo descargar el archivo CSV de GitHub");
-        const text = await res.text();
-        
-        // Agregar BOM UTF-8 (﻿) para compatibilidad perfecta de acentos y columnas en Excel
-        const blob = new Blob(["\ufeff" + text], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "registro_incidencias.csv";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        alert("¡Archivo CSV descargado! Toca la notificación o el archivo descargado en tu teléfono/PC para abrirlo directamente en Microsoft Excel.");
-      } catch (err) {
-        alert("Error al descargar para Excel: " + err.message);
+    function sincronizarConGitHub() {
+      cargarRegistrosGitHub();
+      alert("¡Base local sincronizada y actualizada!");
+    }
+
+    function limpiarRegistrosLocales() {
+      if (confirm("¿Estás seguro de vaciar el historial de registros almacenados localmente en tu teléfono?")) {
+        localStorage.removeItem('CALIDAD_REGISTROS');
+        registrosPersistentes = [];
+        renderizarTablaRegistros();
+        alert("Historial local vaciado.");
       }
     }
 
-    function copiarUrlExcel() {
-      const input = document.getElementById('urlCsvExcel');
-      input.select();
-      navigator.clipboard.writeText(input.value);
-      alert("URL copiada al portapapeles: Pégala en Excel (Datos -> Desde la web) para consultar los registros en tiempo real.");
+    // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX) USANDO SHEETJS
+    function exportarCatalogosExcelXLSX() {
+      if (typeof XLSX === 'undefined') {
+        alert("Cargando librería Excel... Por favor intenta en un segundo.");
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      const mapTabs = [
+        { key: 'almacenes', name: 'Almacenes' },
+        { key: 'areas', name: 'Areas' },
+        { key: 'partes', name: 'Partes' },
+        { key: 'estampas', name: 'Estampas' },
+        { key: 'defectos', name: 'Defectos_NC' },
+        { key: 'defectosSecundarios', name: 'Defectos_Secundarios' },
+        { key: 'medidas', name: 'Medidas' }
+      ];
+
+      mapTabs.forEach(item => {
+        const data = catalogosLocal[item.key] || [];
+        const ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, item.name);
+      });
+
+      XLSX.writeFile(wb, 'catalogos_maestros_plantilla.xlsx');
+    }
+
+    function exportarCatIndividualCSV() {
+      const tipo = document.getElementById('exp_cat_individual_tipo').value;
+      const datos = catalogosLocal[tipo] || [];
+      if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
+      
+      const keys = Object.keys(datos[0]);
+      let csvContent = "sep=,
+" + keys.join(",") + "
+";
+      datos.forEach(row => {
+        csvContent += keys.map(k => `"${(row[k] || '').toString().replace(/"/g, '""')}"`).join(",") + "
+";
+      });
+      
+      downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
+    }
+
+    function exportarRegistrosCSV() {
+      if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
+      
+      const headers = ["Folio_OC", "Tipo", "Fecha", "Almacen", "Locacion", "Parte", "Cantidad", "Estampa", "Defecto", "Detalle_NC", "Operador", "Turno", "Area", "Estatus"];
+      let csvContent = "sep=,
+" + headers.join(",") + "
+";
+      
+      registrosPersistentes.forEach(r => {
+        csvContent += [
+          `"${r.folio_oc || r.folio || ''}"`,
+          `"${r.tipo_envio || r.tipo || ''}"`,
+          `"${r.fecha || ''}"`,
+          `"${r.almacen_origen || r.almacen || ''}"`,
+          `"${r.locacion_origen || r.locacion || ''}"`,
+          `"${r.parte || ''}"`,
+          `"${r.cantidad || '1'}"`,
+          `"${r.estampa || ''}"`,
+          `"${r.no_conformancia || ''}"`,
+          `"${r.detalle_nc || ''}"`,
+          `"${r.operador || ''}"`,
+          `"${r.turno || '1'}"`,
+          `"${r.area || ''}"`,
+          `"${r.estatus || 'Activo'}"`
+        ].join(",") + "
+";
+      });
+
+      downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
+    }
+
+    function exportarRegistrosJSON() {
+      const jsonContent = JSON.stringify(registrosPersistentes, null, 2);
+      downloadFile(jsonContent, 'registro_incidencias_locales.json', 'application/json');
+    }
+
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // IMPORTAR CATÁLOGOS
+    function importarCatalogos() {
+      const fileInput = document.getElementById('fileImportCatalogos');
+      const file = fileInput.files[0];
+      const tipo = document.getElementById('imp_cat_tipo_selector').value;
+
+      if (!file) { alert("Por favor selecciona un archivo."); return; }
+
+      const reader = new FileReader();
+
+      // SI ES EXCEL MULTI-HOJA (.XLSX)
+      if (file.name.endsWith('.xlsx') || tipo === 'xlsx_multi') {
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            const tabMap = {
+              'Almacenes': 'almacenes',
+              'Areas': 'areas',
+              'Partes': 'partes',
+              'Estampas': 'estampas',
+              'Defectos_NC': 'defectos',
+              'Defectos_Secundarios': 'defectosSecundarios',
+              'Medidas': 'medidas'
+            };
+
+            let cargadas = 0;
+            workbook.SheetNames.forEach(sheetName => {
+              const catKey = tabMap[sheetName] || sheetName.toLowerCase();
+              if (catalogosLocal.hasOwnProperty(catKey) || tabMap[sheetName]) {
+                const sheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                if (json.length > 0) {
+                  catalogosLocal[tabMap[sheetName] || catKey] = json;
+                  cargadas++;
+                }
+              }
+            });
+
+            localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+            cargarCatalogosFormulario();
+            alert(`¡ÉXITO! Se importaron y actualizaron ${cargadas} catálogos desde el libro de Excel Multi-Hoja.`);
+          } catch(err) {
+            alert("Error al leer el libro de Excel: " + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+      // SI ES JSON
+      else if (file.name.endsWith('.json')) {
+        reader.onload = function(e) {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (tipo === 'todos_json') {
+              Object.assign(catalogosLocal, parsed);
+            } else {
+              catalogosLocal[tipo] = parsed;
+            }
+            localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+            cargarCatalogosFormulario();
+            alert("¡Catálogo(s) importado(s) con éxito!");
+          } catch(err) { alert("Error al procesar JSON: " + err.message); }
+        };
+        reader.readAsText(file);
+      }
+      // SI ES CSV
+      else {
+        reader.onload = function(e) {
+          try {
+            const content = e.target.result;
+            const lineas = content.split("
+").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+            if (lineas.length > 1) {
+              const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
+              const items = lineas.slice(1).map(l => {
+                const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
+                let obj = {};
+                headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
+                return obj;
+              });
+
+              catalogosLocal[tipo] = items;
+              localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+              cargarCatalogosFormulario();
+              alert(`¡Catálogo '${tipo}' importado desde CSV exitosamente!`);
+            }
+          } catch(err) { alert("Error al procesar CSV: " + err.message); }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    // IMPORTAR REGISTROS
+    function importarRegistros() {
+      const fileInput = document.getElementById('fileImportRegistros');
+      const file = fileInput.files[0];
+      if (!file) { alert("Por favor selecciona un archivo."); return; }
+
+      const reader = new FileReader();
+
+      if (file.name.endsWith('.json')) {
+        reader.onload = function(e) {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (Array.isArray(parsed)) {
+              parsed.forEach(r => guardarRegistroPersistenteLocal(r));
+              renderizarTablaRegistros();
+              alert(`¡ÉXITO! Se importaron ${parsed.length} registros al historial local.`);
+            }
+          } catch(err) { alert("Error en JSON: " + err.message); }
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = function(e) {
+          try {
+            const content = e.target.result;
+            const lineas = content.split("
+").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+            if (lineas.length > 1) {
+              const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
+              const items = lineas.slice(1).map(l => {
+                const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
+                let obj = {};
+                headers.forEach((h, idx) => { obj[h.toLowerCase()] = parts[idx] || ""; });
+                
+                return {
+                  folio_oc: obj.folio_oc || obj.folio || "OC-IMP-" + Math.floor(Math.random()*100000),
+                  tipo_envio: obj.tipo_envio || obj.tipo || "Proceso",
+                  fecha: obj.fecha || new Date().toLocaleString(),
+                  almacen_origen: obj.almacen_origen || obj.almacen || "",
+                  locacion_origen: obj.locacion_origen || obj.locacion || "",
+                  parte: obj.parte || "",
+                  cantidad: obj.cantidad || "1",
+                  estampa: obj.estampa || "",
+                  no_conformancia: obj.defecto || obj.no_conformancia || "",
+                  detalle_nc: obj.detalle_nc || "",
+                  operador: obj.operador || "Inspector",
+                  turno: obj.turno || "1",
+                  area: obj.area || "",
+                  estatus: obj.estatus || "Activo"
+                };
+              });
+
+              items.forEach(r => guardarRegistroPersistenteLocal(r));
+              renderizarTablaRegistros();
+              alert(`¡ÉXITO! Se importaron ${items.length} registros desde el CSV.`);
+            }
+          } catch(err) { alert("Error en CSV: " + err.message); }
+        };
+        reader.readAsText(file);
+      }
     }
   </script>
 </body>
