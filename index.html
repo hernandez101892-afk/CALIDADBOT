@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta</title>
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v16)</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d6efd">
   <!-- Bootstrap 5 CSS -->
@@ -30,6 +30,10 @@
     .record-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
     .status-badge { font-size: 0.8rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
     .table-responsive { max-height: 500px; overflow-y: auto; }
+    .kpi-card { border-radius: 12px; padding: 15px; text-align: center; color: white; font-weight: bold; }
+    .kpi-total { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
+    .kpi-done { background: linear-gradient(135deg, #198754, #157347); }
+    .kpi-pending { background: linear-gradient(135deg, #ffc107, #ffca2c); color: #000; }
   </style>
 </head>
 <body>
@@ -41,6 +45,28 @@
   </div>
 
   <div class="container-fluid px-3 px-md-4 mb-5">
+
+    <!-- RESUMEN DE INDICADORES (KPIs) DE DISPOSICIÓN -->
+    <div class="row g-3 mb-4" id="resumenKPIs">
+      <div class="col-4">
+        <div class="kpi-card kpi-total shadow-sm">
+          <small class="d-block text-uppercase text-white-50">Total Registros</small>
+          <span class="fs-3 fw-bold" id="kpiTotalNum">0</span>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="kpi-card kpi-done shadow-sm">
+          <small class="d-block text-uppercase text-white-50">Con Disposición</small>
+          <span class="fs-3 fw-bold" id="kpiDoneNum">0</span>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="kpi-card kpi-pending shadow-sm">
+          <small class="d-block text-uppercase fw-bold text-dark">Pendientes NC</small>
+          <span class="fs-3 fw-bold text-dark" id="kpiPendingNum">0</span>
+        </div>
+      </div>
+    </div>
 
     <!-- NAVEGACIÓN POR PESTAÑAS -->
     <ul class="nav nav-pills nav-justified mb-3 shadow-sm bg-white p-2 rounded-3" id="mainTabs" role="tablist">
@@ -189,14 +215,14 @@
       </div>
 
 
-      <!-- PESTAÑA 2: VER REGISTROS PERSISTENTES -->
+      <!-- PESTAÑA 2: VER REGISTROS PERSISTENTES Y NAVEGAR A DISPOSICIÓN -->
       <div class="tab-pane fade" id="tab-ver-registros" role="tabpanel">
         
         <div class="card">
           <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span><i class="fa-solid fa-database me-2"></i>Histórico Persistente de Registros (<span id="cantRegistrosPersistentes">0</span>)</span>
+            <span><i class="fa-solid fa-database me-2"></i>Histórico de Registros (<span id="cantRegistrosPersistentes">0</span>)</span>
             <div>
-              <button class="btn btn-sm btn-outline-light me-1" onclick="sincronizarConGitHub()"><i class="fa-solid fa-rotate me-1"></i>Sincronizar GitHub</button>
+              <button class="btn btn-sm btn-outline-light me-1" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Sincronizar GitHub</button>
               <button class="btn btn-sm btn-danger" onclick="limpiarRegistrosLocales()"><i class="fa-solid fa-trash me-1"></i>Vaciar Local</button>
             </div>
           </div>
@@ -204,23 +230,24 @@
             
             <!-- BUSCADOR Y FILTROS -->
             <div class="row g-2 mb-3">
-              <div class="col-md-6">
+              <div class="col-md-5">
                 <div class="input-group">
                   <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
                   <input type="text" id="searchRegistros" class="form-control" placeholder="Buscar por Folio, Parte, Almacén, Defecto u Operador..." onkeyup="filtrarTablaRegistros()">
                 </div>
               </div>
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <select id="filterTipo" class="form-select" onchange="filtrarTablaRegistros()">
-                  <option value="ALL">Todos los Tipos</option>
+                  <option value="ALL">Todos los Registros</option>
+                  <option value="PENDING_DISP">⚠️ Solo Pendientes de Disposición</option>
+                  <option value="DONE_DISP">🟢 Con Disposición Registrada</option>
                   <option value="Proceso">Proceso / Recibo</option>
                   <option value="Contención">Contención / Sorteo</option>
                   <option value="Rechazo">Rechazo</option>
-                  <option value="Evaluación y Disposición">Disposición</option>
                 </select>
               </div>
               <div class="col-md-3">
-                <button class="btn btn-primary w-100 fw-bold" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-sync me-1"></i>Refrescar Vista</button>
+                <button class="btn btn-primary w-100 fw-bold" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-sync me-1"></i>Refrescar Tabla</button>
               </div>
             </div>
 
@@ -237,7 +264,7 @@
                     <th>Almacén / Área</th>
                     <th>No Conformancia</th>
                     <th>Operador</th>
-                    <th>Estatus</th>
+                    <th>Estatus Disposición</th>
                     <th class="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -362,37 +389,32 @@
               <div class="card-header bg-primary text-white"><i class="fa-solid fa-file-export me-2"></i>Exportar Catálogos y Registros</div>
               <div class="card-body d-flex flex-column justify-content-between">
                 <div>
-                  <p class="text-muted small">Descarga copias de seguridad de tus catálogos locales y registros en formato Excel Multi-Hoja (.xlsx), CSV o JSON.</p>
+                  <p class="text-muted small">Genera y descarga copias de seguridad de tus catálogos locales y registros directamente en tu dispositivo.</p>
                   
-                  <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-file-excel me-1 text-success"></i>Libro de Catálogos Completo (Excel .xlsx Multi-Hoja):</h6>
+                  <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-file-excel me-1 text-success"></i>Libro de Catálogos Completo (Excel Multi-Hoja):</h6>
                   <button class="btn btn-success fw-bold w-100 mb-3 shadow-sm" onclick="exportarCatalogosExcelXLSX()"><i class="fa-solid fa-file-excel me-2"></i>Descargar Plantilla / Libro de Catálogos Completo (.xlsx)</button>
 
-                  <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-list-check me-1 text-primary"></i>Exportación Individual por Catálogo:</h6>
-                  <div class="row g-2 mb-3">
-                    <div class="col-7">
-                      <select id="exp_cat_individual_tipo" class="form-select form-select-sm">
-                        <option value="almacenes">Almacenes</option>
-                        <option value="areas">Áreas</option>
-                        <option value="partes">Partes</option>
-                        <option value="estampas">Estampas</option>
-                        <option value="defectos">Defectos (NC)</option>
-                        <option value="defectosSecundarios">Defectos Secundarios</option>
-                        <option value="medidas">Medidas</option>
-                      </select>
-                    </div>
-                    <div class="col-5">
-                      <button class="btn btn-outline-primary btn-sm w-100" onclick="exportarCatIndividualCSV()"><i class="fa-solid fa-download me-1"></i>CSV</button>
-                    </div>
+                  <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-list-check me-1 text-primary"></i>Exportación Individual en CSV:</h6>
+                  <div class="input-group mb-3">
+                    <select id="exp_cat_individual_tipo" class="form-select form-select-sm">
+                      <option value="almacenes">Almacenes</option>
+                      <option value="areas">Áreas</option>
+                      <option value="partes">Partes</option>
+                      <option value="estampas">Estampas</option>
+                      <option value="defectos">Defectos Principales (NC)</option>
+                      <option value="defectosSecundarios">Defectos Secundarios</option>
+                    </select>
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportarCatIndividualCSV()"><i class="fa-solid fa-file-csv me-1"></i>Descargar CSV</button>
                   </div>
 
                   <h6 class="fw-bold text-dark mt-3"><i class="fa-solid fa-database me-1 text-success"></i>Exportar Registros Persistentes:</h6>
                   <div class="d-flex gap-2">
-                    <button class="btn btn-outline-success btn-sm w-50 fw-bold" onclick="exportarRegistrosCSV()"><i class="fa-solid fa-file-csv me-1"></i>Registros (CSV sep=,)</button>
-                    <button class="btn btn-outline-secondary btn-sm w-50 fw-bold" onclick="exportarRegistrosJSON()"><i class="fa-solid fa-code me-1"></i>Registros (JSON)</button>
+                    <button class="btn btn-outline-success btn-sm w-50 fw-bold" onclick="exportarRegistrosCSV()"><i class="fa-solid fa-file-excel me-1"></i>Registros CSV (sep=,)</button>
+                    <button class="btn btn-outline-secondary btn-sm w-50 fw-bold" onclick="exportarRegistrosJSON()"><i class="fa-solid fa-code me-1"></i>Registros JSON</button>
                   </div>
                 </div>
                 <div class="mt-4 alert alert-info small m-0">
-                  <i class="fa-solid fa-circle-info me-1"></i>El libro Excel Multi-Hoja (.xlsx) genera 7 pestañas independientes listas para ser editadas e importadas nuevamente.
+                  <i class="fa-solid fa-circle-info me-1"></i>El libro Excel Multi-Hoja (.xlsx) genera 7 pestañas independientes (Almacenes, Áreas, Partes, Estampas, Defectos, etc.) listas para editar e importar.
                 </div>
               </div>
             </div>
@@ -403,31 +425,29 @@
             <div class="card h-100 border-success shadow-sm">
               <div class="card-header bg-success text-white"><i class="fa-solid fa-file-import me-2"></i>Importar Catálogos y Registros</div>
               <div class="card-body">
-                <p class="text-muted small">Carga un libro de Excel (.xlsx), CSV o JSON para actualizar las sugerencias de los catálogos o restaurar un historial de registros previo.</p>
+                <p class="text-muted small">Carga un libro de Excel (.xlsx), CSV o JSON para actualizar las sugerencias o importar un historial de incidencias.</p>
 
-                <div class="mb-3 p-3 border rounded bg-light">
-                  <label class="form-label fw-bold text-success"><i class="fa-solid fa-file-excel me-1"></i>1. Importar Catálogos Maestros (Excel / CSV / JSON):</label>
+                <div class="mb-3">
+                  <label class="form-label fw-bold">1. Importar Catálogos Maestros (Excel .xlsx / CSV / JSON):</label>
                   <select id="imp_cat_tipo_selector" class="form-select form-select-sm mb-2">
                     <option value="xlsx_multi" selected>Libro de Excel Completo Multi-Hoja (.xlsx) [RECOMENDADO]</option>
-                    <option value="almacenes">Almacenes (CSV/JSON)</option>
-                    <option value="areas">Áreas (CSV/JSON)</option>
-                    <option value="partes">Partes (CSV/JSON)</option>
-                    <option value="estampas">Estampas (CSV/JSON)</option>
-                    <option value="defectos">Defectos Principales (CSV/JSON)</option>
-                    <option value="defectosSecundarios">Defectos Secundarios (CSV/JSON)</option>
-                    <option value="medidas">Medidas (CSV/JSON)</option>
-                    <option value="todos_json">Todos los Catálogos (JSON)</option>
+                    <option value="almacenes">Almacenes</option>
+                    <option value="areas">Áreas</option>
+                    <option value="partes">Partes / Números de Parte</option>
+                    <option value="estampas">Estampas / Inspectores</option>
+                    <option value="defectos">Defectos Principales (NC)</option>
+                    <option value="defectosSecundarios">Defectos Secundarios</option>
                   </select>
                   <input type="file" id="fileImportCatalogos" accept=".xlsx,.csv,.json" class="form-control form-control-sm mb-2">
-                  <button class="btn btn-success btn-sm w-100 fw-bold" onclick="importarCatalogos()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Catálogo(s)</button>
+                  <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="importarCatalogos()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Catálogo(s)</button>
                 </div>
 
                 <hr>
 
-                <div class="mb-3 p-3 border rounded bg-light">
-                  <label class="form-label fw-bold text-primary"><i class="fa-solid fa-database me-1"></i>2. Cargar Archivo de Registros Históricos (CSV / JSON):</label>
+                <div class="mb-3">
+                  <label class="form-label fw-bold">2. Importar Registros de Incidencias Historicos (CSV / JSON):</label>
                   <input type="file" id="fileImportRegistros" accept=".csv,.json" class="form-control form-control-sm mb-2">
-                  <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="importarRegistros()"><i class="fa-solid fa-upload me-1"></i>Importar Registros al Almacén Local</button>
+                  <button class="btn btn-success btn-sm w-100 fw-bold" onclick="importarRegistros()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Registros</button>
                 </div>
 
               </div>
@@ -514,7 +534,7 @@
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V13 -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V16 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbwoDCxvDp_Mv7qFypv7fWNhq0azzUvcvItVtHGnCwFHMECEsZsZcitmjX4tdXpzSMVS/exec";
     
@@ -594,10 +614,10 @@
         { codigo: "i", nombre: "ROSCA DEL DRENAJE TAPADA CON PASTA" }
       ],
       medidas: [
-        { nombre: "CHICA", valor: "1/8" },
-        { nombre: "MED", valor: "1/4" },
-        { nombre: "GRANDE", valor: "1/2" },
-        { nombre: "ESTÁNDAR", valor: "3/8" }
+        { nombre: "CHICA", valor: "Small" },
+        { nombre: "MED", valor: "Medium" },
+        { nombre: "GRANDE", valor: "Large" },
+        { nombre: "ESTÁNDAR", valor: "Standard" }
       ]
     };
 
@@ -611,6 +631,9 @@
       cargarRegistrosPersistentesLocales();
       actualizarEstadoRed();
       
+      // CARGAR REGISTROS DESDE GITHUB AUTOMÁTICAMENTE AL ABRIR LA APP WEB
+      cargarRegistrosGitHub();
+
       window.addEventListener('online', actualizarEstadoRed);
       window.addEventListener('offline', actualizarEstadoRed);
     });
@@ -640,12 +663,12 @@
     }
 
     function cargarCatalogosFormulario() {
-      poblarDatalist("dl_almacenes", catalogosLocal.almacenes.map(x => `${x.numero} - ${x.nombre}`));
-      poblarDatalist("dl_areas", catalogosLocal.areas.map(x => `${x.codigo} - ${x.nombre}`));
-      poblarDatalist("dl_partes", catalogosLocal.partes.map(x => `${x.codigo} - ${x.descripcion}`));
-      poblarDatalist("dl_estampas", catalogosLocal.estampas.map(x => `${x.codigo} (${x.usuario} - ${x.medida})`));
-      poblarDatalist("dl_defectos", catalogosLocal.defectos.map(x => `${x.codigo} - ${x.nombre}`));
-      poblarDatalist("dl_defectos_sec", catalogosLocal.defectosSecundarios.map(x => `${x.codigo} - ${x.nombre}`));
+      poblarDatalist("dl_almacenes", catalogosLocal.almacenes.map(x => `${x.numero || x.codigo || ''} - ${x.nombre || ''}`));
+      poblarDatalist("dl_areas", catalogosLocal.areas.map(x => `${x.codigo || ''} - ${x.nombre || ''}`));
+      poblarDatalist("dl_partes", catalogosLocal.partes.map(x => `${x.codigo || ''} - ${x.descripcion || x.nombre || ''}`));
+      poblarDatalist("dl_estampas", catalogosLocal.estampas.map(x => `${x.codigo || ''} (${x.usuario || ''} - ${x.medida || ''})`));
+      poblarDatalist("dl_defectos", catalogosLocal.defectos.map(x => `${x.codigo || ''} - ${x.nombre || ''}`));
+      poblarDatalist("dl_defectos_sec", catalogosLocal.defectosSecundarios.map(x => `${x.codigo || ''} - ${x.nombre || ''}`));
     }
 
     // ESCÁNER QR
@@ -737,9 +760,15 @@
     }
 
     function guardarRegistroPersistenteLocal(nuevoReg) {
-      const index = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio) === (nuevoReg.folio_oc || nuevoReg.folio));
+      const targetFolio = (nuevoReg.folio_oc || nuevoReg.folio || '').toString().trim();
+      if (!targetFolio) return;
+
+      const index = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio || '').toString().trim() === targetFolio);
+      
       if (index >= 0) {
-        registrosPersistentes[index] = nuevoReg;
+        // Preservar datos de disposición si ya existían
+        const prev = registrosPersistentes[index];
+        registrosPersistentes[index] = Object.assign({}, prev, nuevoReg);
       } else {
         registrosPersistentes.unshift(nuevoReg);
       }
@@ -748,8 +777,34 @@
     }
 
     function actualizarContadorPersistente() {
+      const total = registrosPersistentes.length;
+      let conDisp = 0;
+      let pendDisp = 0;
+
+      registrosPersistentes.forEach(r => {
+        if (r.no_conformancia === 'DISPOSICIÓN REGISTRADA' || r.tiene_disposicion || r.tipo_envio === 'Evaluación y Disposición') {
+          conDisp++;
+        } else {
+          pendDisp++;
+        }
+      });
+
       const elem = document.getElementById('cantRegistrosPersistentes');
-      if (elem) elem.innerText = registrosPersistentes.length;
+      if (elem) elem.innerText = total;
+
+      document.getElementById('kpiTotalNum').innerText = total;
+      document.getElementById('kpiDoneNum').innerText = conDisp;
+      document.getElementById('kpiPendingNum').innerText = pendDisp;
+    }
+
+    function limpiarRegistrosLocales() {
+      if (confirm("¿Deseas vaciar los registros almacenados en la memoria local del navegador?")) {
+        localStorage.removeItem('CALIDAD_REGISTROS');
+        registrosPersistentes = [];
+        actualizarContadorPersistente();
+        renderizarTablaRegistros();
+        alert("Almacén local vaciado.");
+      }
     }
 
     // ENVIAR REGISTRO
@@ -777,7 +832,7 @@
         operador: document.getElementById('operador').value,
         turno: document.getElementById('turno').value,
         foto_b64: fotoBase64,
-        estatus: "Abierto / Pendiente"
+        tiene_disposicion: false
       };
 
       // Guardar inmediatamente en almacenamiento persistente local
@@ -848,19 +903,25 @@
 
       if (registrosPersistentes.length === 0) {
         tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No hay registros almacenados. Crea un nuevo registro o sincroniza con GitHub.</td></tr>`;
+        actualizarContadorPersistente();
         return;
       }
 
-      registrosPersistentes.forEach((reg, index) => {
+      registrosPersistentes.forEach((reg) => {
         const tr = document.createElement('tr');
-        
+        const folio = reg.folio_oc || reg.folio || 'N/A';
+        const tieneDisp = reg.no_conformancia === 'DISPOSICIÓN REGISTRADA' || reg.tiene_disposicion || reg.tipo_envio === 'Evaluación y Disposición';
+
         let estatusClass = 'bg-primary';
         if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') estatusClass = 'bg-danger';
         if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') estatusClass = 'bg-warning text-dark';
-        if (reg.no_conformancia === 'DISPOSICIÓN REGISTRADA') estatusClass = 'bg-success';
+
+        let dispBadge = tieneDisp 
+          ? '<span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Con Disposición</span>'
+          : '<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Pendiente NC</span>';
 
         tr.innerHTML = `
-          <td class="fw-bold text-primary">${reg.folio_oc || reg.folio || 'N/A'}</td>
+          <td class="fw-bold text-primary">${folio}</td>
           <td><span class="badge ${estatusClass}">${reg.tipo_envio || reg.tipo || 'Proceso'}</span></td>
           <td class="small text-muted">${reg.fecha || 'Reciente'}</td>
           <td class="fw-bold">${reg.parte || '-'}</td>
@@ -868,10 +929,10 @@
           <td class="small">${reg.almacen_origen || reg.almacen || ''} / ${reg.area || ''}</td>
           <td class="text-danger fw-bold small">${reg.no_conformancia || '-'}</td>
           <td class="small">${reg.operador || 'Inspector'}</td>
-          <td><span class="badge bg-secondary">${reg.estatus || 'Activo'}</span></td>
+          <td>${dispBadge}</td>
           <td class="text-center">
-            <button class="btn btn-sm btn-warning fw-bold shadow-sm me-1" onclick="irADisposicionDesdeFolio('${reg.folio_oc || reg.folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
-            <button class="btn btn-sm btn-outline-info" onclick="verDetalleModal('${reg.folio_oc || reg.folio}')" title="Ver Detalle"><i class="fa-solid fa-eye"></i></button>
+            <button class="btn btn-sm btn-warning fw-bold shadow-sm me-1" onclick="irADisposicionDesdeFolio('${folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
+            <button class="btn btn-sm btn-outline-info" onclick="verDetalleModal('${folio}')" title="Ver Detalle"><i class="fa-solid fa-eye"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -888,7 +949,15 @@
       rows.forEach(row => {
         const text = row.innerText.toLowerCase();
         const matchesQuery = text.includes(query);
-        const matchesTipo = filterTipo === 'ALL' || text.includes(filterTipo.toLowerCase());
+        
+        let matchesTipo = true;
+        if (filterTipo === 'PENDING_DISP') {
+          matchesTipo = text.includes('pendiente nc');
+        } else if (filterTipo === 'DONE_DISP') {
+          matchesTipo = text.includes('con disposición');
+        } else if (filterTipo !== 'ALL') {
+          matchesTipo = text.includes(filterTipo.toLowerCase());
+        }
 
         if (matchesQuery && matchesTipo) {
           row.style.display = '';
@@ -947,17 +1016,19 @@
       myModal.show();
     }
 
-    // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN
+    // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN Y ACTUALIZACIÓN DESDE GITHUB
     async function cargarRegistrosGitHub() {
       const container = document.getElementById('listaIncidencias');
       const loading = document.getElementById('loadingRegistros');
-      container.innerHTML = "";
-      loading.style.display = "block";
+      if (container) container.innerHTML = "";
+      if (loading) loading.style.display = "block";
 
+      // Mostrar base persistente local de inmediato
       if (registrosPersistentes.length > 0) {
         renderizarTarjetasDisposicion(registrosPersistentes);
       }
 
+      // Descargar el CSV remoto desde GitHub para sincronizar
       const csvUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv?t=" + Date.now();
 
       try {
@@ -968,7 +1039,7 @@
 ").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
           
           if (lineas.length > 1) {
-            const remotos = lineas.slice(1).map((line, index) => {
+            const remotos = lineas.slice(1).map((line) => {
               const cols = line.split(",").map(c => c.replace(/^"|"$/g, '').trim());
               return {
                 folio: cols[0] || 'N/A',
@@ -988,19 +1059,22 @@
               };
             });
 
+            // Guardar e integrar
             remotos.forEach(r => guardarRegistroPersistenteLocal(r));
             renderizarTarjetasDisposicion(registrosPersistentes);
+            renderizarTablaRegistros();
           }
         }
       } catch (err) {
-        console.log("Usando base persistente local para lista de disposición");
+        console.log("Servidor GitHub no disponible. Usando datos persistentes locales.");
       }
 
-      loading.style.display = "none";
+      if (loading) loading.style.display = "none";
     }
 
     function renderizarTarjetasDisposicion(lista) {
       const container = document.getElementById('listaIncidencias');
+      if (!container) return;
       container.innerHTML = "";
 
       if (lista.length === 0) {
@@ -1035,9 +1109,10 @@
 
     function seleccionarRegistroParaDisposicion(folio) {
       const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
-      
+      if (!reg) return;
+
       document.getElementById('panelEvaluacionDisposicion').style.display = 'block';
-      document.getElementById('dispFolioTitulo').innerText = `${folio} - ${reg ? reg.parte : ''}`;
+      document.getElementById('dispFolioTitulo').innerText = `${folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
       document.getElementById('panelEvaluacionDisposicion').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -1052,67 +1127,51 @@
       const payloadDisposicion = {
         tipo_envio: "Evaluación y Disposición",
         folio_oc: folio,
-        fecha: new Date().toLocaleString(),
         no_conformancia: "DISPOSICIÓN REGISTRADA",
         detalle_nc: `Destino: ${document.getElementById('disp_destino').value} | Buenas: ${document.getElementById('disp_piezas_buenas').value} | Malas: ${document.getElementById('disp_piezas_malas').value} | Causa Raíz: ${document.getElementById('disp_causa_raiz').value}`,
         operador: "Inspector de Calidad",
-        estatus: document.getElementById('disp_estatus').value,
-        foto_b64: ""
+        foto_b64: "",
+        tiene_disposicion: true
       };
 
       guardarRegistroPersistenteLocal(payloadDisposicion);
-
-      if (navigator.onLine) {
-        await enviarPayloadProxy(payloadDisposicion);
-      } else {
-        alert("Disposición guardada en la memoria local persistente de la App Web.");
-      }
-
-      cerrarPanelDisposicion();
-      renderizarTablaRegistros();
+      await enviarPayloadProxy(payloadDisposicion);
+      document.getElementById('panelEvaluacionDisposicion').style.display = 'none';
       cargarRegistrosGitHub();
     }
 
-    function sincronizarConGitHub() {
-      cargarRegistrosGitHub();
-      alert("¡Base local sincronizada y actualizada!");
-    }
-
-    function limpiarRegistrosLocales() {
-      if (confirm("¿Estás seguro de vaciar el historial de registros almacenados localmente en tu teléfono?")) {
-        localStorage.removeItem('CALIDAD_REGISTROS');
-        registrosPersistentes = [];
-        renderizarTablaRegistros();
-        alert("Historial local vaciado.");
-      }
-    }
-
-    // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX) USANDO SHEETJS
+    // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX) O FALLBACK CSV
     function exportarCatalogosExcelXLSX() {
       if (typeof XLSX === 'undefined') {
-        alert("Cargando librería Excel... Por favor intenta en un segundo.");
+        alert("Librería SheetJS no detectada. Generando respaldo en CSV de contingencia...");
+        exportarCatIndividualCSV();
         return;
       }
 
-      const wb = XLSX.utils.book_new();
+      try {
+        const wb = XLSX.utils.book_new();
 
-      const mapTabs = [
-        { key: 'almacenes', name: 'Almacenes' },
-        { key: 'areas', name: 'Areas' },
-        { key: 'partes', name: 'Partes' },
-        { key: 'estampas', name: 'Estampas' },
-        { key: 'defectos', name: 'Defectos_NC' },
-        { key: 'defectosSecundarios', name: 'Defectos_Secundarios' },
-        { key: 'medidas', name: 'Medidas' }
-      ];
+        const mapTabs = [
+          { key: 'almacenes', name: 'Almacenes' },
+          { key: 'areas', name: 'Areas' },
+          { key: 'partes', name: 'Partes' },
+          { key: 'estampas', name: 'Estampas' },
+          { key: 'defectos', name: 'Defectos_NC' },
+          { key: 'defectosSecundarios', name: 'Defectos_Secundarios' },
+          { key: 'medidas', name: 'Medidas' }
+        ];
 
-      mapTabs.forEach(item => {
-        const data = catalogosLocal[item.key] || [];
-        const ws = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, item.name);
-      });
+        mapTabs.forEach(item => {
+          const data = catalogosLocal[item.key] || [];
+          const ws = XLSX.utils.json_to_sheet(data);
+          XLSX.utils.book_append_sheet(wb, ws, item.name);
+        });
 
-      XLSX.writeFile(wb, 'catalogos_maestros_plantilla.xlsx');
+        XLSX.writeFile(wb, 'catalogos_maestros_plantilla.xlsx');
+      } catch (e) {
+        alert("Error al construir Excel XLSX: " + e.message + ". Generando CSV...");
+        exportarCatIndividualCSV();
+      }
     }
 
     function exportarCatIndividualCSV() {
@@ -1120,46 +1179,41 @@
       const datos = catalogosLocal[tipo] || [];
       if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
       
-      const keys = Object.keys(datos[0]);
       let csvContent = "sep=,
-" + keys.join(",") + "
+" + Object.keys(datos[0]).join(",") + "
 ";
       datos.forEach(row => {
-        csvContent += keys.map(k => `"${(row[k] || '').toString().replace(/"/g, '""')}"`).join(",") + "
+        csvContent += Object.values(row).map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "
 ";
       });
-      
       downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
     }
 
     function exportarRegistrosCSV() {
       if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
-      
-      const headers = ["Folio_OC", "Tipo", "Fecha", "Almacen", "Locacion", "Parte", "Cantidad", "Estampa", "Defecto", "Detalle_NC", "Operador", "Turno", "Area", "Estatus"];
       let csvContent = "sep=,
-" + headers.join(",") + "
+Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Foto_URL
 ";
-      
       registrosPersistentes.forEach(r => {
-        csvContent += [
-          `"${r.folio_oc || r.folio || ''}"`,
-          `"${r.tipo_envio || r.tipo || ''}"`,
-          `"${r.fecha || ''}"`,
-          `"${r.almacen_origen || r.almacen || ''}"`,
-          `"${r.locacion_origen || r.locacion || ''}"`,
-          `"${r.parte || ''}"`,
-          `"${r.cantidad || '1'}"`,
-          `"${r.estampa || ''}"`,
-          `"${r.no_conformancia || ''}"`,
-          `"${r.detalle_nc || ''}"`,
-          `"${r.operador || ''}"`,
-          `"${r.turno || '1'}"`,
-          `"${r.area || ''}"`,
-          `"${r.estatus || 'Activo'}"`
-        ].join(",") + "
+        const fila = [
+          r.folio_oc || r.folio || '',
+          r.tipo_envio || r.tipo || '',
+          r.fecha || '',
+          r.almacen_origen || r.almacen || '',
+          r.locacion_origen || r.locacion || '',
+          r.parte || '',
+          r.cantidad || '1',
+          r.estampa || '',
+          r.no_conformancia || '',
+          r.detalle_nc || '',
+          r.operador || '',
+          r.turno || '1',
+          r.area || '',
+          r.foto_b64 || ''
+        ];
+        csvContent += fila.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "
 ";
       });
-
       downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
     }
 
@@ -1168,14 +1222,28 @@
       downloadFile(jsonContent, 'registro_incidencias_locales.json', 'application/json');
     }
 
+    // FUNCIÓN UNIVERSAL DE DESCARGA ADAPTATIVA PARA MÓVILES Y NAVEGADORES
     function downloadFile(content, fileName, mimeType) {
-      const blob = new Blob([content], { type: mimeType });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        const blob = new Blob(["﻿" + content], { type: mimeType });
+        if (navigator.msSaveOrOpenBlob) {
+          navigator.msSaveOrOpenBlob(blob, fileName);
+          return;
+        }
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 200);
+      } catch(e) {
+        alert("Error al descargar archivo: " + e.message);
+      }
     }
 
     // IMPORTAR CATÁLOGOS
@@ -1194,7 +1262,7 @@
           try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
-
+            
             const tabMap = {
               'Almacenes': 'almacenes',
               'Areas': 'areas',
@@ -1205,7 +1273,6 @@
               'Medidas': 'medidas'
             };
 
-            let cargadas = 0;
             workbook.SheetNames.forEach(sheetName => {
               const catKey = tabMap[sheetName] || sheetName.toLowerCase();
               if (catalogosLocal.hasOwnProperty(catKey) || tabMap[sheetName]) {
@@ -1213,123 +1280,110 @@
                 const json = XLSX.utils.sheet_to_json(sheet);
                 if (json.length > 0) {
                   catalogosLocal[tabMap[sheetName] || catKey] = json;
-                  cargadas++;
                 }
               }
             });
 
             localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
             cargarCatalogosFormulario();
-            alert(`¡ÉXITO! Se importaron y actualizaron ${cargadas} catálogos desde el libro de Excel Multi-Hoja.`);
+            alert("¡Libro de Excel (.xlsx) importado exitosamente! Catálogos actualizados.");
           } catch(err) {
-            alert("Error al leer el libro de Excel: " + err.message);
+            alert("Error al leer el archivo Excel: " + err.message);
           }
         };
         reader.readAsArrayBuffer(file);
-      }
-      // SI ES JSON
-      else if (file.name.endsWith('.json')) {
-        reader.onload = function(e) {
-          try {
-            const parsed = JSON.parse(e.target.result);
-            if (tipo === 'todos_json') {
-              Object.assign(catalogosLocal, parsed);
-            } else {
-              catalogosLocal[tipo] = parsed;
-            }
-            localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
-            cargarCatalogosFormulario();
-            alert("¡Catálogo(s) importado(s) con éxito!");
-          } catch(err) { alert("Error al procesar JSON: " + err.message); }
-        };
-        reader.readAsText(file);
-      }
-      // SI ES CSV
+      } 
       else {
+        // SI ES CSV O JSON
         reader.onload = function(e) {
+          const content = e.target.result;
           try {
-            const content = e.target.result;
-            const lineas = content.split("
-").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
-            if (lineas.length > 1) {
-              const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
-              const items = lineas.slice(1).map(l => {
-                const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
-                let obj = {};
-                headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
-                return obj;
-              });
-
-              catalogosLocal[tipo] = items;
+            if (file.name.endsWith('.json')) {
+              const parsed = JSON.parse(content);
+              if (Array.isArray(parsed)) {
+                catalogosLocal[tipo] = parsed;
+              } else {
+                Object.assign(catalogosLocal, parsed);
+              }
               localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
-              cargarCatalogosFormulario();
-              alert(`¡Catálogo '${tipo}' importado desde CSV exitosamente!`);
+              alert("¡Catálogo importado desde JSON!");
+            } else {
+              // CSV
+              const lineas = content.split("
+").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+              if (lineas.length > 1) {
+                const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
+                const items = lineas.slice(1).map(l => {
+                  const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
+                  let obj = {};
+                  headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
+                  return obj;
+                });
+                catalogosLocal[tipo] = items;
+                localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+                alert(`¡Catálogo '${tipo}' importado exitosamente desde CSV!`);
+              }
             }
-          } catch(err) { alert("Error al procesar CSV: " + err.message); }
+            cargarCatalogosFormulario();
+          } catch(err) {
+            alert("Error al procesar archivo: " + err.message);
+          }
         };
         reader.readAsText(file);
       }
     }
 
-    // IMPORTAR REGISTROS
+    // IMPORTAR REGISTROS HISTRÓRICOS
     function importarRegistros() {
       const fileInput = document.getElementById('fileImportRegistros');
       const file = fileInput.files[0];
-      if (!file) { alert("Por favor selecciona un archivo."); return; }
+      if (!file) { alert("Selecciona un archivo."); return; }
 
       const reader = new FileReader();
-
-      if (file.name.endsWith('.json')) {
-        reader.onload = function(e) {
-          try {
-            const parsed = JSON.parse(e.target.result);
+      reader.onload = function(e) {
+        const content = e.target.result;
+        try {
+          if (file.name.endsWith('.json')) {
+            const parsed = JSON.parse(content);
             if (Array.isArray(parsed)) {
               parsed.forEach(r => guardarRegistroPersistenteLocal(r));
-              renderizarTablaRegistros();
-              alert(`¡ÉXITO! Se importaron ${parsed.length} registros al historial local.`);
+              alert(`¡Se importaron ${parsed.length} registros desde JSON!`);
             }
-          } catch(err) { alert("Error en JSON: " + err.message); }
-        };
-        reader.readAsText(file);
-      } else {
-        reader.onload = function(e) {
-          try {
-            const content = e.target.result;
+          } else {
+            // CSV
             const lineas = content.split("
 ").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
             if (lineas.length > 1) {
-              const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
               const items = lineas.slice(1).map(l => {
-                const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
-                let obj = {};
-                headers.forEach((h, idx) => { obj[h.toLowerCase()] = parts[idx] || ""; });
-                
+                const cols = l.split(",").map(c => c.replace(/^"|"$/g, '').trim());
                 return {
-                  folio_oc: obj.folio_oc || obj.folio || "OC-IMP-" + Math.floor(Math.random()*100000),
-                  tipo_envio: obj.tipo_envio || obj.tipo || "Proceso",
-                  fecha: obj.fecha || new Date().toLocaleString(),
-                  almacen_origen: obj.almacen_origen || obj.almacen || "",
-                  locacion_origen: obj.locacion_origen || obj.locacion || "",
-                  parte: obj.parte || "",
-                  cantidad: obj.cantidad || "1",
-                  estampa: obj.estampa || "",
-                  no_conformancia: obj.defecto || obj.no_conformancia || "",
-                  detalle_nc: obj.detalle_nc || "",
-                  operador: obj.operador || "Inspector",
-                  turno: obj.turno || "1",
-                  area: obj.area || "",
-                  estatus: obj.estatus || "Activo"
+                  folio_oc: cols[0] || 'OC-999',
+                  tipo_envio: cols[1] || 'Proceso',
+                  fecha: cols[2] || '',
+                  almacen_origen: cols[3] || '',
+                  locacion_origen: cols[4] || '',
+                  parte: cols[5] || '',
+                  cantidad: cols[6] || '1',
+                  estampa: cols[7] || '',
+                  no_conformancia: cols[8] || '',
+                  detalle_nc: cols[9] || '',
+                  operador: cols[10] || '',
+                  turno: cols[11] || '1',
+                  area: cols[12] || '',
+                  foto_b64: cols[13] || ''
                 };
               });
 
               items.forEach(r => guardarRegistroPersistenteLocal(r));
-              renderizarTablaRegistros();
-              alert(`¡ÉXITO! Se importaron ${items.length} registros desde el CSV.`);
+              alert(`¡Se importaron ${items.length} registros desde CSV!`);
             }
-          } catch(err) { alert("Error en CSV: " + err.message); }
-        };
-        reader.readAsText(file);
-      }
+          }
+          renderizarTablaRegistros();
+        } catch(err) {
+          alert("Error al importar registros: " + err.message);
+        }
+      };
+      reader.readAsText(file);
     }
   </script>
 </body>
