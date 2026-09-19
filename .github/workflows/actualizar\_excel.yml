@@ -1,0 +1,119 @@
+name: Actualizar Registros e Imágenes de Calidad
+
+on:
+  repository_dispatch:
+    types: [nuevo_registro_calidad]
+  workflow_dispatch:
+    inputs:
+      datos_json:
+        description: 'Datos del registro en formato JSON'
+        required: true
+
+jobs:
+  procesar_registro:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout del repositorio
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: 2. Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 3. Instalar dependencias (Pandas & OpenPyXL)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl
+
+      - name: 4. Procesar Registro y Guardar Fotografía
+        env:
+          PAYLOAD_JSON: ${{ github.event.client_payload && toJson(github.event.client_payload) || github.event.inputs.datos_json }}
+        run: |
+          python -c "
+          import os, json, base64, pandas as pd
+          from datetime import datetime
+
+          # 1. Leer el payload
+          raw_payload = os.environ.get('PAYLOAD_JSON', '{}')
+          print('Payload recibido:', raw_payload)
+          data = json.loads(raw_payload) if isinstance(raw_payload, str) else raw_payload
+
+          folio = data.get('folio_oc', f'FOLIO_{int(datetime.now().timestamp())}')
+          
+          # 2. Guardar Imagen si viene en Base64
+          foto_link = 'N/A'
+          if 'foto_base64' in data and data['foto_base64']:
+              try:
+                  os.makedirs('ARCHIVOS/imagenes', exist_ok=True)
+                  filename = f'{folio}_{int(datetime.now().timestamp())}.jpg'
+                  filepath = os.path.join('ARCHIVOS/imagenes', filename)
+                  
+                  # Limpiar header Data URL si existe
+                  b64_str = data['foto_base64']
+                  if ',' in b64_str:
+                      b64_str = b64_str.split(',')[1]
+                      
+                  with open(filepath, 'wb') as f:
+                      f.write(base64.b64decode(b64_str))
+                      
+                  foto_link = f'https://github.com/hernandez101892-afk/CALIDADBOT/blob/main/ARCHIVOS/imagenes/{filename}'
+                  print(f'✅ Imagen guardada en: {filepath}')
+              except Exception as e:
+                  print(f'⚠️ Error guardando imagen: {e}')
+
+          # 3. Actualizar Excel y CSV de Registros
+          excel_path = 'ARCHIVOS/registro_incidencias_calidad_14campos.xlsx'
+          csv_path = 'ARCHIVOS/registro_incidencias_calidad_14campos.csv'
+          os.makedirs('ARCHIVOS', exist_ok=True)
+
+          nuevo_registro = {
+              'folio_oc': folio,
+              'tipo_envio': data.get('tipo_envio', 'Proceso'),
+              'fecha_origen': data.get('fecha_origen', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+              'almacen_origen': data.get('almacen_origen', ''),
+              'locacion_origen': data.get('locacion_origen', ''),
+              'parte': data.get('parte', ''),
+              'cantidad': data.get('cantidad', 1),
+              'estampa': data.get('estampa', ''),
+              'no_conformancia': data.get('no_conformancia', ''),
+              'detalle_nc': data.get('detalle_nc', ''),
+              'operador': data.get('operador', ''),
+              'turno': data.get('turno', ''),
+              'accion_correctiva': data.get('accion_correctiva', ''),
+              'area': data.get('area', ''),
+              'supervisor': data.get('supervisor', ''),
+              'estatus': data.get('estatus', 'CREADO'),
+              'disposicion': data.get('disposicion', 'PENDIENTE'),
+              'causa_raiz': data.get('causa_raiz', ''),
+              'motivo_scrap': data.get('motivo_scrap', ''),
+              'link_evidencia': foto_link,
+              'fecha_modificacion': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+          }
+
+          if os.path.exists(excel_path):
+              df = pd.read_excel(excel_path)
+              # Reemplazar si el folio existe, o agregar si es nuevo
+              if folio in df['folio_oc'].values:
+                  idx = df[df['folio_oc'] == folio].index[0]
+                  for col, val in nuevo_registro.items():
+                      df.at[idx, col] = val
+              else:
+                  df = pd.concat([df, pd.DataFrame([nuevo_registro])], ignore_index=True)
+          else:
+              df = pd.DataFrame([nuevo_registro])
+
+          df.to_excel(excel_path, index=False, engine='openpyxl')
+          df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+          print('✅ Excel y CSV actualizados exitosamente.')
+          "
+
+      - name: 5. Commit y Push a GitHub de forma segura
+        run: |
+          git config --global user.name "GitHub Action Bot - Calidad"
+          git config --global user.email "action@github.com"
+          git add ARCHIVOS/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Actualización de registro y fotografía desde App Web [Folio Auto]" && git push origin main)
