@@ -24,7 +24,7 @@
   <div class="header-bg text-center">
     <div class="container">
       <h2 class="fw-bold mb-1"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad en Planta</h2>
-      <p class="mb-0 opacity-75">Captura de Incidencias, Evidencia Fotográfica y Sincronización Directa</p>
+      <p class="mb-0 opacity-75">Captura de Incidencias, Evidencia Fotográfica y Registro Directo</p>
     </div>
   </div>
 
@@ -33,16 +33,16 @@
     <!-- Configuración del Proxy (Seguridad Total - Sin pedir Tokens a Inspectores) -->
     <div class="card card-custom mb-4">
       <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-        <span><i class="fa-solid fa-shield-halved text-success me-2"></i>Estado del Servidor Seguro</span>
+        <span><i class="fa-solid fa-shield-halved text-success me-2"></i>Estado del Servidor Seguro (Proxy Google)</span>
         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfig">
-          <i class="fa-solid fa-gear"></i> Ajustes Proxy
+          <i class="fa-solid fa-gear"></i> Ajustes URL Proxy
         </button>
       </div>
-      <div class="collapse" id="collapseConfig">
+      <div class="collapse show" id="collapseConfig">
         <div class="card-body bg-light">
-          <label class="form-label fw-bold small text-muted">URL del Proxy Seguro (Google Apps Script / Cloudflare Worker):</label>
-          <input type="text" id="proxyUrl" class="form-control form-control-sm" placeholder="https://script.google.com/macros/s/..." value="">
-          <div class="form-text small">Con este proxy, ningún inspector necesita ingresar el Token de GitHub en su celular.</div>
+          <label class="form-label fw-bold small text-muted">URL del Proxy de Google Apps Script (terminada en /exec):</label>
+          <input type="text" id="proxyUrl" class="form-control form-control-sm" placeholder="https://script.google.com/macros/s/.../exec" value="">
+          <div class="form-text small">Ingresa la URL de tu implementación de Google Apps Script. Se guarda automáticamente en este teléfono.</div>
         </div>
       </div>
     </div>
@@ -159,10 +159,10 @@
           <h6 class="fw-bold mb-3"><i class="fa-solid fa-folder-open text-warning me-2"></i>Consultar Registros en GitHub</h6>
           <div class="d-grid gap-2">
             <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS" target="_blank" class="btn btn-outline-dark text-start">
-              <i class="fa-brands fa-github me-2"></i> Ver Tabla de Registros en GitHub
+              <i class="fa-brands fa-github me-2"></i> Ver Archivos CSV en GitHub
             </a>
             <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="btn btn-outline-primary text-start">
-              <i class="fa-solid fa-images me-2"></i> Ver Galería de Fotos de Evidencia
+              <i class="fa-solid fa-images me-2"></i> Ver Galería de Fotos en GitHub
             </a>
           </div>
         </div>
@@ -170,7 +170,7 @@
         <!-- RESUMEN LOCAL DE CAPTURAS -->
         <div class="card card-custom">
           <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-            <span><i class="fa-solid fa-clock-history me-2"></i>Historial de Capturas</span>
+            <span><i class="fa-solid fa-clock-rotate-left me-2"></i>Historial de Capturas</span>
             <span id="contadorLocal" class="badge bg-secondary">0</span>
           </div>
           <div class="card-body p-0">
@@ -207,16 +207,22 @@
 
     // Guardar/Cargar URL del Proxy
     const proxyInput = document.getElementById('proxyUrl');
-    proxyInput.value = localStorage.getItem('PROXY_URL') || "https://script.google.com/macros/s/AKfycbwqo8wKK_T-k3-kR6-Durkqdapb0cFAb7qnIVQgMUkBKTqfb_MA45tgfmAwKiALQoLf/exec";
+    proxyInput.value = localStorage.getItem('PROXY_URL') || "";
     proxyInput.addEventListener('change', () => localStorage.setItem('PROXY_URL', proxyInput.value));
 
     // Envío del Formulario
     document.getElementById('calidadForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      const proxyUrl = proxyInput.value.trim();
+      if (!proxyUrl || !proxyUrl.startsWith("https://script.google.com")) {
+        alert("⚠️ Por favor pega la URL de tu implementación de Google Apps Script (debe empezar por https://script.google.com y terminar en /exec).");
+        return;
+      }
+
       const btn = document.getElementById('btnGuardar');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Procesando y Subiendo a GitHub...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Guardando en GitHub...';
 
       const payload = {
         folio_oc: document.getElementById('folio_oc').value.trim(),
@@ -234,37 +240,35 @@
         foto_b64: fotoBase64
       };
 
-      const proxyUrl = proxyInput.value.trim();
-
       try {
         const response = await fetch(proxyUrl, {
           method: 'POST',
-          contentType: 'application/json',
           body: JSON.stringify(payload)
         });
 
         const resData = await response.json();
 
-        alert("✅ ¡Registro y Fotografía enviados con éxito a GitHub!");
-        
-        // Agregar al historial local visual
-        agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia);
-
-        // Limpiar formulario
-        document.getElementById('calidadForm').reset();
-        document.getElementById('imgPreview').style.display = 'none';
-        fotoBase64 = "";
+        if (resData.status === "ok") {
+          alert("✅ ¡Registro y Fotografía guardados con éxito en tu repositorio de GitHub!\n\nLink Foto: " + resData.foto);
+          agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia, "Guardado en GitHub");
+          document.getElementById('calidadForm').reset();
+          document.getElementById('imgPreview').style.display = 'none';
+          fotoBase64 = "";
+        } else {
+          alert("⚠️ Respuesta del Servidor: " + (resData.mensaje || "Error desconocido"));
+          agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia, "Error Servidor");
+        }
 
       } catch (err) {
-        alert("⚠️ El registro fue guardado localmente. Asegúrate de haber publicado el Proxy de Google Apps Script.");
-        agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia);
+        alert("❌ Ocurrió un error al conectar con Google Apps Script. Asegúrate de haber publicado como 'Aplicación web' con acceso a 'Cualquier persona'.\n\nDetalle: " + err.message);
+        agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia, "Error Conexión");
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i> Enviar Registro y Fotografía';
       }
     });
 
-    function agregarAlHistorial(folio, parte, defecto) {
+    function agregarAlHistorial(folio, parte, defecto, estado) {
       const lista = document.getElementById('listaHistorial');
       if (lista.children[0] && lista.children[0].innerText.includes("No hay registros")) {
         lista.innerHTML = "";
@@ -272,12 +276,13 @@
 
       const item = document.createElement('li');
       item.className = "list-group-item d-flex justify-content-between align-items-center";
+      const isOk = estado.includes("Guardado");
       item.innerHTML = `
         <div>
           <strong class="text-primary">${folio}</strong> - Parte: ${parte}<br>
           <small class="text-muted">${defecto}</small>
         </div>
-        <span class="badge bg-success badge-status">Enviado</span>
+        <span class="badge ${isOk ? 'bg-success' : 'bg-danger'} badge-status">${estado}</span>
       `;
       lista.insertBefore(item, lista.firstChild);
 
