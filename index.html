@@ -34,6 +34,16 @@
     .kpi-total { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
     .kpi-pending { background: linear-gradient(135deg, #ffc107, #fd7e14); color: #000; }
     .kpi-done { background: linear-gradient(135deg, #198754, #157347); }
+    /* ESTILOS TIMELINE E HISTORIAL OC */
+    .timeline { position: relative; padding-left: 20px; list-style: none; margin: 0; }
+    .timeline::before { content: ''; position: absolute; top: 0; bottom: 0; left: 7px; width: 2px; background: #0d6efd; }
+    .timeline-item { position: relative; margin-bottom: 15px; }
+    .timeline-item::before { content: ''; position: absolute; left: -17px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #0d6efd; border: 2px solid white; }
+    
+    /* ESTILOS GALERÍA DE FOTOS */
+    .gallery-card { cursor: pointer; transition: all 0.25s ease-in-out; overflow: hidden; border-radius: 10px; border: 1px solid #de2b2b; }
+    .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.18); border-color: #0d6efd; }
+    .gallery-thumb { height: 150px; object-fit: cover; width: 100%; border-radius: 8px 8px 0 0; background-color: #000; }
   </style>
 </head>
 <body>
@@ -83,7 +93,10 @@
         <button class="nav-link" id="tab-import-export-btn" data-bs-toggle="pill" data-bs-target="#tab-import-export" type="button" role="tab"><i class="fa-solid fa-file-import me-1"></i> 4. Importar / Exportar</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-archivos-btn" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button" role="tab"><i class="fa-file-excel me-1"></i> 5. Excel y Fotos</button>
+        <button class="nav-link" id="tab-archivos-btn" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button" role="tab"><i class="fa-file-excel me-1"></i> 5. Excel</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-galeria-btn" data-bs-toggle="pill" data-bs-target="#tab-galeria" type="button" role="tab" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-images me-1"></i> 6. Galería de Fotos</button>
       </li>
     </ul>
 
@@ -497,6 +510,45 @@
       </div>
 
 
+
+      <!-- PESTAÑA 6: GALERÍA DE FOTOS DE EVIDENCIA (GITHUB Y LOCAL) -->
+      <div class="tab-pane fade" id="tab-galeria" role="tabpanel">
+        
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span><i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia (<span id="cantFotosGaleria">0</span>)</span>
+            <button class="btn btn-sm btn-outline-light" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-arrows-rotate me-1"></i>Refrescar Galería</button>
+          </div>
+          <div class="card-body">
+            
+            <!-- BUSCADOR DE FOTOS -->
+            <div class="row g-2 mb-3">
+              <div class="col-md-8">
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                  <input type="text" id="searchFotosGaleria" class="form-control" placeholder="Buscar foto por Folio OC, Parte, Defecto u Operador..." onkeyup="filtrarGaleriaFotos()">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-primary w-100 fw-bold" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-camera me-1"></i>Cargar Fotos GitHub y Locales</button>
+              </div>
+            </div>
+
+            <!-- CONTENEDOR DE TARJETAS DE FOTOS -->
+            <div id="loadingGaleria" class="text-center py-4" style="display:none;">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-2 text-muted">Cargando fotografías desde GitHub y registros locales...</p>
+            </div>
+
+            <div id="contenedorGaleriaFotos" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+              <!-- Las miniaturas de las fotos se renderizan aquí dinámicamente -->
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
       <!-- PESTAÑA 5: ARCHIVOS Y EXCEL -->
       <div class="tab-pane fade" id="tab-archivos" role="tabpanel">
         
@@ -564,6 +616,27 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-warning fw-bold" id="btnModalIrDisposicion"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL VISTA PREVIA FOTO EN GRANDE -->
+  <div class="modal fade" id="modalFotoGrande" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title fw-bold" id="modalFotoTitulo"><i class="fa-solid fa-image me-2"></i>Fotografía de Evidencia</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-2">
+          <img id="imgFotoGrandeView" src="" class="img-fluid rounded shadow-lg" style="max-height: 75vh; object-fit: contain; width: auto;">
+          <p id="modalFotoSubtitulo" class="text-light small mt-3 mb-0 fw-bold"></p>
+        </div>
+        <div class="modal-footer border-secondary d-flex justify-content-between">
+          <a id="btnDescargarFotoGrande" href="" target="_blank" class="btn btn-success fw-bold" download><i class="fa-solid fa-download me-1"></i>Abrir / Descargar Foto Original</a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar Vista Previa</button>
         </div>
       </div>
     </div>
@@ -673,6 +746,7 @@
       
       // CARGAR REGISTROS DESDE GITHUB AUTOMÁTICAMENTE AL ABRIR LA APP WEB
       cargarRegistrosGitHub();
+      cargarGaleriaFotos();
 
       window.addEventListener('online', actualizarEstadoRed);
       window.addEventListener('offline', actualizarEstadoRed);
@@ -791,6 +865,20 @@
         }
       };
       reader.readAsDataURL(file);
+    }
+
+    
+    // MANEJO DE HISTORIAL Y TRAZABILIDAD POR OC
+    function agregarEntradaHistorial(reg, accion, usuario, detalle, estatus) {
+      if (!reg.historial) reg.historial = [];
+      const nowStr = new Date().toLocaleString();
+      reg.historial.push({
+        fecha: nowStr,
+        accion: accion,
+        usuario: usuario || 'Inspector',
+        detalle: detalle || '',
+        estatus: estatus || 'Nuevo'
+      });
     }
 
     // MANEJO DE REGISTROS PERSISTENTES LOCALES
@@ -1266,6 +1354,7 @@
       
       cerrarPanelDisposicion();
       cargarRegistrosGitHub();
+      cargarGaleriaFotos();
       renderizarTablaRegistros();
     }
 
@@ -1311,7 +1400,7 @@
       
       let csvContent = "sep=,\n" + Object.keys(datos[0]).join(",") + "\n";
       datos.forEach(row => {
-        csvContent += Object.values(row).map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "\n";
+        csvContent += Object.values(row).map(function(v){ return "\"" + (v || "").toString().replace(/"/g, '""') + "\""; }).join(",") + "\n";
       });
       downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
     }
@@ -1337,7 +1426,7 @@
           r.estatus || 'Nuevo',
           r.foto_b64 || ''
         ];
-        csvContent += fila.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "\n";
+        csvContent += fila.map(function(v){ return "\"" + (v || "").toString().replace(/"/g, '""') + "\""; }).join(",") + "\n";
       });
       downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
     }
