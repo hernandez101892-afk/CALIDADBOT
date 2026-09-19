@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v16)</title>
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d6efd">
   <!-- Bootstrap 5 CSS -->
@@ -534,7 +534,7 @@
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V16 -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V19 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbzGpkcgt4Elocfep6VW4hMKZ42yBAX_dKhz6iJZtkFmc8fES9TxJwyW2x-j1bN8jH9H/exec";
     
@@ -623,8 +623,10 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       const proxyInput = document.getElementById('proxyUrl');
-      proxyInput.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
-      proxyInput.addEventListener('change', () => localStorage.setItem('PROXY_URL', proxyInput.value));
+      if (proxyInput) {
+        proxyInput.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
+        proxyInput.addEventListener('change', () => localStorage.setItem('PROXY_URL', proxyInput.value));
+      }
 
       inicializarFirmaCanvas();
       cargarCatalogosFormulario();
@@ -640,6 +642,7 @@
 
     function actualizarEstadoRed() {
       const netBadge = document.getElementById('netStatus');
+      if (!netBadge) return;
       if (navigator.onLine) {
         netBadge.className = 'badge-online mt-2 d-inline-block';
         netBadge.innerHTML = '<i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa + Persistencia Local)';
@@ -674,6 +677,7 @@
     // ESCÁNER QR
     function toggleQrScanner() {
       const container = document.getElementById('qrReaderContainer');
+      if (!container) return;
       if (isQrScanning) {
         if (html5QrCode) {
           html5QrCode.stop().then(() => {
@@ -688,7 +692,8 @@
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
           (decodedText) => {
-            document.getElementById('folio_oc').value = decodedText;
+            const folInput = document.getElementById('folio_oc');
+            if (folInput) folInput.value = decodedText;
             alert("Código escaneado con éxito: " + decodedText);
             toggleQrScanner();
           },
@@ -718,9 +723,9 @@
     }
 
     function startDrawing(e) { isDrawing = true; draw(e); }
-    function stopDrawing() { isDrawing = false; ctx.beginPath(); }
+    function stopDrawing() { isDrawing = false; if (ctx) ctx.beginPath(); }
     function draw(e) {
-      if (!isDrawing) return;
+      if (!isDrawing || !ctx) return;
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
@@ -742,8 +747,10 @@
       reader.onload = function(evt) {
         fotoBase64 = evt.target.result;
         const img = document.getElementById('fotoPreview');
-        img.src = fotoBase64;
-        img.style.display = 'block';
+        if (img) {
+          img.src = fotoBase64;
+          img.style.display = 'block';
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -766,7 +773,6 @@
       const index = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio || '').toString().trim() === targetFolio);
       
       if (index >= 0) {
-        // Preservar datos de disposición si ya existían
         const prev = registrosPersistentes[index];
         registrosPersistentes[index] = Object.assign({}, prev, nuevoReg);
       } else {
@@ -792,9 +798,14 @@
       const elem = document.getElementById('cantRegistrosPersistentes');
       if (elem) elem.innerText = total;
 
-      document.getElementById('kpiTotalNum').innerText = total;
-      document.getElementById('kpiDoneNum').innerText = conDisp;
-      document.getElementById('kpiPendingNum').innerText = pendDisp;
+      const kpiT = document.getElementById('kpiTotalNum');
+      if (kpiT) kpiT.innerText = total;
+
+      const kpiD = document.getElementById('kpiDoneNum');
+      if (kpiD) kpiD.innerText = conDisp;
+
+      const kpiP = document.getElementById('kpiPendingNum');
+      if (kpiP) kpiP.innerText = pendDisp;
     }
 
     function limpiarRegistrosLocales() {
@@ -811,31 +822,33 @@
     async function guardarRegistro(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+      }
 
       const nowStr = new Date().toLocaleString();
-      const folio = document.getElementById('folio_oc').value.trim();
+      const folioInput = document.getElementById('folio_oc');
+      const folio = folioInput ? folioInput.value.trim() : ('OC-' + Math.floor(Math.random() * 900000));
 
       const payload = {
         folio_oc: folio,
-        tipo_envio: document.getElementById('tipo_envio').value,
+        tipo_envio: document.getElementById('tipo_envio') ? document.getElementById('tipo_envio').value : 'Proceso',
         fecha: nowStr,
-        almacen_origen: document.getElementById('almacen_origen').value,
-        locacion_origen: document.getElementById('locacion_origen').value,
-        area: document.getElementById('area').value,
-        parte: document.getElementById('parte').value,
-        cantidad: document.getElementById('cantidad').value,
-        estampa: document.getElementById('estampa').value,
-        no_conformancia: document.getElementById('no_conformancia').value,
-        detalle_nc: document.getElementById('detalle_nc').value,
-        operador: document.getElementById('operador').value,
-        turno: document.getElementById('turno').value,
+        almacen_origen: document.getElementById('almacen_origen') ? document.getElementById('almacen_origen').value : '',
+        locacion_origen: document.getElementById('locacion_origen') ? document.getElementById('locacion_origen').value : '',
+        area: document.getElementById('area') ? document.getElementById('area').value : '',
+        parte: document.getElementById('parte') ? document.getElementById('parte').value : '',
+        cantidad: document.getElementById('cantidad') ? document.getElementById('cantidad').value : '1',
+        estampa: document.getElementById('estampa') ? document.getElementById('estampa').value : '',
+        no_conformancia: document.getElementById('no_conformancia') ? document.getElementById('no_conformancia').value : '',
+        detalle_nc: document.getElementById('detalle_nc') ? document.getElementById('detalle_nc').value : '',
+        operador: document.getElementById('operador') ? document.getElementById('operador').value : 'Inspector',
+        turno: document.getElementById('turno') ? document.getElementById('turno').value : '1',
         foto_b64: fotoBase64,
         tiene_disposicion: false
       };
 
-      // Guardar inmediatamente en almacenamiento persistente local
       guardarRegistroPersistenteLocal(payload);
 
       if (!navigator.onLine) {
@@ -844,18 +857,23 @@
         localStorage.setItem('COLA_OFFLINE', JSON.stringify(cola));
         alert("Registro guardado localmente de forma PERSISTENTE en la App Web. Se sincronizará con GitHub al recuperar conexión.");
         resetForm();
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
+        }
         return;
       }
 
       await enviarPayloadProxy(payload);
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
+      }
     }
 
     async function enviarPayloadProxy(payload) {
-      const proxyUrl = document.getElementById('proxyUrl').value || PROXY_DEFAULT;
+      const proxyElem = document.getElementById('proxyUrl');
+      const proxyUrl = (proxyElem && proxyElem.value) ? proxyElem.value : PROXY_DEFAULT;
       try {
         const response = await fetch(proxyUrl, {
           method: 'POST',
@@ -865,9 +883,7 @@
 
         const resJson = await response.json();
         if (resJson.status === 'ok') {
-          alert("¡ÉXITO!
-
-" + resJson.mensaje);
+          alert("¡ÉXITO!\n\n" + resJson.mensaje);
           resetForm();
         } else {
           alert("Guardado localmente. Servidor respondió: " + resJson.mensaje);
@@ -878,8 +894,10 @@
     }
 
     function resetForm() {
-      document.getElementById('formCalidad').reset();
-      document.getElementById('fotoPreview').style.display = 'none';
+      const form = document.getElementById('formCalidad');
+      if (form) form.reset();
+      const prev = document.getElementById('fotoPreview');
+      if (prev) prev.style.display = 'none';
       fotoBase64 = "";
       limpiarFirma();
     }
@@ -888,7 +906,7 @@
       let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
       if (cola.length === 0) return;
 
-      console.log(`Sincronizando ${cola.length} registros pendientes...`);
+      console.log("Sincronizando " + cola.length + " registros pendientes...");
       for (const item of cola) {
         await enviarPayloadProxy(item);
       }
@@ -899,10 +917,11 @@
     // RENDERIZAR TABLA DE VER REGISTROS (PESTAÑA 2)
     function renderizarTablaRegistros() {
       const tbody = document.getElementById('tbodyRegistros');
+      if (!tbody) return;
       tbody.innerHTML = "";
 
       if (registrosPersistentes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No hay registros almacenados. Crea un nuevo registro o sincroniza con GitHub.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4">No hay registros almacenados. Crea un nuevo registro o sincroniza con GitHub.</td></tr>';
         actualizarContadorPersistente();
         return;
       }
@@ -942,8 +961,10 @@
     }
 
     function filtrarTablaRegistros() {
-      const query = document.getElementById('searchRegistros').value.toLowerCase();
-      const filterTipo = document.getElementById('filterTipo').value;
+      const searchInput = document.getElementById('searchRegistros');
+      const query = searchInput ? searchInput.value.toLowerCase() : '';
+      const filterElem = document.getElementById('filterTipo');
+      const filterTipo = filterElem ? filterElem.value : 'ALL';
       const rows = document.querySelectorAll('#tbodyRegistros tr');
 
       rows.forEach(row => {
@@ -970,9 +991,10 @@
     // NAVEGAR DIRECTAMENTE A PESTAÑA DISPOSICIÓN CON EL FOLIO SELECCIONADO
     function irADisposicionDesdeFolio(folio) {
       const tabBtn = document.getElementById('tab-disposicion-btn');
-      const tab = new bootstrap.Tab(tabBtn);
-      tab.show();
-
+      if (tabBtn && typeof bootstrap !== 'undefined') {
+        const tab = new bootstrap.Tab(tabBtn);
+        tab.show();
+      }
       seleccionarRegistroParaDisposicion(folio);
     }
 
@@ -981,39 +1003,51 @@
       const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
       if (!reg) return;
 
-      document.getElementById('modalDetalleTitulo').innerText = `Detalle del Registro: ${reg.folio_oc || reg.folio}`;
+      const tit = document.getElementById('modalDetalleTitulo');
+      if (tit) tit.innerText = "Detalle del Registro: " + (reg.folio_oc || reg.folio);
       
       let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2" style="max-height:250px;">` : '<p class="text-muted italic">Sin foto adjunta</p>';
       
-      document.getElementById('modalDetalleCuerpo').innerHTML = `
-        <div class="row g-2">
-          <div class="col-6"><strong>Folio:</strong> ${reg.folio_oc || reg.folio}</div>
-          <div class="col-6"><strong>Tipo:</strong> ${reg.tipo_envio || reg.tipo}</div>
-          <div class="col-6"><strong>Número de Parte:</strong> ${reg.parte}</div>
-          <div class="col-6"><strong>Cantidad:</strong> ${reg.cantidad} pzas</div>
-          <div class="col-6"><strong>Almacén:</strong> ${reg.almacen_origen || reg.almacen} (${reg.locacion_origen || ''})</div>
-          <div class="col-6"><strong>Área:</strong> ${reg.area}</div>
-          <div class="col-6"><strong>No Conformancia:</strong> <span class="text-danger fw-bold">${reg.no_conformancia}</span></div>
-          <div class="col-6"><strong>Detalle:</strong> ${reg.detalle_nc}</div>
-          <div class="col-6"><strong>Inspector/Operador:</strong> ${reg.operador} (Turno ${reg.turno})</div>
-          <div class="col-6"><strong>Estampa:</strong> ${reg.estampa}</div>
-        </div>
-        <hr>
-        <div class="text-center">
-          <h6>Fotografía de Evidencia:</h6>
-          ${fotoHtml}
-        </div>
-      `;
+      const cuerpo = document.getElementById('modalDetalleCuerpo');
+      if (cuerpo) {
+        cuerpo.innerHTML = `
+          <div class="row g-2">
+            <div class="col-6"><strong>Folio:</strong> ${reg.folio_oc || reg.folio}</div>
+            <div class="col-6"><strong>Tipo:</strong> ${reg.tipo_envio || reg.tipo}</div>
+            <div class="col-6"><strong>Número de Parte:</strong> ${reg.parte}</div>
+            <div class="col-6"><strong>Cantidad:</strong> ${reg.cantidad} pzas</div>
+            <div class="col-6"><strong>Almacén:</strong> ${reg.almacen_origen || reg.almacen} (${reg.locacion_origen || ''})</div>
+            <div class="col-6"><strong>Área:</strong> ${reg.area}</div>
+            <div class="col-6"><strong>No Conformancia:</strong> <span class="text-danger fw-bold">${reg.no_conformancia}</span></div>
+            <div class="col-6"><strong>Detalle:</strong> ${reg.detalle_nc}</div>
+            <div class="col-6"><strong>Inspector/Operador:</strong> ${reg.operador} (Turno ${reg.turno})</div>
+            <div class="col-6"><strong>Estampa:</strong> ${reg.estampa}</div>
+          </div>
+          <hr>
+          <div class="text-center">
+            <h6>Fotografía de Evidencia:</h6>
+            ${fotoHtml}
+          </div>
+        `;
+      }
 
-      document.getElementById('btnModalIrDisposicion').onclick = () => {
-        const modalEl = document.getElementById('modalDetalleRegistro');
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-        irADisposicionDesdeFolio(folio);
-      };
+      const btnIr = document.getElementById('btnModalIrDisposicion');
+      if (btnIr) {
+        btnIr.onclick = () => {
+          const modalEl = document.getElementById('modalDetalleRegistro');
+          if (modalEl && typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+          }
+          irADisposicionDesdeFolio(folio);
+        };
+      }
 
-      const myModal = new bootstrap.Modal(document.getElementById('modalDetalleRegistro'));
-      myModal.show();
+      const modalElement = document.getElementById('modalDetalleRegistro');
+      if (modalElement && typeof bootstrap !== 'undefined') {
+        const myModal = new bootstrap.Modal(modalElement);
+        myModal.show();
+      }
     }
 
     // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN Y ACTUALIZACIÓN DESDE GITHUB
@@ -1023,20 +1057,17 @@
       if (container) container.innerHTML = "";
       if (loading) loading.style.display = "block";
 
-      // Mostrar base persistente local de inmediato
       if (registrosPersistentes.length > 0) {
         renderizarTarjetasDisposicion(registrosPersistentes);
       }
 
-      // Descargar el CSV remoto desde GitHub para sincronizar
       const csvUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv?t=" + Date.now();
 
       try {
         const res = await fetch(csvUrl);
         if (res.ok) {
           const text = await res.text();
-          const lineas = text.split("
-").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+          const lineas = text.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
           
           if (lineas.length > 1) {
             const remotos = lineas.slice(1).map((line) => {
@@ -1059,7 +1090,6 @@
               };
             });
 
-            // Guardar e integrar
             remotos.forEach(r => guardarRegistroPersistenteLocal(r));
             renderizarTarjetasDisposicion(registrosPersistentes);
             renderizarTablaRegistros();
@@ -1111,24 +1141,30 @@
       const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
       if (!reg) return;
 
-      document.getElementById('panelEvaluacionDisposicion').style.display = 'block';
-      document.getElementById('dispFolioTitulo').innerText = `${folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
-      document.getElementById('panelEvaluacionDisposicion').scrollIntoView({ behavior: 'smooth' });
+      const panel = document.getElementById('panelEvaluacionDisposicion');
+      if (panel) panel.style.display = 'block';
+
+      const tit = document.getElementById('dispFolioTitulo');
+      if (tit) tit.innerText = `${folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
+
+      if (panel) panel.scrollIntoView({ behavior: 'smooth' });
     }
 
     function cerrarPanelDisposicion() {
-      document.getElementById('panelEvaluacionDisposicion').style.display = 'none';
+      const panel = document.getElementById('panelEvaluacionDisposicion');
+      if (panel) panel.style.display = 'none';
     }
 
     async function guardarDisposicion(e) {
       e.preventDefault();
-      const folio = document.getElementById('dispFolioTitulo').innerText.split(" ")[0];
+      const tit = document.getElementById('dispFolioTitulo');
+      const folio = tit ? tit.innerText.split(" ")[0] : 'OC-999';
       
       const payloadDisposicion = {
         tipo_envio: "Evaluación y Disposición",
         folio_oc: folio,
         no_conformancia: "DISPOSICIÓN REGISTRADA",
-        detalle_nc: `Destino: ${document.getElementById('disp_destino').value} | Buenas: ${document.getElementById('disp_piezas_buenas').value} | Malas: ${document.getElementById('disp_piezas_malas').value} | Causa Raíz: ${document.getElementById('disp_causa_raiz').value}`,
+        detalle_nc: `Destino: ${document.getElementById('disp_destino') ? document.getElementById('disp_destino').value : ''} | Buenas: ${document.getElementById('disp_piezas_buenas') ? document.getElementById('disp_piezas_buenas').value : '0'} | Malas: ${document.getElementById('disp_piezas_malas') ? document.getElementById('disp_piezas_malas').value : '0'} | Causa Raíz: ${document.getElementById('disp_causa_raiz') ? document.getElementById('disp_causa_raiz').value : ''}`,
         operador: "Inspector de Calidad",
         foto_b64: "",
         tiene_disposicion: true
@@ -1136,14 +1172,14 @@
 
       guardarRegistroPersistenteLocal(payloadDisposicion);
       await enviarPayloadProxy(payloadDisposicion);
-      document.getElementById('panelEvaluacionDisposicion').style.display = 'none';
+      cerrarPanelDisposicion();
       cargarRegistrosGitHub();
     }
 
     // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX) O FALLBACK CSV
     function exportarCatalogosExcelXLSX() {
       if (typeof XLSX === 'undefined') {
-        alert("Librería SheetJS no detectada. Generando respaldo en CSV de contingencia...");
+        alert("Librería SheetJS no detectada. Generando respaldo en CSV...");
         exportarCatIndividualCSV();
         return;
       }
@@ -1175,25 +1211,21 @@
     }
 
     function exportarCatIndividualCSV() {
-      const tipo = document.getElementById('exp_cat_individual_tipo').value;
+      const tipoSelect = document.getElementById('exp_cat_individual_tipo');
+      const tipo = tipoSelect ? tipoSelect.value : 'almacenes';
       const datos = catalogosLocal[tipo] || [];
       if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
       
-      let csvContent = "sep=,
-" + Object.keys(datos[0]).join(",") + "
-";
+      let csvContent = "sep=,\n" + Object.keys(datos[0]).join(",") + "\n";
       datos.forEach(row => {
-        csvContent += Object.values(row).map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "
-";
+        csvContent += Object.values(row).map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "\n";
       });
       downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
     }
 
     function exportarRegistrosCSV() {
       if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
-      let csvContent = "sep=,
-Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Foto_URL
-";
+      let csvContent = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Foto_URL\n";
       registrosPersistentes.forEach(r => {
         const fila = [
           r.folio_oc || r.folio || '',
@@ -1211,8 +1243,7 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
           r.area || '',
           r.foto_b64 || ''
         ];
-        csvContent += fila.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "
-";
+        csvContent += fila.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "\n";
       });
       downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
     }
@@ -1225,7 +1256,7 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
     // FUNCIÓN UNIVERSAL DE DESCARGA ADAPTATIVA PARA MÓVILES Y NAVEGADORES
     function downloadFile(content, fileName, mimeType) {
       try {
-        const blob = new Blob(["﻿" + content], { type: mimeType });
+        const blob = new Blob(["\ufeff" + content], { type: mimeType });
         if (navigator.msSaveOrOpenBlob) {
           navigator.msSaveOrOpenBlob(blob, fileName);
           return;
@@ -1249,14 +1280,14 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
     // IMPORTAR CATÁLOGOS
     function importarCatalogos() {
       const fileInput = document.getElementById('fileImportCatalogos');
-      const file = fileInput.files[0];
-      const tipo = document.getElementById('imp_cat_tipo_selector').value;
+      const file = fileInput ? fileInput.files[0] : null;
+      const selectorElem = document.getElementById('imp_cat_tipo_selector');
+      const tipo = selectorElem ? selectorElem.value : 'xlsx_multi';
 
       if (!file) { alert("Por favor selecciona un archivo."); return; }
 
       const reader = new FileReader();
 
-      // SI ES EXCEL MULTI-HOJA (.XLSX)
       if (file.name.endsWith('.xlsx') || tipo === 'xlsx_multi') {
         reader.onload = function(e) {
           try {
@@ -1294,7 +1325,6 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
         reader.readAsArrayBuffer(file);
       } 
       else {
-        // SI ES CSV O JSON
         reader.onload = function(e) {
           const content = e.target.result;
           try {
@@ -1308,9 +1338,7 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
               localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
               alert("¡Catálogo importado desde JSON!");
             } else {
-              // CSV
-              const lineas = content.split("
-").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+              const lineas = content.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
               if (lineas.length > 1) {
                 const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
                 const items = lineas.slice(1).map(l => {
@@ -1333,10 +1361,10 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
       }
     }
 
-    // IMPORTAR REGISTROS HISTRÓRICOS
+    // IMPORTAR REGISTROS HISTÓRICOS
     function importarRegistros() {
       const fileInput = document.getElementById('fileImportRegistros');
-      const file = fileInput.files[0];
+      const file = fileInput ? fileInput.files[0] : null;
       if (!file) { alert("Selecciona un archivo."); return; }
 
       const reader = new FileReader();
@@ -1350,9 +1378,7 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
               alert(`¡Se importaron ${parsed.length} registros desde JSON!`);
             }
           } else {
-            // CSV
-            const lineas = content.split("
-").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+            const lineas = content.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
             if (lineas.length > 1) {
               const items = lineas.slice(1).map(l => {
                 const cols = l.split(",").map(c => c.replace(/^"|"$/g, '').trim());
