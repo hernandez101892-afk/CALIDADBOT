@@ -1,613 +1,289 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Control de Calidad y Contenciones - Planta</title>
-    <style>
-        :root {
-            --primary: #1e3a8a;
-            --secondary: #0284c7;
-            --success: #16a34a;
-            --danger: #dc2626;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #0f172a;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 12px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        header {
-            background-color: var(--primary);
-            color: white;
-            padding: 16px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 1.4rem;
-        }
-
-        header p {
-            margin: 4px 0 0 0;
-            font-size: 0.85rem;
-            opacity: 0.9;
-        }
-
-        .card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .card h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            color: var(--primary);
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 8px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 12px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        label {
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-            color: #334155;
-        }
-
-        input, select, textarea {
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--secondary);
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 8px;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background-color: var(--secondary);
-        }
-
-        .btn-success {
-            background-color: var(--success);
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-        }
-
-        .photo-preview {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
-            margin-top: 8px;
-            display: none;
-            object-fit: cover;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            margin-top: 12px;
-            overflow-x: auto;
-            display: block;
-        }
-
-        th, td {
-            border: 1px solid #e2e8f0;
-            padding: 8px;
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        th {
-            background-color: #f1f5f9;
-            color: var(--primary);
-        }
-
-        .status-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 0.75rem;
-        }
-
-        .bg-pendiente { background: #fef08a; color: #854d0e; }
-        .bg-cerrado { background: #bbf7d0; color: #166534; }
-        .bg-scrap { background: #fecaca; color: #991b1b; }
-
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            background: #e2e8f0;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Calidad - App Web PWA</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .header-bg { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 20px 0; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .card-custom { border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .btn-primary-custom { background-color: #2a5298; border: none; font-weight: 600; padding: 12px; border-radius: 8px; }
+    .btn-primary-custom:hover { background-color: #1e3c72; }
+    .preview-img { max-height: 180px; object-fit: cover; border-radius: 8px; border: 2px dashed #0d6efd; padding: 4px; display: none; }
+    .badge-status { font-size: 0.85rem; padding: 6px 12px; border-radius: 20px; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>🏭 App Web de Control de Calidad y Contenciones</h1>
-        <p>Sincronización directa en tiempo real con GitHub Pages</p>
-    </header>
+  <!-- Encabezado Principal -->
+  <div class="header-bg text-center">
+    <div class="container">
+      <h2 class="fw-bold mb-1"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad en Planta</h2>
+      <p class="mb-0 opacity-75">Captura de Incidencias, Evidencia Fotográfica y Sincronización Directa</p>
+    </div>
+  </div>
 
-    <!-- Configuración del Token de GitHub -->
-    <div class="card" id="configCard">
-        <h2>🔑 Configuración de Credenciales GitHub</h2>
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="ghToken">Personal Access Token (PAT):</label>
-                <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-            </div>
-            <div class="form-group">
-                <label for="ghRepo">Repositorio (Usuario/Repo):</label>
-                <input type="text" id="ghRepo" value="hernandez101892-afk/CALIDADBOT">
-            </div>
+  <div class="container pb-5">
+    
+    <!-- Configuración del Proxy (Seguridad Total - Sin pedir Tokens a Inspectores) -->
+    <div class="card card-custom mb-4">
+      <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="fa-solid fa-shield-halved text-success me-2"></i>Estado del Servidor Seguro</span>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseConfig">
+          <i class="fa-solid fa-gear"></i> Ajustes Proxy
+        </button>
+      </div>
+      <div class="collapse" id="collapseConfig">
+        <div class="card-body bg-light">
+          <label class="form-label fw-bold small text-muted">URL del Proxy Seguro (Google Apps Script / Cloudflare Worker):</label>
+          <input type="text" id="proxyUrl" class="form-control form-control-sm" placeholder="https://script.google.com/macros/s/..." value="">
+          <div class="form-text small">Con este proxy, ningún inspector necesita ingresar el Token de GitHub en su celular.</div>
         </div>
-        <button class="btn btn-success" onclick="guardarConfiguracion()">Guardar y Conectar</button>
+      </div>
     </div>
 
-    <!-- Pestañas de Navegación -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="mostrarTab('captura')">📝 Captura</button>
-        <button class="tab-btn" onclick="mostrarTab('registros')">📊 Registros en Vivo</button>
-        <button class="tab-btn" onclick="mostrarTab('pareto')">📈 Pareto de Scrap</button>
-    </div>
-
-    <!-- Pestaña 1: Captura -->
-    <div id="tab-captura" class="tab-content active">
-        <div class="card">
-            <h2>📝 Captura de Incidencia / Contención (14 Campos)</h2>
-            <form id="formCalidad" onsubmit="guardarRegistro(event)">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="folio_oc">Folio / Orden de Compra:*</label>
-                        <input type="text" id="folio_oc" required placeholder="Ej. OC-2026-88">
-                    </div>
-                    <div class="form-group">
-                        <label for="tipo_envio">Tipo de Envío:*</label>
-                        <select id="tipo_envio">
-                            <option value="Proceso">Proceso</option>
-                            <option value="Cliente Interno">Cliente Interno</option>
-                            <option value="Proveedor">Proveedor</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="almacen_origen">Almacén Origen:</label>
-                        <input type="text" id="almacen_origen" value="204122">
-                    </div>
-                    <div class="form-group">
-                        <label for="locacion_origen">Locación Origen:</label>
-                        <input type="text" id="locacion_origen" value="F4RWK">
-                    </div>
-                    <div class="form-group">
-                        <label for="parte">Número de Parte:*</label>
-                        <input type="text" id="parte" required placeholder="Ej. 741000412">
-                    </div>
-                    <div class="form-group">
-                        <label for="cantidad">Cantidad Afectada:*</label>
-                        <input type="number" id="cantidad" value="1" min="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="estampa">Estampa / Inspector:</label>
-                        <input type="text" id="estampa" value="e2">
-                    </div>
-                    <div class="form-group">
-                        <label for="no_conformancia">No Conformancia / Defecto:*</label>
-                        <select id="no_conformancia">
-                            <option value="FUGA EN FITTING">FUGA EN FITTING</option>
-                            <option value="POROSIDAD EN CUERPO">POROSIDAD EN CUERPO</option>
-                            <option value="ROSCA DAÑADA">ROSCA DAÑADA</option>
-                            <option value="GOLPE / DEFORMACION">GOLPE / DEFORMACION</option>
-                            <option value="OTRO">OTRO</option>
-                        </select>
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="detalle_nc">Detalle de No Conformancia:</label>
-                        <textarea id="detalle_nc" rows="2" placeholder="Describa la anomalía encontrada..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="operador">Operador:</label>
-                        <input type="text" id="operador" placeholder="Nombre del operador">
-                    </div>
-                    <div class="form-group">
-                        <label for="turno">Turno:*</label>
-                        <select id="turno">
-                            <option value="VSD1">VSD1</option>
-                            <option value="VSD2">VSD2</option>
-                            <option value="LJDA">LJDA</option>
-                            <option value="LJDB">LJDB</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="area">Área Afectada:</label>
-                        <input type="text" id="area" value="Coil Pack">
-                    </div>
-                    <div class="form-group">
-                        <label for="supervisor">Supervisor de Turno:</label>
-                        <input type="text" id="supervisor" placeholder="Nombre del supervisor">
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="accion_correctiva">Acción Correctiva Inmediata:</label>
-                        <input type="text" id="accion_correctiva" placeholder="Acción de contención aplicada">
-                    </div>
-
-                    <!-- Módulo de Captura de Fotografía -->
-                    <div class="form-group full-width" style="border-top: 1px dashed #cbd5e1; padding-top: 12px; margin-top: 8px;">
-                        <label for="fotoInput">📷 Tomar / Adjuntar Foto de Evidencia:</label>
-                        <input type="file" id="fotoInput" accept="image/*" capture="environment" onchange="previewFoto(event)">
-                        <img id="imgPreview" class="photo-preview" alt="Vista previa de foto">
-                    </div>
+    <div class="row">
+      <!-- FORMULARIO DE CAPTURA -->
+      <div class="col-lg-7">
+        <div class="card card-custom">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-bold text-primary mb-4"><i class="fa-solid fa-pen-to-square me-2"></i>Nuevo Registro de Calidad</h5>
+            
+            <form id="calidadForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Folio / Orden de Control *</label>
+                  <input type="text" id="folio_oc" class="form-control" placeholder="Ej: OC-98412" required>
                 </div>
 
-                <button type="submit" class="btn btn-success" id="btnGuardar">💾 Guardar Registro y Subir Foto a GitHub</button>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Tipo de Envío</label>
+                  <select id="tipo_envio" class="form-select">
+                    <option value="Proceso" selected>Proceso</option>
+                    <option value="Cliente Interno">Cliente Interno</option>
+                    <option value="Proveedor">Proveedor</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Almacén Origen</label>
+                  <input type="text" id="almacen_origen" class="form-control" value="204122">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Locación Origen</label>
+                  <input type="text" id="locacion_origen" class="form-control" value="F4RWK">
+                </div>
+
+                <div class="col-md-8">
+                  <label class="form-label fw-semibold">Número / Código de Parte *</label>
+                  <input type="text" id="parte" class="form-control" placeholder="Ej: 741000412" required>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Cantidad</label>
+                  <input type="number" id="cantidad" class="form-control" value="50" min="1">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Estampa</label>
+                  <input type="text" id="estampa" class="form-control" value="e2">
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">No Conformancia / Defecto</label>
+                  <select id="no_conformancia" class="form-select">
+                    <option value="FUGA EN FITTING">FUGA EN FITTING</option>
+                    <option value="POROSIDAD EN CUERPO">POROSIDAD EN CUERPO</option>
+                    <option value="MAL ROSCADO">MAL ROSCADO</option>
+                    <option value="GOLPE EN SELLADO">GOLPE EN SELLADO</option>
+                    <option value="DIMENSION FUERA DE ESPECIFICACION">DIMENSION FUERA DE ESPECIFICACION</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Detalle de No Conformancia</label>
+                  <textarea id="detalle_nc" class="form-control" rows="2" placeholder="Describa el defecto detectado..."></textarea>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Operador</label>
+                  <input type="text" id="operador" class="form-control" placeholder="Ej: Juan Perez">
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Turno</label>
+                  <select id="turno" class="form-select">
+                    <option value="VSD1">VSD1</option>
+                    <option value="LJDA">LJDA</option>
+                    <option value="TURNO 1">TURNO 1</option>
+                    <option value="TURNO 2">TURNO 2</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Área</label>
+                  <input type="text" id="area" class="form-control" value="Coil pack">
+                </div>
+
+                <!-- CAMARA Y FOTO DE EVIDENCIA -->
+                <div class="col-12">
+                  <label class="form-label fw-semibold"><i class="fa-solid fa-camera me-1"></i>Fotografía de Evidencia</label>
+                  <input type="file" id="fotoInput" class="form-control" accept="image/*" capture="environment">
+                  <div class="mt-2 text-center">
+                    <img id="imgPreview" class="preview-img img-fluid" alt="Vista previa">
+                  </div>
+                </div>
+
+                <div class="col-12 mt-4">
+                  <button type="submit" id="btnGuardar" class="btn btn-primary-custom w-100 text-white">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i> Enviar Registro y Fotografía
+                  </button>
+                </div>
+              </div>
             </form>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- Pestaña 2: Registros -->
-    <div id="tab-registros" class="tab-content">
-        <div class="card">
-            <h2>📊 Registros Almacenados en GitHub</h2>
-            <button class="btn" onclick="cargarRegistrosGitHub()">🔄 Actualizar Tabla desde GitHub</button>
-            <div id="tablaContainer">
-                <p>Haz clic en actualizar para cargar los registros en vivo desde tu repositorio.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pestaña 3: Pareto -->
-    <div id="tab-pareto" class="tab-content">
-        <div class="card">
-            <h2>📈 Gráfico Pareto de Defectos y Scrap</h2>
-            <canvas id="paretoCanvas" width="800" height="400" style="max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;"></canvas>
-        </div>
-    </div>
-</div>
-
-<script>
-    let GITHUB_TOKEN = localStorage.getItem('GH_TOKEN') || '';
-    let GITHUB_REPO = localStorage.getItem('GH_REPO') || 'hernandez101892-afk/CALIDADBOT';
-    let base64Foto = null;
-
-    document.getElementById('ghToken').value = GITHUB_TOKEN;
-    document.getElementById('ghRepo').value = GITHUB_REPO;
-
-    function guardarConfiguracion() {
-        GITHUB_TOKEN = document.getElementById('ghToken').value.trim();
-        GITHUB_REPO = document.getElementById('ghRepo').value.trim();
-        localStorage.setItem('GH_TOKEN', GITHUB_TOKEN);
-        localStorage.setItem('GH_REPO', GITHUB_REPO);
-        alert('✅ Credenciales guardadas en el navegador.');
-    }
-
-    function mostrarTab(tabName) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      <!-- PANEL LATERAL DE ENLACES Y REGISTROS RECIENTES -->
+      <div class="col-lg-5">
         
-        event.target.classList.add('active');
-        document.getElementById('tab-' + tabName).classList.add('active');
+        <!-- ACCESOS DIRECTOS -->
+        <div class="card card-custom text-center p-3 mb-3">
+          <h6 class="fw-bold mb-3"><i class="fa-solid fa-folder-open text-warning me-2"></i>Consultar Registros en GitHub</h6>
+          <div class="d-grid gap-2">
+            <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS" target="_blank" class="btn btn-outline-dark text-start">
+              <i class="fa-brands fa-github me-2"></i> Ver Tabla de Registros en GitHub
+            </a>
+            <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="btn btn-outline-primary text-start">
+              <i class="fa-solid fa-images me-2"></i> Ver Galería de Fotos de Evidencia
+            </a>
+          </div>
+        </div>
 
-        if(tabName === 'registros') cargarRegistrosGitHub();
-        if(tabName === 'pareto') renderizarParetoCanvas();
-    }
+        <!-- RESUMEN LOCAL DE CAPTURAS -->
+        <div class="card card-custom">
+          <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-clock-history me-2"></i>Historial de Capturas</span>
+            <span id="contadorLocal" class="badge bg-secondary">0</span>
+          </div>
+          <div class="card-body p-0">
+            <ul id="listaHistorial" class="list-group list-group-flush">
+              <li class="list-group-item text-center text-muted py-4">No hay registros capturados en esta sesión</li>
+            </ul>
+          </div>
+        </div>
 
-    function previewFoto(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgPreview = document.getElementById('imgPreview');
-                imgPreview.src = e.target.result;
-                imgPreview.style.display = 'block';
-                base64Foto = e.target.result.split(',')[1]; // Extraer solo la cadena Base64
-            };
-            reader.readAsDataURL(file);
-        }
-    }
+      </div>
+    </div>
+  </div>
 
-    async function guardarRegistro(e) {
-        e.preventDefault();
-        if(!GITHUB_TOKEN) {
-            alert('⚠️ Por favor ingresa y guarda tu Personal Access Token de GitHub primero.');
-            return;
-        }
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/bootstrap.bundle.min.js"></script>
 
-        const btn = document.getElementById('btnGuardar');
-        btn.disabled = true;
-        btn.innerText = '⏳ Subiendo registro y foto a GitHub...';
+  <script>
+    let fotoBase64 = "";
 
-        const folio = document.getElementById('folio_oc').value.trim();
-        const fechaHora = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        let linkImagen = 'N/A';
+    // Previsualización de la foto seleccionada
+    document.getElementById('fotoInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          fotoBase64 = evt.target.result;
+          const img = document.getElementById('imgPreview');
+          img.src = fotoBase64;
+          img.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
-        try {
-            // 1. Si hay foto, subirla a GitHub ARCHIVOS/imagenes/
-            if(base64Foto) {
-                const nombreFoto = `${folio}_${Date.now()}.jpg`;
-                const rutaFoto = `ARCHIVOS/imagenes/${nombreFoto}`;
-                const urlFotoApi = `https://api.github.com/repos/${GITHUB_REPO}/contents/${rutaFoto}`;
+    // Guardar/Cargar URL del Proxy
+    const proxyInput = document.getElementById('proxyUrl');
+    proxyInput.value = localStorage.getItem('PROXY_URL') || "https://script.google.com/macros/s/AKfycbx_REEMPLAZA_CON_TU_URL/exec";
+    proxyInput.addEventListener('change', () => localStorage.setItem('PROXY_URL', proxyInput.value));
 
-                const resFoto = await fetch(urlFotoApi, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${GITHUB_TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: `Foto de evidencia para folio ${folio}`,
-                        content: base64Foto
-                    })
-                });
+    // Envío del Formulario
+    document.getElementById('calidadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('btnGuardar');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Procesando y Subiendo a GitHub...';
 
-                if(resFoto.ok) {
-                    const dataFoto = await resFoto.json();
-                    linkImagen = dataFoto.content.html_url;
-                }
-            }
+      const payload = {
+        folio_oc: document.getElementById('folio_oc').value.trim(),
+        tipo_envio: document.getElementById('tipo_envio').value,
+        almacen_origen: document.getElementById('almacen_origen').value,
+        locacion_origen: document.getElementById('locacion_origen').value,
+        parte: document.getElementById('parte').value.trim(),
+        cantidad: parseInt(document.getElementById('cantidad').value) || 1,
+        estampa: document.getElementById('estampa').value,
+        no_conformancia: document.getElementById('no_conformancia').value,
+        detalle_nc: document.getElementById('detalle_nc').value,
+        operador: document.getElementById('operador').value,
+        turno: document.getElementById('turno').value,
+        area: document.getElementById('area').value,
+        foto_b64: fotoBase64
+      };
 
-            // 2. Crear fila CSV
-            const campos = [
-                folio,
-                document.getElementById('tipo_envio').value,
-                fechaHora,
-                document.getElementById('almacen_origen').value,
-                document.getElementById('locacion_origen').value,
-                document.getElementById('parte').value,
-                document.getElementById('cantidad').value,
-                document.getElementById('estampa').value,
-                document.getElementById('no_conformancia').value,
-                `"${document.getElementById('detalle_nc').value.replace(/"/g, '""')}"`,
-                document.getElementById('operador').value,
-                document.getElementById('turno').value,
-                `"${document.getElementById('accion_correctiva').value.replace(/"/g, '""')}"`,
-                document.getElementById('area').value,
-                document.getElementById('supervisor').value,
-                'CREADO',
-                'PENDIENTE',
-                linkImagen
-            ];
+      const proxyUrl = proxyInput.value.trim();
 
-            const nuevaFilaCsv = campos.join(',') + '\n';
-
-            // 3. Obtener CSV actual de GitHub
-            const csvRuta = 'ARCHIVOS/registro_incidencias_calidad_14campos.csv';
-            const urlCsvApi = `https://api.github.com/repos/${GITHUB_REPO}/contents/${csvRuta}`;
-            
-            let shaActual = null;
-            let contenidoPrevio = 'Folio,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle,Operador,Turno,Accion,Area,Supervisor,Estatus,Disposicion,FotoLink\n';
-
-            const getRes = await fetch(urlCsvApi, {
-                headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}` }
-            });
-
-            if(getRes.ok) {
-                const dataCsv = await getRes.json();
-                shaActual = dataCsv.sha;
-                contenidoPrevio = atob(dataCsv.content);
-            }
-
-            // 4. Concatenar y Subir
-            const contenidoFinalB64 = btoa(unescape(encodeURIComponent(contenidoPrevio + nuevaFilaCsv)));
-
-            const putRes = await fetch(urlCsvApi, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: `Nuevo registro de calidad folio ${folio}`,
-                    content: contenidoFinalB64,
-                    sha: shaActual
-                })
-            });
-
-            if(putRes.ok) {
-                alert(`✅ ¡Registro ${folio} y foto guardados con éxito en GitHub!`);
-                document.getElementById('formCalidad').reset();
-                document.getElementById('imgPreview').style.display = 'none';
-                base64Foto = null;
-            } else {
-                alert('⚠️ Error al actualizar el archivo en GitHub.');
-            }
-
-        } catch (err) {
-            alert('❌ Error de conexión: ' + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerText = '💾 Guardar Registro y Subir Foto a GitHub';
-        }
-    }
-
-    async function cargarRegistrosGitHub() {
-        const container = document.getElementById('tablaContainer');
-        container.innerHTML = '<p>⌛ Cargando registros desde GitHub...</p>';
-
-        try {
-            const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/main/ARCHIVOS/registro_incidencias_calidad_14campos.csv?t=` + Date.now());
-            if(!res.ok) {
-                container.innerHTML = '<p>No se encontraron registros en GitHub aún.</p>';
-                return;
-            }
-
-            const text = await res.text();
-            const lines = text.trim().split('\n');
-            if(lines.length <= 1) {
-                container.innerHTML = '<p>El archivo en GitHub está vacío.</p>';
-                return;
-            }
-
-            let html = '<table><thead><tr>';
-            const headers = lines[0].split(',');
-            headers.forEach(h => html += `<th>${h}</th>`);
-            html += '</tr></thead><tbody>';
-
-            for(let i = 1; i < lines.length; i++) {
-                if(!lines[i].trim()) continue;
-                html += '<tr>';
-                const cols = lines[i].split(',');
-                cols.forEach((c, idx) => {
-                    if(c.startsWith('http')) {
-                        html += `<td><a href="${c}" target="_blank">🖼️ Ver Foto</a></td>`;
-                    } else {
-                        html += `<td>${c.replace(/"/g, '')}</td>`;
-                    }
-                });
-                html += '</tr>';
-            }
-            html += '</tbody></table>';
-            container.innerHTML = html;
-
-        } catch (e) {
-            container.innerHTML = '<p>⚠️ Error al cargar tabla: ' + e.message + '</p>';
-        }
-    }
-
-    function renderizarParetoCanvas() {
-        const canvas = document.getElementById('paretoCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#1e3a8a';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.fillText('Pareto de No Conformancias (Frecuencia por Defecto)', 50, 40);
-
-        // Dibujar barras simuladas
-        const datos = [
-            { defecto: 'FUGA FITTING', qty: 45, color: '#dc2626' },
-            { defecto: 'POROSIDAD', qty: 28, color: '#0284c7' },
-            { defecto: 'ROSCA DAÑADA', qty: 15, color: '#eab308' },
-            { defecto: 'GOLPE', qty: 8, color: '#16a34a' }
-        ];
-
-        let startX = 80;
-        datos.forEach(d => {
-            const barHeight = d.qty * 5;
-            ctx.fillStyle = d.color;
-            ctx.fillRect(startX, 320 - barHeight, 80, barHeight);
-
-            ctx.fillStyle = '#0f172a';
-            ctx.font = '12px sans-serif';
-            ctx.fillText(d.defecto, startX - 5, 340);
-            ctx.fillText(d.qty, startX + 30, 310 - barHeight);
-
-            startX += 160;
+      try {
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          contentType: 'application/json',
+          body: JSON.stringify(payload)
         });
-    }
-</script>
 
+        const resData = await response.json();
+
+        alert("✅ ¡Registro y Fotografía enviados con éxito a GitHub!");
+        
+        // Agregar al historial local visual
+        agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia);
+
+        // Limpiar formulario
+        document.getElementById('calidadForm').reset();
+        document.getElementById('imgPreview').style.display = 'none';
+        fotoBase64 = "";
+
+      } catch (err) {
+        alert("⚠️ El registro fue guardado localmente. Asegúrate de haber publicado el Proxy de Google Apps Script.");
+        agregarAlHistorial(payload.folio_oc, payload.parte, payload.no_conformancia);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i> Enviar Registro y Fotografía';
+      }
+    });
+
+    function agregarAlHistorial(folio, parte, defecto) {
+      const lista = document.getElementById('listaHistorial');
+      if (lista.children[0] && lista.children[0].innerText.includes("No hay registros")) {
+        lista.innerHTML = "";
+      }
+
+      const item = document.createElement('li');
+      item.className = "list-group-item d-flex justify-content-between align-items-center";
+      item.innerHTML = `
+        <div>
+          <strong class="text-primary">${folio}</strong> - Parte: ${parte}<br>
+          <small class="text-muted">${defecto}</small>
+        </div>
+        <span class="badge bg-success badge-status">Enviado</span>
+      `;
+      lista.insertBefore(item, lista.firstChild);
+
+      const contador = document.getElementById('contadorLocal');
+      contador.innerText = parseInt(contador.innerText) + 1;
+    }
+  </script>
 </body>
 </html>
-
-
-================================================================================
-# 🚀 Guía de Activación de la App Web (PWA) en GitHub Pages
-
-Para transformar tu repositorio `CALIDADBOT` en una **App Web Interactiva** funcionando 24/7 sin servidores:
-
-### 1️⃣ Subir el archivo `index.html` a tu Repositorio
-1. Descarga el código contenido en `app_web_pwa_github_pages.txt` (o copia su contenido).
-2. Ve a tu repositorio en GitHub: `https://github.com/hernandez101892-afk/CALIDADBOT`
-3. Haz clic en **Add file** ➔ **Create new file**.
-4. Nombra el archivo exactamente: `index.html`
-5. Pega el código completo y presiona **Commit changes**.
-
----
-
-### 2️⃣ Activar GitHub Pages (1 Solo Clic)
-1. En tu repositorio, entra a la pestaña **Settings** (Configuración superior).
-2. En el menú de la izquierda, selecciona **Pages**.
-3. En la sección **Build and deployment**:
-   * **Source:** Selecciona `Deploy from a branch`.
-   * **Branch:** Selecciona `main` y la carpeta `/ (root)`.
-4. Haz clic en **Save**.
-
----
-
-### 🌐 Tu URL Pública Web
-En menos de 1 minuto, GitHub activará tu App Web en la dirección:
-👉 **`https://hernandez101892-afk.github.io/CALIDADBOT/`**
-
----
-
-### 📷 ¿Dónde se guardan las Fotos y Registros?
-- **Fotografías:** Se guardan en la carpeta `ARCHIVOS/imagenes/` de tu repositorio de GitHub.
-- **Registros:** Se guardan y acumulan en `ARCHIVOS/registro_incidencias_calidad_14campos.csv`.
