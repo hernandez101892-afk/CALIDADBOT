@@ -277,37 +277,72 @@
       <div class="tab-pane fade" id="tab-archivos" role="tabpanel">
         
         <div class="card">
-          <div class="card-header bg-success text-white"><i class="fa-file-excel me-2"></i>Enlaces a Archivos y Reportes Excel</div>
+          <div class="card-header bg-success text-white"><i class="fa-solid fa-file-excel me-2"></i>Abrir y Editar con Microsoft Excel</div>
           <div class="card-body">
-            <p class="text-muted small">Todos los registros y fotografías enviados desde la app se consolidan en tu repositorio central de GitHub:</p>
+            <p class="text-muted small">Elige la opción que prefieras para abrir o conectar tus registros directamente con Microsoft Excel:</p>
 
-            <div class="list-group mb-3">
-              <a href="https://github.com/hernandez101892-afk/CALIDADBOT/blob/main/ARCHIVOS/registro_incidencias.csv" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                  <i class="fa-solid fa-table text-success me-2 fs-5"></i>
-                  <strong>Abrir / Editar CSV de Incidencias en GitHub</strong>
-                  <div class="small text-muted">Ver todas las filas registradas directamente en la web.</div>
+            <div class="d-grid gap-3 mb-4">
+              
+              <!-- OPCIÓN 1: Protocolo directo ms-excel -->
+              <a href="ms-excel:ofe|u|https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" class="btn btn-success btn-lg text-start p-3 shadow-sm">
+                <div class="d-flex align-items-center">
+                  <i class="fa-solid fa-file-excel fs-1 me-3"></i>
+                  <div>
+                    <div class="fw-bold fs-6"><i class="fa-solid fa-bolt text-warning me-1"></i>1. Abrir Directo en la App de Microsoft Excel</div>
+                    <div class="small opacity-75">Ejecuta directamente la aplicación Excel instalada en tu teléfono o PC.</div>
+                  </div>
                 </div>
-                <span class="badge bg-primary rounded-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
               </a>
 
-              <a href="https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" download class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                  <i class="fa-solid fa-file-csv text-primary me-2 fs-5"></i>
-                  <strong>Descargar CSV Directo a Excel</strong>
-                  <div class="small text-muted">Descarga rápida para abrir con Microsoft Excel.</div>
+              <!-- OPCIÓN 2: Descargar CSV con BOM para Excel -->
+              <button type="button" onclick="descargarCsvParaExcel()" class="btn btn-primary btn-lg text-start p-3 shadow-sm">
+                <div class="d-flex align-items-center">
+                  <i class="fa-solid fa-file-arrow-down fs-1 me-3"></i>
+                  <div>
+                    <div class="fw-bold fs-6"><i class="fa-solid fa-download me-1"></i>2. Descargar Archivo .CSV Formateado para Excel</div>
+                    <div class="small opacity-75">Descarga instantánea con formato especial para acentos y columnas en Excel.</div>
+                  </div>
                 </div>
-                <span class="badge bg-success rounded-pill"><i class="fa-solid fa-download"></i></span>
+              </button>
+
+              <!-- OPCIÓN 3: Excel Online Visor -->
+              <a href="https://view.officeapps.live.com/op/view.aspx?src=https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" target="_blank" class="btn btn-outline-success text-start p-3">
+                <div class="d-flex align-items-center">
+                  <i class="fa-solid fa-globe fs-2 me-3"></i>
+                  <div>
+                    <div class="fw-bold">3. Visualizar en Excel Web Online (Microsoft Office)</div>
+                    <div class="small text-muted">Abre el visor oficial de Microsoft Office directamente en el navegador.</div>
+                  </div>
+                </div>
               </a>
 
-              <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                <div>
-                  <i class="fa-solid fa-images text-warning me-2 fs-5"></i>
-                  <strong>Galería de Fotografías de Evidencia</strong>
-                  <div class="small text-muted">Acceder a todas las fotos en alta resolución.</div>
-                </div>
-                <span class="badge bg-warning text-dark rounded-pill"><i class="fa-solid fa-folder-open"></i></span>
+              <!-- OPCIÓN 4: Ver en GitHub -->
+              <a href="https://github.com/hernandez101892-afk/CALIDADBOT/blob/main/ARCHIVOS/registro_incidencias.csv" target="_blank" class="btn btn-outline-secondary text-start p-2">
+                <i class="fa-brands fa-github me-2"></i>Ver archivo fuente en la web de GitHub
               </a>
+
+              <!-- GALERÍA DE FOTOS -->
+              <a href="https://github.com/hernandez101892-afk/CALIDADBOT/tree/main/ARCHIVOS/imagenes" target="_blank" class="btn btn-outline-warning text-dark text-start p-2">
+                <i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia
+              </a>
+
+            </div>
+
+            <!-- INSTRUCCIONES CONEXIÓN VIVA EN EXCEL DE ESCRITORIO -->
+            <div class="card bg-light border-success mb-3">
+              <div class="card-body">
+                <h6 class="fw-bold text-success"><i class="fa-solid fa-plug me-2"></i>Conexión en Vivo desde Excel en PC (Sin descargar):</h6>
+                <ol class="small mb-2 ps-3">
+                  <li>Abre Microsoft Excel en tu computadora.</li>
+                  <li>Ve a la pestaña <strong>Datos</strong> ➔ <strong>Obtener datos</strong> ➔ <strong>Desde la web</strong>.</li>
+                  <li>Pega esta URL exacta:</li>
+                </ol>
+                <div class="input-group input-group-sm mb-2">
+                  <input type="text" id="urlCsvExcel" class="form-control" value="https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv" readonly>
+                  <button class="btn btn-outline-primary" type="button" onclick="copiarUrlExcel()"><i class="fa-solid fa-copy me-1"></i>Copiar URL</button>
+                </div>
+                <small class="text-muted">Cada vez que presiones <strong>"Actualizar todo"</strong> en Excel, traerá los nuevos registros enviados desde los celulares.</small>
+              </div>
             </div>
 
             <!-- CONFIGURACIÓN PROXY -->
@@ -319,6 +354,8 @@
 
           </div>
         </div>
+
+      </div>
 
       </div>
 
@@ -708,6 +745,36 @@
       await enviarPayloadProxy(payloadDisposicion);
       document.getElementById('panelEvaluacionDisposicion').style.display = 'none';
       cargarRegistrosGitHub();
+    }
+
+    async function descargarCsvParaExcel() {
+      const csvUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv?t=" + Date.now();
+      try {
+        const res = await fetch(csvUrl);
+        if (!res.ok) throw new Error("No se pudo descargar el archivo CSV de GitHub");
+        const text = await res.text();
+        
+        // Agregar BOM UTF-8 (﻿) para compatibilidad perfecta de acentos y columnas en Excel
+        const blob = new Blob(["\ufeff" + text], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "registro_incidencias.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert("¡Archivo CSV descargado! Toca la notificación o el archivo descargado en tu teléfono/PC para abrirlo directamente en Microsoft Excel.");
+      } catch (err) {
+        alert("Error al descargar para Excel: " + err.message);
+      }
+    }
+
+    function copiarUrlExcel() {
+      const input = document.getElementById('urlCsvExcel');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      alert("URL copiada al portapapeles: Pégala en Excel (Datos -> Desde la web) para consultar los registros en tiempo real.");
     }
   </script>
 </body>
