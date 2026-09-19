@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta</title>
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v20)</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d6efd">
   <!-- Bootstrap 5 CSS -->
@@ -32,8 +32,8 @@
     .table-responsive { max-height: 500px; overflow-y: auto; }
     .kpi-card { border-radius: 12px; padding: 15px; text-align: center; color: white; font-weight: bold; }
     .kpi-total { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
+    .kpi-pending { background: linear-gradient(135deg, #ffc107, #fd7e14); color: #000; }
     .kpi-done { background: linear-gradient(135deg, #198754, #157347); }
-    .kpi-pending { background: linear-gradient(135deg, #ffc107, #ffca2c); color: #000; }
   </style>
 </head>
 <body>
@@ -50,20 +50,20 @@
     <div class="row g-3 mb-4" id="resumenKPIs">
       <div class="col-4">
         <div class="kpi-card kpi-total shadow-sm">
-          <small class="d-block text-uppercase text-white-50">Total Registros</small>
+          <small class="d-block text-uppercase text-white-50">Total Registrados</small>
           <span class="fs-3 fw-bold" id="kpiTotalNum">0</span>
         </div>
       </div>
       <div class="col-4">
-        <div class="kpi-card kpi-done shadow-sm">
-          <small class="d-block text-uppercase text-white-50">Con Disposición</small>
-          <span class="fs-3 fw-bold" id="kpiDoneNum">0</span>
+        <div class="kpi-card kpi-pending shadow-sm">
+          <small class="d-block text-uppercase fw-bold text-dark"><i class="fa-solid fa-triangle-exclamation me-1"></i>Faltan Disposición</small>
+          <span class="fs-3 fw-bold text-dark" id="kpiPendingNum">0</span>
         </div>
       </div>
       <div class="col-4">
-        <div class="kpi-card kpi-pending shadow-sm">
-          <small class="d-block text-uppercase fw-bold text-dark">Pendientes NC</small>
-          <span class="fs-3 fw-bold text-dark" id="kpiPendingNum">0</span>
+        <div class="kpi-card kpi-done shadow-sm">
+          <small class="d-block text-uppercase text-white-50">Terminados / Cerrados</small>
+          <span class="fs-3 fw-bold" id="kpiDoneNum">0</span>
         </div>
       </div>
     </div>
@@ -239,8 +239,11 @@
               <div class="col-md-4">
                 <select id="filterTipo" class="form-select" onchange="filtrarTablaRegistros()">
                   <option value="ALL">Todos los Registros</option>
-                  <option value="PENDING_DISP">⚠️ Solo Pendientes de Disposición</option>
-                  <option value="DONE_DISP">🟢 Con Disposición Registrada</option>
+                  <option value="PENDING">⚠️ Pendientes de Disposición (Nuevo / En Proceso)</option>
+                  <option value="DONE">🟢 Terminados / Cerrados</option>
+                  <option value="Nuevo">Estatus: Nuevo</option>
+                  <option value="En Proceso">Estatus: En Proceso</option>
+                  <option value="Terminado">Estatus: Terminado</option>
                   <option value="Proceso">Proceso / Recibo</option>
                   <option value="Contención">Contención / Sorteo</option>
                   <option value="Rechazo">Rechazo</option>
@@ -263,8 +266,8 @@
                     <th>Cant.</th>
                     <th>Almacén / Área</th>
                     <th>No Conformancia</th>
-                    <th>Operador</th>
-                    <th>Estatus Disposición</th>
+                    <th>Etapa / Paso</th>
+                    <th>Estatus Final</th>
                     <th class="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -289,7 +292,7 @@
             <button class="btn btn-sm btn-light" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Actualizar Lista</button>
           </div>
           <div class="card-body">
-            <p class="text-muted small m-0 mb-3">Haz clic en el botón <strong>"Evaluar Disposición"</strong> de cualquier registro para abrir la evaluación de 3 Pasos (Destino, Sorteo, Causa Raíz 5-Porqués).</p>
+            <p class="text-muted small m-0 mb-3">Haz clic en el botón <strong>"Evaluar Disposición"</strong> de cualquier registro para abrir la evaluación de 3 Pasos (Destino, Sorteo, Análisis 5 Porqués y Causa Raíz).</p>
 
             <div id="loadingRegistros" class="text-center py-4" style="display:none;">
               <div class="spinner-border text-primary" role="status"></div>
@@ -302,7 +305,7 @@
           </div>
         </div>
 
-        <!-- FORMULARIO DE EVALUACIÓN / DISPOSICIÓN -->
+        <!-- FORMULARIO DE EVALUACIÓN / DISPOSICIÓN COMPLETO -->
         <div class="card mt-3 shadow-lg border-warning" id="panelEvaluacionDisposicion" style="display:none;">
           <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
             <span><i class="fa-solid fa-gavel me-2"></i>Módulo de Disposición de Calidad: <strong id="dispFolioTitulo"></strong></span>
@@ -334,8 +337,8 @@
                 </div>
               </div>
 
-              <!-- PASO 2: CONCILIACIÓN DE SORTEO -->
-              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-2 me-1"></i>Paso 2: Conteo y Conciliación de Sorteo</h6>
+              <!-- PASO 2: CONCILIACIÓN DE SORTEO Y ESTATUS DE PROGRESO -->
+              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-2 me-1"></i>Paso 2: Conteo de Sorteo y Estatus de Registro</h6>
               <div class="row g-3 mb-3">
                 <div class="col-md-4">
                   <label class="form-label fw-bold">Piezas Buenas (Aceptadas):</label>
@@ -346,27 +349,62 @@
                   <input type="number" class="form-control" id="disp_piezas_malas" value="0" min="0">
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label fw-bold">Estatus Final de la Incidencia:</label>
-                  <select class="form-select" id="disp_estatus">
-                    <option value="En Proceso">En Proceso / Sorteo Activo</option>
-                    <option value="Terminado">Terminado / Cierre Conciliado</option>
+                  <label class="form-label fw-bold">Estatus del Registro:</label>
+                  <select class="form-select fw-bold" id="disp_estatus" required>
+                    <option value="Nuevo">🔴 Nuevo (Registrado sin Sorteo)</option>
+                    <option value="En Proceso" selected>🟡 En Proceso (Sorteo / Evaluación Activa)</option>
+                    <option value="Terminado">🟢 Terminado (Disposición y Cierre Completo)</option>
                   </select>
                 </div>
               </div>
 
-              <!-- PASO 3: ANÁLISIS 5 PORQUÉS Y CAUSA RAÍZ -->
-              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-3 me-1"></i>Paso 3: Causa Raíz y Acción Correctiva</h6>
-              <div class="mb-3">
-                <label class="form-label fw-bold">Causa Raíz Identificada (5-Porqués):</label>
-                <textarea class="form-control" id="disp_causa_raiz" rows="2" placeholder="Describa la causa raíz..."></textarea>
+              <!-- PASO 3: ANÁLISIS COMPLETO DE LOS 5 PORQUÉS Y CAUSA RAÍZ -->
+              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-3 me-1"></i>Paso 3: Análisis de los 5 Porqués, Causa Raíz y Acción Correctiva</h6>
+              
+              <div class="bg-light p-3 rounded mb-3 border">
+                <label class="form-label fw-bold text-dark mb-2"><i class="fa-solid fa-diagram-project me-1"></i>Metodología de los 5 Porqués (Causa Raíz):</label>
+                
+                <div class="row g-2 mb-2">
+                  <div class="col-12">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-secondary text-white fw-bold">1º Por qué:</span>
+                      <input type="text" class="form-control" id="por_que_1" placeholder="¿Por qué ocurrió el defecto inicial?">
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-secondary text-white fw-bold">2º Por qué:</span>
+                      <input type="text" class="form-control" id="por_que_2" placeholder="¿Por qué ocurrió el 1er motivo?">
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-secondary text-white fw-bold">3º Por qué:</span>
+                      <input type="text" class="form-control" id="por_que_3" placeholder="¿Por qué ocurrió el 2do motivo?">
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-secondary text-white fw-bold">4º Por qué:</span>
+                      <input type="text" class="form-control" id="por_que_4" placeholder="¿Por qué ocurrió el 3er motivo?">
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-danger text-white fw-bold">5º Por qué (Causa Raíz Final):</span>
+                      <input type="text" class="form-control fw-bold border-danger" id="por_que_5" placeholder="¿Causa raíz originaria del problema?">
+                    </div>
+                  </div>
+                </div>
               </div>
+
               <div class="mb-3">
-                <label class="form-label fw-bold">Acción Correctiva Implementada:</label>
-                <textarea class="form-control" id="disp_accion_correctiva" rows="2" placeholder="Acción correctiva o preventiva..."></textarea>
+                <label class="form-label fw-bold">Acción Correctiva Implementada / Plan de Acción:</label>
+                <textarea class="form-control" id="disp_accion_correctiva" rows="2" placeholder="Describa la acción preventiva o correctiva implementada..."></textarea>
               </div>
 
               <div class="text-center mt-4 d-flex gap-2">
-                <button type="submit" class="btn btn-warning btn-lg btn-custom flex-grow-1 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Disposición en Registro</button>
+                <button type="submit" class="btn btn-warning btn-lg btn-custom flex-grow-1 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Disposición y Actualizar Registro</button>
                 <button type="button" class="btn btn-secondary btn-lg btn-custom" onclick="cerrarPanelDisposicion()">Cancelar</button>
               </div>
 
@@ -445,7 +483,7 @@
                 <hr>
 
                 <div class="mb-3">
-                  <label class="form-label fw-bold">2. Importar Registros de Incidencias Historicos (CSV / JSON):</label>
+                  <label class="form-label fw-bold">2. Importar Registros de Incidencias Históricos (CSV / JSON):</label>
                   <input type="file" id="fileImportRegistros" accept=".csv,.json" class="form-control form-control-sm mb-2">
                   <button class="btn btn-success btn-sm w-100 fw-bold" onclick="importarRegistros()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Registros</button>
                 </div>
@@ -534,7 +572,7 @@
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V19 -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V20 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbzGpkcgt4Elocfep6VW4hMKZ42yBAX_dKhz6iJZtkFmc8fES9TxJwyW2x-j1bN8jH9H/exec";
     
@@ -692,8 +730,8 @@
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
           (decodedText) => {
-            const folInput = document.getElementById('folio_oc');
-            if (folInput) folInput.value = decodedText;
+            const folioInput = document.getElementById('folio_oc');
+            if (folioInput) folioInput.value = decodedText;
             alert("Código escaneado con éxito: " + decodedText);
             toggleQrScanner();
           },
@@ -738,7 +776,7 @@
       ctx.beginPath();
       ctx.moveTo(x, y);
     }
-    function limpiarFirma() { if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    function limpiarFirma() { if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
     function procesarFoto(e) {
       const file = e.target.files[0];
@@ -776,6 +814,8 @@
         const prev = registrosPersistentes[index];
         registrosPersistentes[index] = Object.assign({}, prev, nuevoReg);
       } else {
+        // Asignar estatus por defecto si no lo tiene
+        if (!nuevoReg.estatus) nuevoReg.estatus = 'Nuevo';
         registrosPersistentes.unshift(nuevoReg);
       }
       localStorage.setItem('CALIDAD_REGISTROS', JSON.stringify(registrosPersistentes));
@@ -788,24 +828,25 @@
       let pendDisp = 0;
 
       registrosPersistentes.forEach(r => {
-        if (r.no_conformancia === 'DISPOSICIÓN REGISTRADA' || r.tiene_disposicion || r.tipo_envio === 'Evaluación y Disposición') {
+        const st = (r.estatus || '').toString().trim();
+        if (st === 'Terminado' || r.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
           conDisp++;
         } else {
           pendDisp++;
         }
       });
 
-      const elem = document.getElementById('cantRegistrosPersistentes');
-      if (elem) elem.innerText = total;
+      const elemTotal = document.getElementById('cantRegistrosPersistentes');
+      if (elemTotal) elemTotal.innerText = total;
 
-      const kpiT = document.getElementById('kpiTotalNum');
-      if (kpiT) kpiT.innerText = total;
+      const kpiTotal = document.getElementById('kpiTotalNum');
+      if (kpiTotal) kpiTotal.innerText = total;
 
-      const kpiD = document.getElementById('kpiDoneNum');
-      if (kpiD) kpiD.innerText = conDisp;
+      const kpiDone = document.getElementById('kpiDoneNum');
+      if (kpiDone) kpiDone.innerText = conDisp;
 
-      const kpiP = document.getElementById('kpiPendingNum');
-      if (kpiP) kpiP.innerText = pendDisp;
+      const kpiPending = document.getElementById('kpiPendingNum');
+      if (kpiPending) kpiPending.innerText = pendDisp;
     }
 
     function limpiarRegistrosLocales() {
@@ -818,7 +859,7 @@
       }
     }
 
-    // ENVIAR REGISTRO
+    // ENVIAR REGISTRO NUEVO
     async function guardarRegistro(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
@@ -828,27 +869,28 @@
       }
 
       const nowStr = new Date().toLocaleString();
-      const folioInput = document.getElementById('folio_oc');
-      const folio = folioInput ? folioInput.value.trim() : ('OC-' + Math.floor(Math.random() * 900000));
+      const folio = document.getElementById('folio_oc').value.trim();
 
       const payload = {
         folio_oc: folio,
-        tipo_envio: document.getElementById('tipo_envio') ? document.getElementById('tipo_envio').value : 'Proceso',
+        tipo_envio: document.getElementById('tipo_envio').value,
         fecha: nowStr,
-        almacen_origen: document.getElementById('almacen_origen') ? document.getElementById('almacen_origen').value : '',
-        locacion_origen: document.getElementById('locacion_origen') ? document.getElementById('locacion_origen').value : '',
-        area: document.getElementById('area') ? document.getElementById('area').value : '',
-        parte: document.getElementById('parte') ? document.getElementById('parte').value : '',
-        cantidad: document.getElementById('cantidad') ? document.getElementById('cantidad').value : '1',
-        estampa: document.getElementById('estampa') ? document.getElementById('estampa').value : '',
-        no_conformancia: document.getElementById('no_conformancia') ? document.getElementById('no_conformancia').value : '',
-        detalle_nc: document.getElementById('detalle_nc') ? document.getElementById('detalle_nc').value : '',
-        operador: document.getElementById('operador') ? document.getElementById('operador').value : 'Inspector',
-        turno: document.getElementById('turno') ? document.getElementById('turno').value : '1',
+        almacen_origen: document.getElementById('almacen_origen').value,
+        locacion_origen: document.getElementById('locacion_origen').value,
+        area: document.getElementById('area').value,
+        parte: document.getElementById('parte').value,
+        cantidad: document.getElementById('cantidad').value,
+        estampa: document.getElementById('estampa').value,
+        no_conformancia: document.getElementById('no_conformancia').value,
+        detalle_nc: document.getElementById('detalle_nc').value,
+        operador: document.getElementById('operador').value,
+        turno: document.getElementById('turno').value,
         foto_b64: fotoBase64,
+        estatus: "Nuevo",
         tiene_disposicion: false
       };
 
+      // Guardar de inmediato en memoria persistente
       guardarRegistroPersistenteLocal(payload);
 
       if (!navigator.onLine) {
@@ -896,8 +938,8 @@
     function resetForm() {
       const form = document.getElementById('formCalidad');
       if (form) form.reset();
-      const prev = document.getElementById('fotoPreview');
-      if (prev) prev.style.display = 'none';
+      const img = document.getElementById('fotoPreview');
+      if (img) img.style.display = 'none';
       fotoBase64 = "";
       limpiarFirma();
     }
@@ -906,12 +948,32 @@
       let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
       if (cola.length === 0) return;
 
-      console.log("Sincronizando " + cola.length + " registros pendientes...");
+      console.log(`Sincronizando ${cola.length} registros pendientes...`);
       for (const item of cola) {
         await enviarPayloadProxy(item);
       }
       localStorage.removeItem('COLA_OFFLINE');
       alert("¡Sincronización completada! Se enviaron todos los registros pendientes.");
+    }
+
+    // HELPER PARA MINI BADGES Y PASOS
+    function obtenerBadgesRegistro(reg) {
+      const st = (reg.estatus || '').toString().trim();
+      let badgeEstatus = '';
+      let badgePaso = '';
+
+      if (st === 'Terminado' || reg.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
+        badgeEstatus = '<span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i>Terminado</span>';
+        badgePaso = '<span class="badge bg-dark"><i class="fa-solid fa-flag-checkered me-1"></i>Paso 3: Cerrado</span>';
+      } else if (st === 'En Proceso') {
+        badgeEstatus = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-arrows-spin me-1"></i>En Proceso</span>';
+        badgePaso = '<span class="badge bg-info text-dark"><i class="fa-solid fa-clock me-1"></i>Paso 2: Sorteo NC</span>';
+      } else {
+        badgeEstatus = '<span class="badge bg-danger"><i class="fa-solid fa-circle-exclamation me-1"></i>Nuevo</span>';
+        badgePaso = '<span class="badge bg-secondary"><i class="fa-solid fa-1 me-1"></i>Paso 1: Registrado</span>';
+      }
+
+      return { badgeEstatus, badgePaso };
     }
 
     // RENDERIZAR TABLA DE VER REGISTROS (PESTAÑA 2)
@@ -929,26 +991,22 @@
       registrosPersistentes.forEach((reg) => {
         const tr = document.createElement('tr');
         const folio = reg.folio_oc || reg.folio || 'N/A';
-        const tieneDisp = reg.no_conformancia === 'DISPOSICIÓN REGISTRADA' || reg.tiene_disposicion || reg.tipo_envio === 'Evaluación y Disposición';
+        const { badgeEstatus, badgePaso } = obtenerBadgesRegistro(reg);
 
-        let estatusClass = 'bg-primary';
-        if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') estatusClass = 'bg-danger';
-        if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') estatusClass = 'bg-warning text-dark';
-
-        let dispBadge = tieneDisp 
-          ? '<span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Con Disposición</span>'
-          : '<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Pendiente NC</span>';
+        let tipoClass = 'bg-primary';
+        if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') tipoClass = 'bg-danger';
+        if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') tipoClass = 'bg-warning text-dark';
 
         tr.innerHTML = `
           <td class="fw-bold text-primary">${folio}</td>
-          <td><span class="badge ${estatusClass}">${reg.tipo_envio || reg.tipo || 'Proceso'}</span></td>
+          <td><span class="badge ${tipoClass}">${reg.tipo_envio || reg.tipo || 'Proceso'}</span></td>
           <td class="small text-muted">${reg.fecha || 'Reciente'}</td>
           <td class="fw-bold">${reg.parte || '-'}</td>
           <td>${reg.cantidad || '1'}</td>
           <td class="small">${reg.almacen_origen || reg.almacen || ''} / ${reg.area || ''}</td>
           <td class="text-danger fw-bold small">${reg.no_conformancia || '-'}</td>
-          <td class="small">${reg.operador || 'Inspector'}</td>
-          <td>${dispBadge}</td>
+          <td>${badgePaso}</td>
+          <td>${badgeEstatus}</td>
           <td class="text-center">
             <button class="btn btn-sm btn-warning fw-bold shadow-sm me-1" onclick="irADisposicionDesdeFolio('${folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
             <button class="btn btn-sm btn-outline-info" onclick="verDetalleModal('${folio}')" title="Ver Detalle"><i class="fa-solid fa-eye"></i></button>
@@ -961,10 +1019,12 @@
     }
 
     function filtrarTablaRegistros() {
-      const searchInput = document.getElementById('searchRegistros');
-      const query = searchInput ? searchInput.value.toLowerCase() : '';
+      const searchElem = document.getElementById('searchRegistros');
+      const query = searchElem ? searchElem.value.toLowerCase() : '';
+      
       const filterElem = document.getElementById('filterTipo');
       const filterTipo = filterElem ? filterElem.value : 'ALL';
+      
       const rows = document.querySelectorAll('#tbodyRegistros tr');
 
       rows.forEach(row => {
@@ -972,10 +1032,10 @@
         const matchesQuery = text.includes(query);
         
         let matchesTipo = true;
-        if (filterTipo === 'PENDING_DISP') {
-          matchesTipo = text.includes('pendiente nc');
-        } else if (filterTipo === 'DONE_DISP') {
-          matchesTipo = text.includes('con disposición');
+        if (filterTipo === 'PENDING') {
+          matchesTipo = text.includes('nuevo') || text.includes('en proceso') || text.includes('paso 1') || text.includes('paso 2');
+        } else if (filterTipo === 'DONE') {
+          matchesTipo = text.includes('terminado') || text.includes('paso 3');
         } else if (filterTipo !== 'ALL') {
           matchesTipo = text.includes(filterTipo.toLowerCase());
         }
@@ -991,7 +1051,7 @@
     // NAVEGAR DIRECTAMENTE A PESTAÑA DISPOSICIÓN CON EL FOLIO SELECCIONADO
     function irADisposicionDesdeFolio(folio) {
       const tabBtn = document.getElementById('tab-disposicion-btn');
-      if (tabBtn && typeof bootstrap !== 'undefined') {
+      if (tabBtn) {
         const tab = new bootstrap.Tab(tabBtn);
         tab.show();
       }
@@ -1004,13 +1064,13 @@
       if (!reg) return;
 
       const tit = document.getElementById('modalDetalleTitulo');
-      if (tit) tit.innerText = "Detalle del Registro: " + (reg.folio_oc || reg.folio);
+      if (tit) tit.innerText = `Detalle del Registro: ${reg.folio_oc || reg.folio}`;
       
       let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2" style="max-height:250px;">` : '<p class="text-muted italic">Sin foto adjunta</p>';
       
-      const cuerpo = document.getElementById('modalDetalleCuerpo');
-      if (cuerpo) {
-        cuerpo.innerHTML = `
+      const body = document.getElementById('modalDetalleCuerpo');
+      if (body) {
+        body.innerHTML = `
           <div class="row g-2">
             <div class="col-6"><strong>Folio:</strong> ${reg.folio_oc || reg.folio}</div>
             <div class="col-6"><strong>Tipo:</strong> ${reg.tipo_envio || reg.tipo}</div>
@@ -1019,9 +1079,9 @@
             <div class="col-6"><strong>Almacén:</strong> ${reg.almacen_origen || reg.almacen} (${reg.locacion_origen || ''})</div>
             <div class="col-6"><strong>Área:</strong> ${reg.area}</div>
             <div class="col-6"><strong>No Conformancia:</strong> <span class="text-danger fw-bold">${reg.no_conformancia}</span></div>
-            <div class="col-6"><strong>Detalle:</strong> ${reg.detalle_nc}</div>
+            <div class="col-6"><strong>Detalle / Causa:</strong> ${reg.detalle_nc}</div>
             <div class="col-6"><strong>Inspector/Operador:</strong> ${reg.operador} (Turno ${reg.turno})</div>
-            <div class="col-6"><strong>Estampa:</strong> ${reg.estampa}</div>
+            <div class="col-6"><strong>Estatus Actual:</strong> <span class="fw-bold">${reg.estatus || 'Nuevo'}</span></div>
           </div>
           <hr>
           <div class="text-center">
@@ -1035,19 +1095,14 @@
       if (btnIr) {
         btnIr.onclick = () => {
           const modalEl = document.getElementById('modalDetalleRegistro');
-          if (modalEl && typeof bootstrap !== 'undefined') {
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-          }
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
           irADisposicionDesdeFolio(folio);
         };
       }
 
-      const modalElement = document.getElementById('modalDetalleRegistro');
-      if (modalElement && typeof bootstrap !== 'undefined') {
-        const myModal = new bootstrap.Modal(modalElement);
-        myModal.show();
-      }
+      const myModal = new bootstrap.Modal(document.getElementById('modalDetalleRegistro'));
+      myModal.show();
     }
 
     // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN Y ACTUALIZACIÓN DESDE GITHUB
@@ -1096,7 +1151,7 @@
           }
         }
       } catch (err) {
-        console.log("Servidor GitHub no disponible. Usando datos persistentes locales.");
+        console.log("Usando datos persistentes locales.");
       }
 
       if (loading) loading.style.display = "none";
@@ -1114,12 +1169,14 @@
 
       lista.forEach(reg => {
         const folio = reg.folio_oc || reg.folio;
+        const { badgeEstatus, badgePaso } = obtenerBadgesRegistro(reg);
+
         const cardHtml = `
           <div class="col-md-6 col-lg-4 mb-3">
             <div class="card record-card p-3 shadow-sm border-start border-4 border-primary">
-              <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-primary fw-bold">${folio}</span>
-                <span class="badge bg-secondary">${reg.tipo_envio || reg.tipo || 'Proceso'}</span>
+                <div class="d-flex gap-1">${badgePaso} ${badgeEstatus}</div>
               </div>
               <h6 class="fw-bold mb-1 text-dark">Parte: ${reg.parte} (${reg.cantidad} pzas)</h6>
               <p class="small text-danger m-0 fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>${reg.no_conformancia}</p>
@@ -1147,6 +1204,20 @@
       const tit = document.getElementById('dispFolioTitulo');
       if (tit) tit.innerText = `${folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
 
+      // Precargar datos si ya existían
+      if (reg.disp_destino) document.getElementById('disp_destino').value = reg.disp_destino;
+      if (reg.disp_responsable) document.getElementById('disp_responsable').value = reg.disp_responsable;
+      if (reg.disp_piezas_buenas) document.getElementById('disp_piezas_buenas').value = reg.disp_piezas_buenas;
+      if (reg.disp_piezas_malas) document.getElementById('disp_piezas_malas').value = reg.disp_piezas_malas;
+      if (reg.estatus) document.getElementById('disp_estatus').value = reg.estatus;
+      
+      if (reg.por_que_1) document.getElementById('por_que_1').value = reg.por_que_1;
+      if (reg.por_que_2) document.getElementById('por_que_2').value = reg.por_que_2;
+      if (reg.por_que_3) document.getElementById('por_que_3').value = reg.por_que_3;
+      if (reg.por_que_4) document.getElementById('por_que_4').value = reg.por_que_4;
+      if (reg.por_que_5) document.getElementById('por_que_5').value = reg.por_que_5;
+      if (reg.disp_accion_correctiva) document.getElementById('disp_accion_correctiva').value = reg.disp_accion_correctiva;
+
       if (panel) panel.scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -1157,29 +1228,51 @@
 
     async function guardarDisposicion(e) {
       e.preventDefault();
-      const tit = document.getElementById('dispFolioTitulo');
-      const folio = tit ? tit.innerText.split(" ")[0] : 'OC-999';
+      const folio = document.getElementById('dispFolioTitulo').innerText.split(" ")[0];
+      const estatusSeleccionado = document.getElementById('disp_estatus').value;
       
+      const pq1 = document.getElementById('por_que_1').value.trim();
+      const pq2 = document.getElementById('por_que_2').value.trim();
+      const pq3 = document.getElementById('por_que_3').value.trim();
+      const pq4 = document.getElementById('por_que_4').value.trim();
+      const pq5 = document.getElementById('por_que_5').value.trim();
+      const accion = document.getElementById('disp_accion_correctiva').value.trim();
+
+      const resumen5Porques = `5-Porqués: [1] ${pq1} | [2] ${pq2} | [3] ${pq3} | [4] ${pq4} | [5-Causa Raíz] ${pq5}`;
+
       const payloadDisposicion = {
         tipo_envio: "Evaluación y Disposición",
         folio_oc: folio,
-        no_conformancia: "DISPOSICIÓN REGISTRADA",
-        detalle_nc: `Destino: ${document.getElementById('disp_destino') ? document.getElementById('disp_destino').value : ''} | Buenas: ${document.getElementById('disp_piezas_buenas') ? document.getElementById('disp_piezas_buenas').value : '0'} | Malas: ${document.getElementById('disp_piezas_malas') ? document.getElementById('disp_piezas_malas').value : '0'} | Causa Raíz: ${document.getElementById('disp_causa_raiz') ? document.getElementById('disp_causa_raiz').value : ''}`,
+        no_conformancia: estatusSeleccionado === 'Terminado' ? "DISPOSICIÓN REGISTRADA" : "EN DISPOSICIÓN",
+        detalle_nc: `Destino: ${document.getElementById('disp_destino').value} | Buenas: ${document.getElementById('disp_piezas_buenas').value} | Malas: ${document.getElementById('disp_piezas_malas').value} | ${resumen5Porques} | Acción: ${accion}`,
         operador: "Inspector de Calidad",
         foto_b64: "",
+        estatus: estatusSeleccionado,
+        disp_destino: document.getElementById('disp_destino').value,
+        disp_responsable: document.getElementById('disp_responsable').value,
+        disp_piezas_buenas: document.getElementById('disp_piezas_buenas').value,
+        disp_piezas_malas: document.getElementById('disp_piezas_malas').value,
+        por_que_1: pq1,
+        por_que_2: pq2,
+        por_que_3: pq3,
+        por_que_4: pq4,
+        por_que_5: pq5,
+        disp_accion_correctiva: accion,
         tiene_disposicion: true
       };
 
       guardarRegistroPersistenteLocal(payloadDisposicion);
       await enviarPayloadProxy(payloadDisposicion);
+      
       cerrarPanelDisposicion();
       cargarRegistrosGitHub();
+      renderizarTablaRegistros();
     }
 
     // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX) O FALLBACK CSV
     function exportarCatalogosExcelXLSX() {
       if (typeof XLSX === 'undefined') {
-        alert("Librería SheetJS no detectada. Generando respaldo en CSV...");
+        alert("Librería SheetJS no detectada. Generando respaldo en CSV de contingencia...");
         exportarCatIndividualCSV();
         return;
       }
@@ -1211,8 +1304,8 @@
     }
 
     function exportarCatIndividualCSV() {
-      const tipoSelect = document.getElementById('exp_cat_individual_tipo');
-      const tipo = tipoSelect ? tipoSelect.value : 'almacenes';
+      const elem = document.getElementById('exp_cat_individual_tipo');
+      const tipo = elem ? elem.value : 'almacenes';
       const datos = catalogosLocal[tipo] || [];
       if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
       
@@ -1225,7 +1318,7 @@
 
     function exportarRegistrosCSV() {
       if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
-      let csvContent = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Foto_URL\n";
+      let csvContent = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_URL\n";
       registrosPersistentes.forEach(r => {
         const fila = [
           r.folio_oc || r.folio || '',
@@ -1241,6 +1334,7 @@
           r.operador || '',
           r.turno || '1',
           r.area || '',
+          r.estatus || 'Nuevo',
           r.foto_b64 || ''
         ];
         csvContent += fila.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(",") + "\n";
@@ -1256,7 +1350,7 @@
     // FUNCIÓN UNIVERSAL DE DESCARGA ADAPTATIVA PARA MÓVILES Y NAVEGADORES
     function downloadFile(content, fileName, mimeType) {
       try {
-        const blob = new Blob(["\ufeff" + content], { type: mimeType });
+        const blob = new Blob(["﻿" + content], { type: mimeType });
         if (navigator.msSaveOrOpenBlob) {
           navigator.msSaveOrOpenBlob(blob, fileName);
           return;
@@ -1281,8 +1375,8 @@
     function importarCatalogos() {
       const fileInput = document.getElementById('fileImportCatalogos');
       const file = fileInput ? fileInput.files[0] : null;
-      const selectorElem = document.getElementById('imp_cat_tipo_selector');
-      const tipo = selectorElem ? selectorElem.value : 'xlsx_multi';
+      const selector = document.getElementById('imp_cat_tipo_selector');
+      const tipo = selector ? selector.value : 'xlsx_multi';
 
       if (!file) { alert("Por favor selecciona un archivo."); return; }
 
@@ -1396,7 +1490,8 @@
                   operador: cols[10] || '',
                   turno: cols[11] || '1',
                   area: cols[12] || '',
-                  foto_b64: cols[13] || ''
+                  estatus: cols[13] || 'Nuevo',
+                  foto_b64: cols[14] || ''
                 };
               });
 
