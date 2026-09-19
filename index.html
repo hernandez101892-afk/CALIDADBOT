@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v20)</title>
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (Catálogos Inteligentes v23)</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d6efd">
   <!-- Bootstrap 5 CSS -->
@@ -81,7 +81,7 @@
     <!-- NAVEGACIÓN POR PESTAÑAS -->
     <ul class="nav nav-pills nav-justified mb-3 shadow-sm bg-white p-2 rounded-3" id="mainTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-registro-btn" data-bs-toggle="pill" data-bs-target="#tab-registro" type="button" role="tab"><i class="fa-solid fa-plus-circle me-1"></i> 1. Nuevo Registro</button>
+        <button class="nav-link active" id="tab-registro-btn" onclick="cargarCatalogosFormulario()" data-bs-toggle="pill" data-bs-target="#tab-registro" type="button" role="tab"><i class="fa-solid fa-plus-circle me-1"></i> 1. Nuevo Registro</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-ver-registros-btn" data-bs-toggle="pill" data-bs-target="#tab-ver-registros" type="button" role="tab" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-table-list me-1"></i> 2. Ver Registros</button>
@@ -139,7 +139,7 @@
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Almacén Origen:</label>
-                  <input type="text" class="form-control" id="almacen_origen" list="dl_almacenes" placeholder="Ej: 204122" value="204122" required>
+                  <input type="text" class="form-control" id="almacen_origen" list="dl_almacenes" onfocus="this.select()" placeholder="Ej: 204122" value="204122" required>
                   <datalist id="dl_almacenes"></datalist>
                 </div>
 
@@ -150,13 +150,13 @@
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Área / Proceso:</label>
-                  <input type="text" class="form-control" id="area" list="dl_areas" placeholder="Ej: Calidad / Foundry" value="Calidad" required>
+                  <input type="text" class="form-control" id="area" list="dl_areas" onfocus="this.select()" placeholder="Ej: Calidad / Foundry" value="Calidad" required>
                   <datalist id="dl_areas"></datalist>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Número de Parte:</label>
-                  <input type="text" class="form-control" id="parte" list="dl_partes" placeholder="Ej: 741000135" required>
+                  <input type="text" class="form-control" id="parte" list="dl_partes" onfocus="this.select()" placeholder="Ej: 741000135" required>
                   <datalist id="dl_partes"></datalist>
                 </div>
 
@@ -167,19 +167,19 @@
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Estampa / Inspector:</label>
-                  <input type="text" class="form-control" id="estampa" list="dl_estampas" placeholder="Ej: e2" value="e2">
+                  <input type="text" class="form-control" id="estampa" list="dl_estampas" onfocus="this.select()" placeholder="Ej: e2" value="e2">
                   <datalist id="dl_estampas"></datalist>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">No Conformancia (Defecto Principal):</label>
-                  <input type="text" class="form-control" id="no_conformancia" list="dl_defectos" placeholder="Selecciona o escribe el defecto" required>
+                  <input type="text" class="form-control" id="no_conformancia" list="dl_defectos" onfocus="this.select()" placeholder="Selecciona o escribe el defecto" required>
                   <datalist id="dl_defectos"></datalist>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Detalle NC / Causa:</label>
-                  <input type="text" class="form-control" id="detalle_nc" list="dl_defectos_sec" placeholder="Detalle secundario o causa">
+                  <input type="text" class="form-control" id="detalle_nc" list="dl_defectos_sec" onfocus="this.select()" placeholder="Detalle secundario o causa">
                   <datalist id="dl_defectos_sec"></datalist>
                 </div>
 
@@ -654,8 +654,8 @@
     let isQrScanning = false;
     let registrosPersistentes = [];
 
-    // CATÁLOGOS LOCALES BASE (Fallback / Editable)
-    let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS')) || {
+    // CATÁLOGOS LOCALES BASE OBLIGATORIOS (Fallback de Integridad)
+    const DEFAULT_CATALOGOS = {
       almacenes: [
         { numero: "201101", nombre: "High Runner Bins - Line 1" },
         { numero: "201102", nombre: "High Runner Bins - Line 2" },
@@ -732,7 +732,115 @@
       ]
     };
 
-    window.addEventListener('DOMContentLoaded', () => {
+    let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS')) || DEFAULT_CATALOGOS;
+
+    // FORMATEADOR INTELIGENTE MULTI-ESTRUCTURA DE ITEMS
+    function formatearItemCatalogo(x) {
+      if (!x) return '';
+      if (typeof x === 'string') return x.trim();
+      if (typeof x !== 'object') return String(x);
+
+      function getProp(obj, keys) {
+        for (let k of keys) {
+          for (let p in obj) {
+            if (p.toLowerCase() === k.toLowerCase() && obj[p] !== undefined && obj[p] !== null) {
+              const str = String(obj[p]).trim();
+              if (str && str !== 'undefined' && str !== 'null') return str;
+            }
+          }
+        }
+        return '';
+      }
+
+      const code = getProp(x, ['numero', 'codigo', 'id', 'key', 'num', 'no']);
+      const name = getProp(x, ['nombre', 'descripcion', 'desc', 'usuario', 'name', 'label', 'valor']);
+      const extra = getProp(x, ['medida', 'turno', 'extra']);
+
+      if (code && name) {
+        return extra ? `${code} - ${name} (${extra})` : `${code} - ${name}`;
+      } else if (code) {
+        return code;
+      } else if (name) {
+        return name;
+      } else {
+        const vals = Object.values(x).map(v => String(v || '').trim()).filter(v => v);
+        return vals.join(' - ');
+      }
+    }
+
+    function obtenerListaCatalogo(key) {
+      let list = null;
+      if (catalogosLocal && Array.isArray(catalogosLocal[key]) && catalogosLocal[key].length > 0) {
+        list = catalogosLocal[key];
+      }
+      if (!list || list.length === 0) {
+        list = DEFAULT_CATALOGOS[key] || [];
+      }
+      return list.map(x => formatearItemCatalogo(x)).filter(s => s && s !== '-');
+    }
+
+    function poblarDatalist(idList, items) {
+      const dl = document.getElementById(idList);
+      if (!dl) return;
+      dl.innerHTML = "";
+      if (!Array.isArray(items)) return;
+      items.forEach(val => {
+        if (val) {
+          const opt = document.createElement('option');
+          opt.value = val;
+          dl.appendChild(opt);
+        }
+      });
+    }
+
+    function cargarCatalogosFormulario() {
+      poblarDatalist("dl_almacenes", obtenerListaCatalogo("almacenes"));
+      poblarDatalist("dl_areas", obtenerListaCatalogo("areas"));
+      poblarDatalist("dl_partes", obtenerListaCatalogo("partes"));
+      poblarDatalist("dl_estampas", obtenerListaCatalogo("estampas"));
+      poblarDatalist("dl_defectos", obtenerListaCatalogo("defectos"));
+      poblarDatalist("dl_defectos_sec", obtenerListaCatalogo("defectosSecundarios"));
+    }
+
+    // SINCRONIZAR CATÁLOGOS DESDE GITHUB (AUTOMÁTICO)
+    async function sincronizarCatalogosGitHub() {
+      const baseGithub = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/CATALOGOS/";
+      const mapCat = [
+        { file: 'almacenes.csv', key: 'almacenes' },
+        { file: 'areas.csv', key: 'areas' },
+        { file: 'partes.csv', key: 'partes' },
+        { file: 'estampas.csv', key: 'estampas' },
+        { file: 'defectos_nc.csv', key: 'defectos' },
+        { file: 'defectos_secundarios.csv', key: 'defectosSecundarios' }
+      ];
+
+      for (let item of mapCat) {
+        try {
+          const res = await fetch(baseGithub + item.file + '?t=' + Date.now());
+          if (res.ok) {
+            const text = await res.text();
+            const lineas = text.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+            if (lineas.length > 1) {
+              const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
+              const parsed = lineas.slice(1).map(l => {
+                const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
+                let obj = {};
+                headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
+                return obj;
+              });
+              if (parsed.length > 0) {
+                catalogosLocal[item.key] = parsed;
+              }
+            }
+          }
+        } catch(e) {}
+      }
+      localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+      cargarCatalogosFormulario();
+      sincronizarCatalogosGitHub();
+    }
+
+window.addEventListener('DOMContentLoaded', () => {
       const proxyInput = document.getElementById('proxyUrl');
       if (proxyInput) {
         proxyInput.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
@@ -741,6 +849,7 @@
 
       inicializarFirmaCanvas();
       cargarCatalogosFormulario();
+      sincronizarCatalogosGitHub();
       cargarRegistrosPersistentesLocales();
       actualizarEstadoRed();
       
@@ -1500,6 +1609,7 @@
 
             localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
             cargarCatalogosFormulario();
+      sincronizarCatalogosGitHub();
             alert("¡Libro de Excel (.xlsx) importado exitosamente! Catálogos actualizados.");
           } catch(err) {
             alert("Error al leer el archivo Excel: " + err.message);
@@ -1536,6 +1646,7 @@
               }
             }
             cargarCatalogosFormulario();
+      sincronizarCatalogosGitHub();
           } catch(err) {
             alert("Error al procesar archivo: " + err.message);
           }
