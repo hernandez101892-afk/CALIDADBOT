@@ -91,8 +91,8 @@
   <div class="header-title text-center">
     <h3 class="m-0 fw-bold"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad, Disposición y Catálogos</h3>
     <small id="netStatus" class="badge-online mt-2 d-inline-block"><i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa + Persistencia Local)</small>
-    <button id="btnInstallPwa" class="btn btn-sm btn-warning fw-bold shadow-sm ms-2 mt-2 d-inline-block" onclick="instalarPwa()"><i class="fa-solid fa-mobile-screen-button me-1"></i>📲 Instalar App</button>
-    <button class="btn btn-sm btn-outline-light fw-bold shadow-sm ms-1 mt-2 d-inline-block" onclick="forzarLimpiezaCacheWeb()"><i class="fa-solid fa-arrows-rotate me-1"></i>🧹 Limpiar Caché / Reiniciar</button>
+    <button type="button" id="btnInstallPwa" class="btn btn-sm btn-warning fw-bold shadow-sm ms-2 mt-2 d-inline-block" onclick="instalarPwa()"><i class="fa-solid fa-mobile-screen-button me-1"></i>📲 Instalar App</button>
+    <button type="button" class="btn btn-sm btn-outline-light fw-bold shadow-sm ms-1 mt-2 d-inline-block" onclick="forzarLimpiezaCacheWeb()"><i class="fa-solid fa-arrows-rotate me-1"></i>🧹 Limpiar Caché / Reiniciar</button>
   </div>
 
   <div class="container-fluid px-3 px-md-4 mb-5">
@@ -756,6 +756,15 @@
   <!-- LÓGICA JAVASCRIPT COMPLETA Y ROBUSTA APP WEB V32 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbzGpkcgt4Elocfep6VW4hMKZ42yBAX_dKhz6iJZtkFmc8fES9TxJwyW2x-j1bN8jH9H/exec";
+
+    function safeSetLocalStorage(key, val) {
+      try {
+        safeSetLocalStorage(key, val);
+      } catch (err) {
+        console.warn("LocalStorage warning:", err);
+      }
+    }
+
     
     let fotoBase64 = "";
     let html5QrCode = null;
@@ -847,7 +856,7 @@
       const proxyInput = document.getElementById('proxyUrl');
       if (proxyInput) {
         proxyInput.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
-        proxyInput.addEventListener('change', function() { localStorage.setItem('PROXY_URL', proxyInput.value); });
+        proxyInput.addEventListener('change', function() { safeSetLocalStorage('PROXY_URL', proxyInput.value); });
       }
 
       inicializarFirmaCanvas();
@@ -1127,16 +1136,40 @@
     function procesarFoto(e) {
       const files = e.target.files;
       if (!files || files.length === 0) return;
+      const file = files[0];
       const reader = new FileReader();
       reader.onload = function(evt) {
-        fotoBase64 = evt.target.result;
-        const img = document.getElementById('fotoPreview');
-        if (img) {
-          img.src = fotoBase64;
-          img.style.display = 'block';
-        }
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          fotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+          const imgPreview = document.getElementById('fotoPreview');
+          if (imgPreview) {
+            imgPreview.src = fotoBase64;
+            imgPreview.style.display = 'block';
+          }
+        };
+        img.src = evt.target.result;
       };
-      reader.readAsDataURL(files[0]);
+      reader.readAsDataURL(file);
     }
 
     // REGISTROS PERSISTENTES LOCALES
@@ -1437,7 +1470,7 @@
       const tit = document.getElementById('modalDetalleTitulo');
       if (tit) tit.innerText = `Detalle & Historial del Folio: ${reg.folio_oc || reg.folio}`;
       
-      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2 shadow-sm" style="max-height:220px; cursor:pointer;" onclick="abrirFotoModalGrande('${reg.foto_b64}', '${reg.folio_oc || reg.folio}')">` : '<p class="text-muted italic">Sin foto adjunta</p>';
+      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2 shadow-sm" style="max-height:220px; cursor:pointer;" onclick="abrirFotoModalGrandePorFolio('${reg.folio_oc || reg.folio}')">` : '<p class="text-muted italic">Sin foto adjunta</p>';
       
       const historial = reg.historial || [
         { fecha: reg.fecha || 'Inicial', evento: 'Registro de Inspección', usuario: reg.operador || 'Inspector', detalle: reg.detalle_nc || 'Incidencia inicial', estatus: reg.estatus || 'Nuevo' }
@@ -1681,7 +1714,7 @@
           htmlFotos += `
             <div class="col-6 col-md-4 col-lg-3 card-foto-item">
               <div class="card h-100 shadow-sm border p-2">
-                <img src="${reg.foto_b64}" class="galeria-img" onclick="abrirFotoModalGrande('${reg.foto_b64}', '${folio}')" alt="Foto ${folio}">
+                <img src="${reg.foto_b64}" class="galeria-img" onclick="abrirFotoModalGrandePorFolio('${folio}')" alt="Foto ${folio}">
                 <div class="card-body p-2 text-center">
                   <span class="badge bg-primary fw-bold">${folio}</span>
                   <p class="small text-muted m-0 mt-1">${reg.parte || 'Foto Evidencia'}</p>
@@ -1712,6 +1745,16 @@
           item.style.display = 'none';
         }
       });
+    }
+
+    
+    function abrirFotoModalGrandePorFolio(folio) {
+      const reg = registrosPersistentes.find(function(r) { return (r.folio_oc || r.folio) === folio; });
+      if (reg && reg.foto_b64) {
+        abrirFotoModalGrande(reg.foto_b64, folio);
+      } else {
+        alert("Fotografía no disponible para el folio: " + folio);
+      }
     }
 
     function abrirFotoModalGrande(src, folio) {
@@ -1764,18 +1807,18 @@
 
       const chkReg = document.getElementById('chkNotifNuevoReg');
       if (chkReg) {
-        localStorage.setItem('NOTIF_SEND_REG', chkReg.checked ? 'true' : 'false');
+        safeSetLocalStorage('NOTIF_SEND_REG', chkReg.checked ? 'true' : 'false');
       }
 
       const chkDisp = document.getElementById('chkNotifDisposicion');
       if (chkDisp) {
-        localStorage.setItem('NOTIF_SEND_DISP', chkDisp.checked ? 'true' : 'false');
+        safeSetLocalStorage('NOTIF_SEND_DISP', chkDisp.checked ? 'true' : 'false');
       }
 
       const proxyConfig = document.getElementById('proxyUrlConfig');
       if (proxyConfig && proxyConfig.value.trim()) {
         const val = proxyConfig.value.trim();
-        localStorage.setItem('PROXY_URL', val);
+        safeSetLocalStorage('PROXY_URL', val);
         const proxyOld = document.getElementById('proxyUrl');
         if (proxyOld) proxyOld.value = val;
       }
