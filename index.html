@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (Catálogos Inteligentes v23)</title>
-    <link rel="manifest" href="manifest.json">
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v29)</title>
+  <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,7 +17,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- HTML5 QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- SheetJS para Excel Multi-Hoja (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -30,7 +29,7 @@
     #canvasFirma { border: 2px dashed #ccc; border-radius: 8px; background: #fff; cursor: crosshair; width: 100%; height: 140px; }
     .badge-offline { background-color: #ffc107; color: #000; font-weight: bold; padding: 6px 12px; border-radius: 20px; }
     .badge-online { background-color: #198754; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 20px; }
-    .nav-pills .nav-link { font-weight: bold; border-radius: 10px; margin-right: 4px; padding: 10px 14px; font-size: 0.92rem; }
+    .nav-pills .nav-link { font-weight: bold; border-radius: 10px; margin-right: 4px; padding: 10px 14px; font-size: 0.90rem; }
     .nav-pills .nav-link.active { background-color: #0d6efd; box-shadow: 0 4px 8px rgba(13,110,253,0.3); }
     .record-card { cursor: pointer; transition: all 0.2s ease; border-left: 5px solid #0d6efd; }
     .record-card:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
@@ -38,19 +37,53 @@
     .table-responsive { max-height: 500px; overflow-y: auto; }
     .kpi-card { border-radius: 12px; padding: 15px; text-align: center; color: white; font-weight: bold; }
     .kpi-total { background: linear-gradient(135deg, #0d6efd, #0b5ed7); }
-    .kpi-pending { background: linear-gradient(135deg, #ffc107, #fd7e14); color: #000; }
     .kpi-done { background: linear-gradient(135deg, #198754, #157347); }
-    /* ESTILOS TIMELINE E HISTORIAL OC */
-    .timeline { position: relative; padding-left: 20px; list-style: none; margin: 0; }
-    .timeline::before { content: ''; position: absolute; top: 0; bottom: 0; left: 7px; width: 2px; background: #0d6efd; }
-    .timeline-item { position: relative; margin-bottom: 15px; }
-    .timeline-item::before { content: ''; position: absolute; left: -17px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #0d6efd; border: 2px solid white; }
-    
-    /* ESTILOS GALERÍA DE FOTOS */
-    .gallery-card { cursor: pointer; transition: all 0.25s ease-in-out; overflow: hidden; border-radius: 10px; border: 1px solid #de2b2b; }
-    .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.18); border-color: #0d6efd; }
-    .gallery-thumb { height: 150px; object-fit: cover; width: 100%; border-radius: 8px 8px 0 0; background-color: #000; }
+    .kpi-pending { background: linear-gradient(135deg, #fd7e14, #d63384); color: #fff; }
+    .galeria-img { height: 180px; object-fit: cover; width: 100%; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
+    .galeria-img:hover { transform: scale(1.03); }
   </style>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => { reg.update().catch(() => {}); })
+          .catch(err => {});
+      });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('btnInstallPwa');
+      if (btn) btn.style.display = 'inline-block';
+    });
+
+    function instalarPwa() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      } else {
+        alert("INSTRUCCIONES DE INSTALACIÓN:\n\n📱 En Android / Chrome / Edge:\n1. Toca los 3 puntos del menú del navegador.\n2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.\n\n🍏 En iPhone / iPad (Safari):\n1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).\n2. Selecciona 'Agregar al inicio'.\n\n💻 En PC / Mac:\n1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.\n2. Haz clic en 'Instalar'.");
+      }
+    }
+
+    function forzarLimpiezaCacheWeb() {
+      if (confirm("¿Deseas forzar la actualización de la página y limpiar la caché del navegador?")) {
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            for (let name of names) caches.delete(name);
+          });
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) registration.unregister();
+          });
+        }
+        window.location.reload(true);
+      }
+    }
+  </script>
 </head>
 <body>
 
@@ -58,7 +91,8 @@
   <div class="header-title text-center">
     <h3 class="m-0 fw-bold"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad, Disposición y Catálogos</h3>
     <small id="netStatus" class="badge-online mt-2 d-inline-block"><i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa + Persistencia Local)</small>
-    <button id="btnInstallPwa" class="btn btn-sm btn-warning fw-bold shadow-sm ms-2 mt-2 d-inline-block" onclick="instalarPwa()"><i class="fa-solid fa-mobile-screen-button me-1"></i>📲 Instalar App en Dispositivo</button>
+    <button id="btnInstallPwa" class="btn btn-sm btn-warning fw-bold shadow-sm ms-2 mt-2 d-inline-block" onclick="instalarPwa()"><i class="fa-solid fa-mobile-screen-button me-1"></i>📲 Instalar App</button>
+    <button class="btn btn-sm btn-outline-light fw-bold shadow-sm ms-1 mt-2 d-inline-block" onclick="forzarLimpiezaCacheWeb()"><i class="fa-solid fa-arrows-rotate me-1"></i>🧹 Limpiar Caché / Reiniciar</button>
   </div>
 
   <div class="container-fluid px-3 px-md-4 mb-5">
@@ -67,28 +101,28 @@
     <div class="row g-3 mb-4" id="resumenKPIs">
       <div class="col-4">
         <div class="kpi-card kpi-total shadow-sm">
-          <small class="d-block text-uppercase text-white-50">Total Registrados</small>
+          <small class="d-block text-uppercase text-white-50">Total Registros</small>
           <span class="fs-3 fw-bold" id="kpiTotalNum">0</span>
         </div>
       </div>
       <div class="col-4">
-        <div class="kpi-card kpi-pending shadow-sm">
-          <small class="d-block text-uppercase fw-bold text-dark"><i class="fa-solid fa-triangle-exclamation me-1"></i>Faltan Disposición</small>
-          <span class="fs-3 fw-bold text-dark" id="kpiPendingNum">0</span>
+        <div class="kpi-card kpi-done shadow-sm">
+          <small class="d-block text-uppercase text-white-50">Con Disposición</small>
+          <span class="fs-3 fw-bold" id="kpiDoneNum">0</span>
         </div>
       </div>
       <div class="col-4">
-        <div class="kpi-card kpi-done shadow-sm">
-          <small class="d-block text-uppercase text-white-50">Terminados / Cerrados</small>
-          <span class="fs-3 fw-bold" id="kpiDoneNum">0</span>
+        <div class="kpi-card kpi-pending shadow-sm">
+          <small class="d-block text-uppercase fw-bold text-white">⚠️ Faltan Disposición</small>
+          <span class="fs-3 fw-bold text-white" id="kpiPendingNum">0</span>
         </div>
       </div>
     </div>
 
-    <!-- NAVEGACIÓN POR PESTAÑAS -->
+    <!-- NAVEGACIÓN POR PESTAÑAS (1 A 7) -->
     <ul class="nav nav-pills nav-justified mb-3 shadow-sm bg-white p-2 rounded-3" id="mainTabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-registro-btn" onclick="cargarCatalogosFormulario()" data-bs-toggle="pill" data-bs-target="#tab-registro" type="button" role="tab"><i class="fa-solid fa-plus-circle me-1"></i> 1. Nuevo Registro</button>
+        <button class="nav-link active" id="tab-registro-btn" data-bs-toggle="pill" data-bs-target="#tab-registro" type="button" role="tab"><i class="fa-solid fa-plus-circle me-1"></i> 1. Nuevo Registro</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-ver-registros-btn" data-bs-toggle="pill" data-bs-target="#tab-ver-registros" type="button" role="tab" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-table-list me-1"></i> 2. Ver Registros</button>
@@ -100,7 +134,7 @@
         <button class="nav-link" id="tab-import-export-btn" data-bs-toggle="pill" data-bs-target="#tab-import-export" type="button" role="tab"><i class="fa-solid fa-file-import me-1"></i> 4. Importar / Exportar</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-archivos-btn" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button" role="tab"><i class="fa-file-excel me-1"></i> 5. Excel</button>
+        <button class="nav-link" id="tab-archivos-btn" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button" role="tab"><i class="fa-file-excel me-1"></i> 5. Excel y Fotos</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-galeria-btn" data-bs-toggle="pill" data-bs-target="#tab-galeria" type="button" role="tab" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-images me-1"></i> 6. Galería de Fotos</button>
@@ -110,6 +144,7 @@
       </li>
     </ul>
 
+    <!-- CONTENEDOR DE PESTAÑAS (TODAS LAS 7 PESTAÑAS DENTRO DE mainTabsContent) -->
     <div class="tab-content" id="mainTabsContent">
 
       <!-- PESTAÑA 1: NUEVO REGISTRO -->
@@ -149,7 +184,7 @@
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Almacén Origen:</label>
-                  <input type="text" class="form-control" id="almacen_origen" list="dl_almacenes" onfocus="this.select()" placeholder="Ej: 204122" value="204122" required>
+                  <input type="text" class="form-control" id="almacen_origen" list="dl_almacenes" placeholder="Ej: 204122 - Foundry" value="204122" onfocus="this.select()" required>
                   <datalist id="dl_almacenes"></datalist>
                 </div>
 
@@ -160,13 +195,13 @@
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Área / Proceso:</label>
-                  <input type="text" class="form-control" id="area" list="dl_areas" onfocus="this.select()" placeholder="Ej: Calidad / Foundry" value="Calidad" required>
+                  <input type="text" class="form-control" id="area" list="dl_areas" placeholder="Ej: Calidad / Foundry" value="Calidad" onfocus="this.select()" required>
                   <datalist id="dl_areas"></datalist>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Número de Parte:</label>
-                  <input type="text" class="form-control" id="parte" list="dl_partes" onfocus="this.select()" placeholder="Ej: 741000135" required>
+                  <input type="text" class="form-control" id="parte" list="dl_partes" placeholder="Selecciona o escribe Número de Parte" onfocus="this.select()" required>
                   <datalist id="dl_partes"></datalist>
                 </div>
 
@@ -177,24 +212,24 @@
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Estampa / Inspector:</label>
-                  <input type="text" class="form-control" id="estampa" list="dl_estampas" onfocus="this.select()" placeholder="Ej: e2" value="e2">
+                  <input type="text" class="form-control" id="estampa" list="dl_estampas" placeholder="Ej: e2 - Inspector E2" value="e2" onfocus="this.select()">
                   <datalist id="dl_estampas"></datalist>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">No Conformancia (Defecto Principal):</label>
-                  <input type="text" class="form-control" id="no_conformancia" list="dl_defectos" onfocus="this.select()" placeholder="Selecciona o escribe el defecto" required>
+                  <input type="text" class="form-control" id="no_conformancia" list="dl_defectos" placeholder="Selecciona o escribe el defecto" onfocus="this.select()" required>
                   <datalist id="dl_defectos"></datalist>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label fw-bold">Detalle NC / Causa:</label>
-                  <input type="text" class="form-control" id="detalle_nc" list="dl_defectos_sec" onfocus="this.select()" placeholder="Detalle secundario o causa">
+                  <label class="form-label fw-bold">Detalle NC / Causa Secundario:</label>
+                  <input type="text" class="form-control" id="detalle_nc" list="dl_defectos_sec" placeholder="Detalle secundario o causa" onfocus="this.select()">
                   <datalist id="dl_defectos_sec"></datalist>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label fw-bold">Operador / Inspector Responsable:</label>
+                  <label class="form-label fw-bold">Operador / Responsable:</label>
                   <input type="text" class="form-control" id="operador" placeholder="Nombre del inspector/operador" value="Inspector">
                 </div>
 
@@ -262,14 +297,14 @@
               <div class="col-md-4">
                 <select id="filterTipo" class="form-select" onchange="filtrarTablaRegistros()">
                   <option value="ALL">Todos los Registros</option>
-                  <option value="PENDING">⚠️ Pendientes de Disposición (Nuevo / En Proceso)</option>
-                  <option value="DONE">🟢 Terminados / Cerrados</option>
-                  <option value="Nuevo">Estatus: Nuevo</option>
-                  <option value="En Proceso">Estatus: En Proceso</option>
-                  <option value="Terminado">Estatus: Terminado</option>
-                  <option value="Proceso">Proceso / Recibo</option>
-                  <option value="Contención">Contención / Sorteo</option>
-                  <option value="Rechazo">Rechazo</option>
+                  <option value="PENDING_DISP">⚠️ Pendientes de Disposición (Nuevo / En Proceso)</option>
+                  <option value="DONE_DISP">🟢 Terminados / Cerrados</option>
+                  <option value="EST_NUEVO">Estatus: Nuevo</option>
+                  <option value="EST_PROCESO">Estatus: En Proceso</option>
+                  <option value="EST_TERMINADO">Estatus: Terminado</option>
+                  <option value="Proceso">Tipo: Proceso / Recibo</option>
+                  <option value="Contención">Tipo: Contención / Sorteo</option>
+                  <option value="Rechazo">Tipo: Rechazo</option>
                 </select>
               </div>
               <div class="col-md-3">
@@ -289,8 +324,8 @@
                     <th>Cant.</th>
                     <th>Almacén / Área</th>
                     <th>No Conformancia</th>
-                    <th>Etapa / Paso</th>
-                    <th>Estatus Final</th>
+                    <th>Operador</th>
+                    <th>Estatus & Etapa</th>
                     <th class="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -315,11 +350,11 @@
             <button class="btn btn-sm btn-light" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Actualizar Lista</button>
           </div>
           <div class="card-body">
-            <p class="text-muted small m-0 mb-3">Haz clic en el botón <strong>"Evaluar Disposición"</strong> de cualquier registro para abrir la evaluación de 3 Pasos (Destino, Sorteo, Análisis 5 Porqués y Causa Raíz).</p>
+            <p class="text-muted small m-0 mb-3">Haz clic en el botón <strong>"Evaluar Disposición"</strong> de cualquier registro para abrir la evaluación de 3 Pasos (Destino, Sorteo y Análisis 5-Porqués).</p>
 
             <div id="loadingRegistros" class="text-center py-4" style="display:none;">
               <div class="spinner-border text-primary" role="status"></div>
-              <p class="mt-2 text-muted">Cargando lista de incidencias...</p>
+              <p class="mt-2 text-muted">Cargando lista de incidencias desde GitHub / Memoria Local...</p>
             </div>
 
             <div id="listaIncidencias" class="row">
@@ -328,7 +363,7 @@
           </div>
         </div>
 
-        <!-- FORMULARIO DE EVALUACIÓN / DISPOSICIÓN COMPLETO -->
+        <!-- FORMULARIO DE EVALUACIÓN / DISPOSICIÓN EN 3 PASOS -->
         <div class="card mt-3 shadow-lg border-warning" id="panelEvaluacionDisposicion" style="display:none;">
           <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
             <span><i class="fa-solid fa-gavel me-2"></i>Módulo de Disposición de Calidad: <strong id="dispFolioTitulo"></strong></span>
@@ -360,8 +395,8 @@
                 </div>
               </div>
 
-              <!-- PASO 2: CONCILIACIÓN DE SORTEO Y ESTATUS DE PROGRESO -->
-              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-2 me-1"></i>Paso 2: Conteo de Sorteo y Estatus de Registro</h6>
+              <!-- PASO 2: CONCILIACIÓN DE SORTEO Y ESTATUS -->
+              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-2 me-1"></i>Paso 2: Conteo y Conciliación de Sorteo</h6>
               <div class="row g-3 mb-3">
                 <div class="col-md-4">
                   <label class="form-label fw-bold">Piezas Buenas (Aceptadas):</label>
@@ -372,62 +407,48 @@
                   <input type="number" class="form-control" id="disp_piezas_malas" value="0" min="0">
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label fw-bold">Estatus del Registro:</label>
-                  <select class="form-select fw-bold" id="disp_estatus" required>
-                    <option value="Nuevo">🔴 Nuevo (Registrado sin Sorteo)</option>
-                    <option value="En Proceso" selected>🟡 En Proceso (Sorteo / Evaluación Activa)</option>
-                    <option value="Terminado">🟢 Terminado (Disposición y Cierre Completo)</option>
+                  <label class="form-label fw-bold">Estatus Final de la Incidencia:</label>
+                  <select class="form-select fw-bold text-primary" id="disp_estatus">
+                    <option value="Nuevo">🔴 Nuevo (Ingresado Sin Disposición)</option>
+                    <option value="En Proceso" selected>🟡 En Proceso (Sorteo / Retrabajo Activo)</option>
+                    <option value="Terminado">🟢 Terminado (Cierre Conciliado con Causa Raíz)</option>
                   </select>
                 </div>
               </div>
 
               <!-- PASO 3: ANÁLISIS COMPLETO DE LOS 5 PORQUÉS Y CAUSA RAÍZ -->
-              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-3 me-1"></i>Paso 3: Análisis de los 5 Porqués, Causa Raíz y Acción Correctiva</h6>
+              <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-3 me-1"></i>Paso 3: Análisis de Causa Raíz (5 Porqués) & Acción Correctiva</h6>
               
-              <div class="bg-light p-3 rounded mb-3 border">
-                <label class="form-label fw-bold text-dark mb-2"><i class="fa-solid fa-diagram-project me-1"></i>Metodología de los 5 Porqués (Causa Raíz):</label>
-                
-                <div class="row g-2 mb-2">
-                  <div class="col-12">
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-secondary text-white fw-bold">1º Por qué:</span>
-                      <input type="text" class="form-control" id="por_que_1" placeholder="¿Por qué ocurrió el defecto inicial?">
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-secondary text-white fw-bold">2º Por qué:</span>
-                      <input type="text" class="form-control" id="por_que_2" placeholder="¿Por qué ocurrió el 1er motivo?">
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-secondary text-white fw-bold">3º Por qué:</span>
-                      <input type="text" class="form-control" id="por_que_3" placeholder="¿Por qué ocurrió el 2do motivo?">
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-secondary text-white fw-bold">4º Por qué:</span>
-                      <input type="text" class="form-control" id="por_que_4" placeholder="¿Por qué ocurrió el 3er motivo?">
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="input-group input-group-sm">
-                      <span class="input-group-text bg-danger text-white fw-bold">5º Por qué (Causa Raíz Final):</span>
-                      <input type="text" class="form-control fw-bold border-danger" id="por_que_5" placeholder="¿Causa raíz originaria del problema?">
-                    </div>
-                  </div>
+              <div class="row g-2 mb-3 bg-light p-3 rounded border">
+                <div class="col-md-6 mb-2">
+                  <label class="form-label small fw-bold text-muted">1º Por qué (¿Por qué ocurrió la falla?):</label>
+                  <input type="text" class="form-control form-control-sm" id="disp_porque1" placeholder="Ej: Se detectó fuga en la rosca del componente">
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label small fw-bold text-muted">2º Por qué (¿Por qué sucedió lo anterior?):</label>
+                  <input type="text" class="form-control form-control-sm" id="disp_porque2" placeholder="Ej: La rosca presentó rebaba de maquinado">
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label small fw-bold text-muted">3º Por qué (¿Por qué no se previno?):</label>
+                  <input type="text" class="form-control form-control-sm" id="disp_porque3" placeholder="Ej: El buril del torno estaba desgastado">
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label small fw-bold text-muted">4º Por qué (¿Por qué falló el control?):</label>
+                  <input type="text" class="form-control form-control-sm" id="disp_porque4" placeholder="Ej: No se realizó la inspección de cambio de herramienta">
+                </div>
+                <div class="col-12 mb-2">
+                  <label class="form-label fw-bold text-danger"><i class="fa-solid fa-bullseye me-1"></i>5º Por qué (CAUSA RAÍZ FINAL):</label>
+                  <input type="text" class="form-control form-control-sm border-danger fw-bold" id="disp_porque5" placeholder="Ej: Falta de checklist obligatorio de mantenimiento preventivo de herramental">
                 </div>
               </div>
 
               <div class="mb-3">
-                <label class="form-label fw-bold">Acción Correctiva Implementada / Plan de Acción:</label>
-                <textarea class="form-control" id="disp_accion_correctiva" rows="2" placeholder="Describa la acción preventiva o correctiva implementada..."></textarea>
+                <label class="form-label fw-bold">Acción Correctiva / Preventiva Implementada:</label>
+                <textarea class="form-control" id="disp_accion_correctiva" rows="2" placeholder="Describa el plan de acción para evitar recurrencia..."></textarea>
               </div>
 
               <div class="text-center mt-4 d-flex gap-2">
-                <button type="submit" class="btn btn-warning btn-lg btn-custom flex-grow-1 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Disposición y Actualizar Registro</button>
+                <button type="submit" class="btn btn-warning btn-lg btn-custom flex-grow-1 fw-bold shadow-sm"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Disposición en Registro</button>
                 <button type="button" class="btn btn-secondary btn-lg btn-custom" onclick="cerrarPanelDisposicion()">Cancelar</button>
               </div>
 
@@ -520,45 +541,6 @@
       </div>
 
 
-
-      <!-- PESTAÑA 6: GALERÍA DE FOTOS DE EVIDENCIA (GITHUB Y LOCAL) -->
-      <div class="tab-pane fade" id="tab-galeria" role="tabpanel">
-        
-        <div class="card shadow-sm">
-          <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span><i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia (<span id="cantFotosGaleria">0</span>)</span>
-            <button class="btn btn-sm btn-outline-light" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-arrows-rotate me-1"></i>Refrescar Galería</button>
-          </div>
-          <div class="card-body">
-            
-            <!-- BUSCADOR DE FOTOS -->
-            <div class="row g-2 mb-3">
-              <div class="col-md-8">
-                <div class="input-group">
-                  <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                  <input type="text" id="searchFotosGaleria" class="form-control" placeholder="Buscar foto por Folio OC, Parte, Defecto u Operador..." onkeyup="filtrarGaleriaFotos()">
-                </div>
-              </div>
-              <div class="col-md-4">
-                <button class="btn btn-primary w-100 fw-bold" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-camera me-1"></i>Cargar Fotos GitHub y Locales</button>
-              </div>
-            </div>
-
-            <!-- CONTENEDOR DE TARJETAS DE FOTOS -->
-            <div id="loadingGaleria" class="text-center py-4" style="display:none;">
-              <div class="spinner-border text-primary" role="status"></div>
-              <p class="mt-2 text-muted">Cargando fotografías desde GitHub y registros locales...</p>
-            </div>
-
-            <div id="contenedorGaleriaFotos" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
-              <!-- Las miniaturas de las fotos se renderizan aquí dinámicamente -->
-            </div>
-
-          </div>
-        </div>
-
-      </div>
-
       <!-- PESTAÑA 5: ARCHIVOS Y EXCEL -->
       <div class="tab-pane fade" id="tab-archivos" role="tabpanel">
         
@@ -608,42 +590,119 @@
 
       </div>
 
-    </div>
 
-  </div>
+      <!-- PESTAÑA 6: GALERÍA DE FOTOS DE EVIDENCIA -->
+      <div class="tab-pane fade" id="tab-galeria" role="tabpanel">
+        
+        <div class="card">
+          <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <span><i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia (GitHub & Local)</span>
+            <button class="btn btn-sm btn-dark" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-rotate me-1"></i>Refrescar Galería</button>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">Haz clic en cualquier miniatura para ver la fotografía en alta resolución y descargar la imagen original:</p>
 
-  
-  <!-- MODAL CÓDIGO QR GENERADO -->
-  <div class="modal fade" id="modalQrGenerado" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-primary shadow-lg">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-qrcode me-2"></i>Código QR de Inspección Generado</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="row g-2 mb-3">
+              <div class="col-md-8">
+                <input type="text" id="searchFotos" class="form-control" placeholder="Filtrar por Folio OC, Número de Parte o Inspector..." onkeyup="filtrarGaleriaFotos()">
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-outline-warning text-dark w-100 fw-bold" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-filter me-1"></i>Actualizar Galería</button>
+              </div>
+            </div>
+
+            <div id="containerGaleriaFotos" class="row g-3">
+              <!-- Las miniaturas se cargan dinámicamente -->
+            </div>
+          </div>
         </div>
-        <div class="modal-body text-center p-4">
-          <div class="badge bg-success mb-2 px-3 py-2 fs-6"><i class="fa-solid fa-check-circle me-1"></i>¡Registro Guardado Exitosamente!</div>
-          <h5 class="fw-bold text-dark mt-2 mb-1" id="modalQrFolioTitulo">OC-XXXXXX</h5>
-          <p class="text-muted small mb-3">Escanea este código QR con la cámara de cualquier celular para ir directo a la evaluación de disposición de esta orden de control.</p>
 
-          <div id="qrContainerModal" class="d-flex justify-content-center align-items-center my-3 p-3 bg-light rounded border shadow-sm" style="min-height: 230px;"></div>
-
-          <p class="small text-break text-muted bg-white p-2 rounded border font-monospace" id="modalQrUrlTexto"></p>
-        </div>
-        <div class="modal-footer d-flex justify-content-between bg-light">
-          <button type="button" class="btn btn-warning fw-bold shadow-sm" id="btnModalQrIrDisposicion"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición Ahora</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- MODAL PARA VER DETALLE / FOTO -->
+
+      <!-- PESTAÑA 7: CONFIGURACIÓN DE ALERTAS, CORREOS Y SERVIDOR -->
+      <div class="tab-pane fade" id="tab-config" role="tabpanel">
+        
+        <div class="row g-4">
+          
+          <!-- TARJETA CONFIGURACIÓN DE CORREOS -->
+          <div class="col-md-7">
+            <div class="card border-primary shadow-sm h-100">
+              <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-envelope-open-text me-2"></i>Notificaciones por Correo Electrónico</span>
+                <span class="badge bg-light text-primary">Email Alerts</span>
+              </div>
+              <div class="card-body">
+                <p class="text-muted small">Configura las direcciones de correo a las que el servidor de Google Apps Script enviará una alerta automática cada vez que se registre una inspección o una disposición.</p>
+                
+                <div class="mb-3">
+                  <label class="form-label fw-bold"><i class="fa-solid fa-at me-1 text-primary"></i>Correos Destinatarios (Separados por coma):</label>
+                  <textarea id="notifEmails" class="form-control" rows="3" placeholder="ejemplo: supervisor_calidad@planta.com, gerente@planta.com, inspeccion@planta.com"></textarea>
+                  <small class="text-muted">Puedes agregar múltiples cuentas separadas por comas.</small>
+                </div>
+
+                <h6 class="fw-bold text-dark mt-4 mb-2"><i class="fa-solid fa-bell me-1 text-warning"></i>Opciones de Alerta Automática:</h6>
+                
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" id="chkNotifNuevoReg" checked>
+                  <label class="form-check-label fw-bold" for="chkNotifNuevoReg">Enviar correo al crear un <strong>Nuevo Registro de Inspección</strong></label>
+                </div>
+
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="chkNotifDisposicion" checked>
+                  <label class="form-check-label fw-bold" for="chkNotifDisposicion">Enviar correo al registrar evaluación de <strong>Disposición NC (5 Porqués)</strong></label>
+                </div>
+
+                <div class="alert alert-info small mb-3">
+                  <i class="fa-solid fa-circle-info me-1"></i>Los correos se envían a través del servicio de Google Apps Script cuando la app transmite los datos.
+                </div>
+
+                <button class="btn btn-success fw-bold w-100 shadow-sm btn-custom" onclick="guardarConfiguracionSistema()"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Configuración de Correos</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TARJETA CONFIGURACIÓN SERVIDOR PROXY Y PWA -->
+          <div class="col-md-5">
+            <div class="card border-dark shadow-sm h-100">
+              <div class="card-header bg-dark text-white"><i class="fa-solid fa-server me-2"></i>Servidor Proxy & App Web PWA</div>
+              <div class="card-body d-flex flex-column justify-content-between">
+                <div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold text-dark mb-1"><i class="fa-solid fa-gears me-1 text-primary"></i>URL del Servidor Proxy (Google Apps Script):</label>
+                    <input type="text" id="proxyUrlConfig" class="form-control form-control-sm mb-2" placeholder="https://script.google.com/macros/s/.../exec">
+                    <small class="text-muted">Enlace de implementación web para sincronización con GitHub y correo.</small>
+                  </div>
+
+                  <hr>
+
+                  <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-mobile-screen-button me-1 text-success"></i>Estado PWA en el Dispositivo:</h6>
+                  <p class="text-muted small">Instala esta aplicación web en la pantalla de inicio de tu teléfono móvil para un acceso directo nativo e inspección offline.</p>
+                  
+                  <button id="btnInstallPwaConfig" class="btn btn-outline-warning text-dark fw-bold w-100 shadow-sm mb-2" onclick="instalarPwa()"><i class="fa-solid fa-download me-1"></i>📲 Instalar App en Dispositivo</button>
+                </div>
+
+                <div class="mt-3 text-center">
+                  <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="guardarConfiguracionSistema()"><i class="fa-solid fa-check me-1"></i>Aplicar Todos los Cambios</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div> <!-- FIN DE mainTabsContent -->
+
+  </div> <!-- FIN DE container-fluid -->
+
+  <!-- MODAL PARA VER DETALLE / HISTORIAL -->
   <div class="modal fade" id="modalDetalleRegistro" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title fw-bold" id="modalDetalleTitulo">Detalle del Registro</h5>
+          <h5 class="modal-title fw-bold" id="modalDetalleTitulo">Detalle del Registro & Historial</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" id="modalDetalleCuerpo">
@@ -656,7 +715,6 @@
       </div>
     </div>
   </div>
-
 
   <!-- MODAL VISTA PREVIA FOTO EN GRANDE -->
   <div class="modal fade" id="modalFotoGrande" tabindex="-1" aria-hidden="true">
@@ -678,10 +736,34 @@
     </div>
   </div>
 
+  <!-- MODAL GENERADOR Y CONSULTA CÓDIGO QR -->
+  <div class="modal fade" id="modalQrGenerado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-qrcode me-2"></i>Código QR de Inspección Generado</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-3">
+          <p class="text-muted small m-0 fw-bold" id="modalQrFolioTitulo">Etiqueta QR de Inspección</p>
+          <div id="qrContainerModal" class="d-flex justify-content-center align-items-center my-3 p-3 bg-light rounded border shadow-sm" style="min-height: 230px;"></div>
+          <small class="text-muted d-block break-all" id="modalQrUrlTexto"></small>
+          <div class="alert alert-info small mt-3 mb-0">
+            <i class="fa-solid fa-circle-info me-1"></i>Escanea este código QR con cualquier cámara o desde la App Web para ir directo a la evaluación de Disposición NC.
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+          <button type="button" class="btn btn-warning fw-bold" id="btnModalQrIrDisposicion"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición Ahora</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V25 - Google QR API -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V29 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbzGpkcgt4Elocfep6VW4hMKZ42yBAX_dKhz6iJZtkFmc8fES9TxJwyW2x-j1bN8jH9H/exec";
     
@@ -690,8 +772,8 @@
     let isQrScanning = false;
     let registrosPersistentes = [];
 
-    // CATÁLOGOS LOCALES BASE OBLIGATORIOS (Fallback de Integridad)
-    const DEFAULT_CATALOGOS = {
+    // CATÁLOGOS LOCALES BASE (Fallback / Editable)
+    let DEFAULT_CATALOGOS = {
       almacenes: [
         { numero: "201101", nombre: "High Runner Bins - Line 1" },
         { numero: "201102", nombre: "High Runner Bins - Line 2" },
@@ -770,113 +852,7 @@
 
     let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS')) || DEFAULT_CATALOGOS;
 
-    // FORMATEADOR INTELIGENTE MULTI-ESTRUCTURA DE ITEMS
-    function formatearItemCatalogo(x) {
-      if (!x) return '';
-      if (typeof x === 'string') return x.trim();
-      if (typeof x !== 'object') return String(x);
-
-      function getProp(obj, keys) {
-        for (let k of keys) {
-          for (let p in obj) {
-            if (p.toLowerCase() === k.toLowerCase() && obj[p] !== undefined && obj[p] !== null) {
-              const str = String(obj[p]).trim();
-              if (str && str !== 'undefined' && str !== 'null') return str;
-            }
-          }
-        }
-        return '';
-      }
-
-      const code = getProp(x, ['numero', 'codigo', 'id', 'key', 'num', 'no']);
-      const name = getProp(x, ['nombre', 'descripcion', 'desc', 'usuario', 'name', 'label', 'valor']);
-      const extra = getProp(x, ['medida', 'turno', 'extra']);
-
-      if (code && name) {
-        return extra ? `${code} - ${name} (${extra})` : `${code} - ${name}`;
-      } else if (code) {
-        return code;
-      } else if (name) {
-        return name;
-      } else {
-        const vals = Object.values(x).map(v => String(v || '').trim()).filter(v => v);
-        return vals.join(' - ');
-      }
-    }
-
-    function obtenerListaCatalogo(key) {
-      let list = null;
-      if (catalogosLocal && Array.isArray(catalogosLocal[key]) && catalogosLocal[key].length > 0) {
-        list = catalogosLocal[key];
-      }
-      if (!list || list.length === 0) {
-        list = DEFAULT_CATALOGOS[key] || [];
-      }
-      return list.map(x => formatearItemCatalogo(x)).filter(s => s && s !== '-');
-    }
-
-    function poblarDatalist(idList, items) {
-      const dl = document.getElementById(idList);
-      if (!dl) return;
-      dl.innerHTML = "";
-      if (!Array.isArray(items)) return;
-      items.forEach(val => {
-        if (val) {
-          const opt = document.createElement('option');
-          opt.value = val;
-          dl.appendChild(opt);
-        }
-      });
-    }
-
-    function cargarCatalogosFormulario() {
-      poblarDatalist("dl_almacenes", obtenerListaCatalogo("almacenes"));
-      poblarDatalist("dl_areas", obtenerListaCatalogo("areas"));
-      poblarDatalist("dl_partes", obtenerListaCatalogo("partes"));
-      poblarDatalist("dl_estampas", obtenerListaCatalogo("estampas"));
-      poblarDatalist("dl_defectos", obtenerListaCatalogo("defectos"));
-      poblarDatalist("dl_defectos_sec", obtenerListaCatalogo("defectosSecundarios"));
-    }
-
-    // SINCRONIZAR CATÁLOGOS DESDE GITHUB (AUTOMÁTICO)
-    async function sincronizarCatalogosGitHub() {
-      const baseGithub = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/CATALOGOS/";
-      const mapCat = [
-        { file: 'almacenes.csv', key: 'almacenes' },
-        { file: 'areas.csv', key: 'areas' },
-        { file: 'partes.csv', key: 'partes' },
-        { file: 'estampas.csv', key: 'estampas' },
-        { file: 'defectos_nc.csv', key: 'defectos' },
-        { file: 'defectos_secundarios.csv', key: 'defectosSecundarios' }
-      ];
-
-      for (let item of mapCat) {
-        try {
-          const res = await fetch(baseGithub + item.file + '?t=' + Date.now());
-          if (res.ok) {
-            const text = await res.text();
-            const lineas = text.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
-            if (lineas.length > 1) {
-              const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
-              const parsed = lineas.slice(1).map(l => {
-                const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
-                let obj = {};
-                headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
-                return obj;
-              });
-              if (parsed.length > 0) {
-                catalogosLocal[item.key] = parsed;
-              }
-            }
-          }
-        } catch(e) {}
-      }
-      localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
-      cargarCatalogosFormulario();
-      sincronizarCatalogosGitHub();
-    }
-
-window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', () => {
       const proxyInput = document.getElementById('proxyUrl');
       if (proxyInput) {
         proxyInput.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
@@ -888,20 +864,19 @@ window.addEventListener('DOMContentLoaded', () => {
       sincronizarCatalogosGitHub();
       cargarRegistrosPersistentesLocales();
       actualizarEstadoRed();
+      cargarConfiguracionSistema();
       
-      // CARGAR REGISTROS DESDE GITHUB AUTOMÁTICAMENTE AL ABRIR LA APP WEB
+      // CARGAR REGISTROS Y GALERÍA DESDE GITHUB
       cargarRegistrosGitHub();
       cargarGaleriaFotos();
-      cargarConfiguracionSistema();
 
-      // DETECTAR SI LA PÁGINA FUE ABIERTA POR ESCANEO DE QR EXTERNO CON PARAMETRO ?folio=...
+      // VERIFICAR SI LA URL TRAE UN FOLIO EN PARÁMETROS (Ej: ?folio=OC-984512)
       const urlParams = new URLSearchParams(window.location.search);
-      const folioParam = urlParams.get('folio') || urlParams.get('oc') || urlParams.get('disposicion');
-      if (folioParam) {
-        console.log("Detectado Folio en URL por escaneo QR:", folioParam);
+      const targetFolioParam = urlParams.get('folio');
+      if (targetFolioParam) {
         setTimeout(() => {
-          irADisposicionDesdeFolio(folioParam.trim());
-        }, 800);
+          irADisposicionDesdeFolio(targetFolioParam);
+        }, 600);
       }
 
       window.addEventListener('online', actualizarEstadoRed);
@@ -921,57 +896,124 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // CARGAR Y POBLAR CATALOGOS
+    // CARGAR Y POBLAR CATALOGOS CON SOPORTE UNIVERSAL DE FORMATO
+    function formatearItemCatalogo(x) {
+      if (!x) return "";
+      if (typeof x === 'string') return x;
+      const cod = x.numero || x.codigo || x.NUMERO || x.CODIGO || x.id || "";
+      const nom = x.nombre || x.descripcion || x.NOMBRE || x.DESCRIPCION || x.usuario || "";
+      const extra = x.medida || x.MEDIDA || "";
+      
+      if (cod && nom) return `${cod} - ${nom}${extra ? ' ('+extra+')' : ''}`;
+      if (nom) return nom;
+      if (cod) return cod;
+      return JSON.stringify(x);
+    }
+
     function poblarDatalist(idList, items) {
       const dl = document.getElementById(idList);
       if (!dl) return;
       dl.innerHTML = "";
       items.forEach(val => {
-        const opt = document.createElement('option');
-        opt.value = val;
-        dl.appendChild(opt);
+        const textStr = formatearItemCatalogo(val);
+        if (textStr) {
+          const opt = document.createElement('option');
+          opt.value = textStr;
+          dl.appendChild(opt);
+        }
       });
     }
 
     function cargarCatalogosFormulario() {
-      poblarDatalist("dl_almacenes", catalogosLocal.almacenes.map(x => `${x.numero || x.codigo || ''} - ${x.nombre || ''}`));
-      poblarDatalist("dl_areas", catalogosLocal.areas.map(x => `${x.codigo || ''} - ${x.nombre || ''}`));
-      poblarDatalist("dl_partes", catalogosLocal.partes.map(x => `${x.codigo || ''} - ${x.descripcion || x.nombre || ''}`));
-      poblarDatalist("dl_estampas", catalogosLocal.estampas.map(x => `${x.codigo || ''} (${x.usuario || ''} - ${x.medida || ''})`));
-      poblarDatalist("dl_defectos", catalogosLocal.defectos.map(x => `${x.codigo || ''} - ${x.nombre || ''}`));
-      poblarDatalist("dl_defectos_sec", catalogosLocal.defectosSecundarios.map(x => `${x.codigo || ''} - ${x.nombre || ''}`));
+      const cats = catalogosLocal || DEFAULT_CATALOGOS;
+      poblarDatalist("dl_almacenes", cats.almacenes || DEFAULT_CATALOGOS.almacenes);
+      poblarDatalist("dl_areas", cats.areas || DEFAULT_CATALOGOS.areas);
+      poblarDatalist("dl_partes", cats.partes || DEFAULT_CATALOGOS.partes);
+      poblarDatalist("dl_estampas", cats.estampas || DEFAULT_CATALOGOS.estampas);
+      poblarDatalist("dl_defectos", cats.defectos || DEFAULT_CATALOGOS.defectos);
+      poblarDatalist("dl_defectos_sec", cats.defectosSecundarios || DEFAULT_CATALOGOS.defectosSecundarios);
+    }
+
+    async function sincronizarCatalogosGitHub() {
+      const baseUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/CATALOGOS/";
+      const archivos = [
+        { file: 'almacenes.csv', key: 'almacenes' },
+        { file: 'areas.csv', key: 'areas' },
+        { file: 'partes.csv', key: 'partes' },
+        { file: 'estampas.csv', key: 'estampas' },
+        { file: 'defectos.csv', key: 'defectos' },
+        { file: 'defectos_secundarios.csv', key: 'defectosSecundarios' }
+      ];
+
+      for (const item of archivos) {
+        try {
+          const res = await fetch(baseUrl + item.file + "?t=" + Date.now());
+          if (res.ok) {
+            const text = await res.text();
+            const lineas = text.split(/
+?
+/).filter(l => l.trim().length > 0 && !l.startsWith('sep='));
+            if (lineas.length > 1) {
+              const headers = lineas[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+              const parsedItems = lineas.slice(1).map(l => {
+                const cols = l.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                let obj = {};
+                headers.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
+                return obj;
+              });
+              if (parsedItems.length > 0) {
+                catalogosLocal[item.key] = parsedItems;
+              }
+            }
+          }
+        } catch(e) {}
+      }
+      localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+      cargarCatalogosFormulario();
     }
 
     // ESCÁNER QR
-    
-    // PROCESAR QR ESCANEADO (INTERNO Y EXTERNO)
-    function procesarQrEscaneado(rawText) {
-      if (!rawText) return;
-      rawText = rawText.trim();
-      let folio = rawText;
-
-      try {
-        if (rawText.startsWith('http://') || rawText.startsWith('https://')) {
-          const urlObj = new URL(rawText);
-          folio = urlObj.searchParams.get('folio') || urlObj.searchParams.get('oc') || urlObj.searchParams.get('disposicion') || rawText;
-        } else if (rawText.includes('folio=')) {
-          const match = rawText.match(/[?&]folio=([^&]+)/);
-          if (match) folio = decodeURIComponent(match[1]);
+    function toggleQrScanner() {
+      const container = document.getElementById('qrReaderContainer');
+      if (!container) return;
+      if (isQrScanning) {
+        if (html5QrCode) {
+          html5QrCode.stop().then(() => {
+            container.style.display = 'none';
+            isQrScanning = false;
+          }).catch(err => console.log(err));
         }
-      } catch(err) {
-        console.log("Error al parsear URL QR:", err);
+      } else {
+        container.style.display = 'block';
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            const folioInput = document.getElementById('folio_oc');
+            
+            let folio = decodedText;
+            if (decodedText.includes('folio=')) {
+              const match = decodedText.match(/folio=([^&]+)/);
+              if (match) folio = decodeURIComponent(match[1]);
+            }
+
+            if (folioInput) folioInput.value = folio;
+            toggleQrScanner();
+
+            alert("🔍 Código QR Escaneado con Éxito:
+" + folio + "
+
+Redirigiendo a la pantalla de Disposición...");
+            irADisposicionDesdeFolio(folio);
+          },
+          (errorMessage) => {}
+        ).then(() => { isQrScanning = true; })
+        .catch(err => { alert("No se pudo iniciar la cámara: " + err); });
       }
-
-      folio = folio.trim();
-      
-      const folioInput = document.getElementById('folio_oc');
-      if (folioInput) folioInput.value = folio;
-
-      alert("🔍 Código QR Escaneado con Éxito:\n" + folio + "\n\nRedirigiendo a la pantalla de Disposición...");
-      irADisposicionDesdeFolio(folio);
     }
 
-    // MOSTRAR MODAL Y GENERAR CÓDIGO QR AUTOMÁTICO
+    // MOSTRAR MODAL Y GENERAR CÓDIGO QR AUTOMÁTICO USANDO GOOGLE CHARTS API
     function mostrarQrGeneradoModal(folio) {
       const baseUrl = window.location.origin + window.location.pathname;
       const targetUrl = baseUrl + '?folio=' + encodeURIComponent(folio);
@@ -979,9 +1021,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const qrContainer = document.getElementById('qrContainerModal');
       if (qrContainer) {
         qrContainer.innerHTML = "";
-        
         const googleQrUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=280x280&chld=M|2&chl=' + encodeURIComponent(targetUrl);
-        qrContainer.innerHTML = '<img src="' + googleQrUrl + '" class="img-fluid rounded border shadow-sm" alt="Código QR Google Chart" style="max-width:280px; width:100%; height:auto;">';
+        qrContainer.innerHTML = '<img src="' + googleQrUrl + '" class="img-fluid rounded border shadow-sm" alt="Google QR Code" style="max-height: 250px;">';
       }
 
       const titEl = document.getElementById('modalQrFolioTitulo');
@@ -1004,34 +1045,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
       const modalEl = document.getElementById('modalQrGenerado');
       if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
-      }
-    }
-
-    function toggleQrScanner() {
-      const container = document.getElementById('qrReaderContainer');
-      if (!container) return;
-      if (isQrScanning) {
-        if (html5QrCode) {
-          html5QrCode.stop().then(() => {
-            container.style.display = 'none';
-            isQrScanning = false;
-          }).catch(err => console.log(err));
-        }
-      } else {
-        container.style.display = 'block';
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          (decodedText) => {
-            toggleQrScanner();
-            procesarQrEscaneado(decodedText);
-          },
-          (errorMessage) => {}
-        ).then(() => { isQrScanning = true; })
-        .catch(err => { alert("No se pudo iniciar la cámara: " + err); });
+        const myModal = new bootstrap.Modal(modalEl);
+        myModal.show();
       }
     }
 
@@ -1055,9 +1070,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function startDrawing(e) { isDrawing = true; draw(e); }
-    function stopDrawing() { isDrawing = false; if (ctx) ctx.beginPath(); }
+    function stopDrawing() { isDrawing = false; ctx.beginPath(); }
     function draw(e) {
-      if (!isDrawing || !ctx) return;
+      if (!isDrawing) return;
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
@@ -1070,7 +1085,7 @@ window.addEventListener('DOMContentLoaded', () => {
       ctx.beginPath();
       ctx.moveTo(x, y);
     }
-    function limpiarFirma() { if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    function limpiarFirma() { if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
     function procesarFoto(e) {
       const file = e.target.files[0];
@@ -1087,21 +1102,7 @@ window.addEventListener('DOMContentLoaded', () => {
       reader.readAsDataURL(file);
     }
 
-    
-    // MANEJO DE HISTORIAL Y TRAZABILIDAD POR OC
-    function agregarEntradaHistorial(reg, accion, usuario, detalle, estatus) {
-      if (!reg.historial) reg.historial = [];
-      const nowStr = new Date().toLocaleString();
-      reg.historial.push({
-        fecha: nowStr,
-        accion: accion,
-        usuario: usuario || 'Inspector',
-        detalle: detalle || '',
-        estatus: estatus || 'Nuevo'
-      });
-    }
-
-    // MANEJO DE REGISTROS PERSISTENTES LOCALES
+    // MANEJO DE REGISTROS PERSISTENTES LOCALES Y HISTORIAL
     function cargarRegistrosPersistentesLocales() {
       const stored = localStorage.getItem('CALIDAD_REGISTROS');
       if (stored) {
@@ -1112,18 +1113,38 @@ window.addEventListener('DOMContentLoaded', () => {
       actualizarContadorPersistente();
     }
 
-    function guardarRegistroPersistenteLocal(nuevoReg) {
+    function guardarRegistroPersistenteLocal(nuevoReg, detalleAccion) {
       const targetFolio = (nuevoReg.folio_oc || nuevoReg.folio || '').toString().trim();
       if (!targetFolio) return;
 
+      const nowStr = nuevoReg.fecha || new Date().toLocaleString();
       const index = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio || '').toString().trim() === targetFolio);
       
+      let historialPrev = [];
+
       if (index >= 0) {
         const prev = registrosPersistentes[index];
-        registrosPersistentes[index] = Object.assign({}, prev, nuevoReg);
+        historialPrev = prev.historial || [];
+        
+        historialPrev.push({
+          fecha: nowStr,
+          evento: nuevoReg.tipo_envio || nuevoReg.tipo || "Actualización",
+          usuario: nuevoReg.operador || "Inspector",
+          detalle: detalleAccion || nuevoReg.detalle_nc || "Registro actualizado",
+          estatus: nuevoReg.estatus || prev.estatus || "En Proceso"
+        });
+
+        registrosPersistentes[index] = Object.assign({}, prev, nuevoReg, { historial: historialPrev });
       } else {
-        // Asignar estatus por defecto si no lo tiene
-        if (!nuevoReg.estatus) nuevoReg.estatus = 'Nuevo';
+        historialPrev.push({
+          fecha: nowStr,
+          evento: nuevoReg.tipo_envio || nuevoReg.tipo || "Registro Inicial",
+          usuario: nuevoReg.operador || "Inspector",
+          detalle: nuevoReg.detalle_nc || "Incidencia registrada en sistema",
+          estatus: nuevoReg.estatus || "Nuevo"
+        });
+
+        nuevoReg.historial = historialPrev;
         registrosPersistentes.unshift(nuevoReg);
       }
       localStorage.setItem('CALIDAD_REGISTROS', JSON.stringify(registrosPersistentes));
@@ -1136,25 +1157,25 @@ window.addEventListener('DOMContentLoaded', () => {
       let pendDisp = 0;
 
       registrosPersistentes.forEach(r => {
-        const st = (r.estatus || '').toString().trim();
-        if (st === 'Terminado' || r.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
+        const est = r.estatus || (r.tiene_disposicion ? "Terminado" : "Nuevo");
+        if (est === "Terminado" || r.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
           conDisp++;
         } else {
           pendDisp++;
         }
       });
 
-      const elemTotal = document.getElementById('cantRegistrosPersistentes');
-      if (elemTotal) elemTotal.innerText = total;
+      const elem = document.getElementById('cantRegistrosPersistentes');
+      if (elem) elem.innerText = total;
 
-      const kpiTotal = document.getElementById('kpiTotalNum');
-      if (kpiTotal) kpiTotal.innerText = total;
-
-      const kpiDone = document.getElementById('kpiDoneNum');
-      if (kpiDone) kpiDone.innerText = conDisp;
-
-      const kpiPending = document.getElementById('kpiPendingNum');
-      if (kpiPending) kpiPending.innerText = pendDisp;
+      const kTot = document.getElementById('kpiTotalNum');
+      if (kTot) kTot.innerText = total;
+      
+      const kDone = document.getElementById('kpiDoneNum');
+      if (kDone) kDone.innerText = conDisp;
+      
+      const kPend = document.getElementById('kpiPendingNum');
+      if (kPend) kPend.innerText = pendDisp;
     }
 
     function limpiarRegistrosLocales() {
@@ -1167,7 +1188,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // ENVIAR REGISTRO NUEVO
+    // ENVIAR NUEVO REGISTRO
     async function guardarRegistro(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
@@ -1201,18 +1222,19 @@ window.addEventListener('DOMContentLoaded', () => {
       };
 
       // Guardar de inmediato en memoria persistente
-      guardarRegistroPersistenteLocal(payload);
+      guardarRegistroPersistenteLocal(payload, "Registro inicial creado por " + payload.operador);
 
       if (!navigator.onLine) {
         let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
         cola.push(payload);
         localStorage.setItem('COLA_OFFLINE', JSON.stringify(cola));
+        alert("Registro guardado localmente de forma PERSISTENTE en la App Web. Se sincronizará con GitHub al recuperar conexión.");
         resetForm();
-        mostrarQrGeneradoModal(folio);
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
         }
+        mostrarQrGeneradoModal(folio);
         return;
       }
 
@@ -1221,11 +1243,12 @@ window.addEventListener('DOMContentLoaded', () => {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
       }
+      mostrarQrGeneradoModal(folio);
     }
 
     async function enviarPayloadProxy(payload) {
       const proxyElem = document.getElementById('proxyUrl');
-      const proxyUrl = (proxyElem && proxyElem.value) ? proxyElem.value : PROXY_DEFAULT;
+      const proxyUrl = (proxyElem ? proxyElem.value : '') || PROXY_DEFAULT;
       try {
         const response = await fetch(proxyUrl, {
           method: 'POST',
@@ -1235,19 +1258,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const resJson = await response.json();
         if (resJson.status === 'ok') {
+          alert("¡ÉXITO!
+
+" + resJson.mensaje);
           resetForm();
-          mostrarQrGeneradoModal(folio);
         } else {
           alert("Guardado localmente. Servidor respondió: " + resJson.mensaje);
         }
       } catch (err) {
-        alert("Registro guardado localmente. Error de servidor: " + err.toString());
+        alert("Registro guardado localmente en la app. Mensaje de servidor: " + err.toString());
       }
     }
 
     function resetForm() {
-      const form = document.getElementById('formCalidad');
-      if (form) form.reset();
+      const f = document.getElementById('formCalidad');
+      if (f) f.reset();
       const img = document.getElementById('fotoPreview');
       if (img) img.style.display = 'none';
       fotoBase64 = "";
@@ -1258,7 +1283,6 @@ window.addEventListener('DOMContentLoaded', () => {
       let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
       if (cola.length === 0) return;
 
-      console.log(`Sincronizando ${cola.length} registros pendientes...`);
       for (const item of cola) {
         await enviarPayloadProxy(item);
       }
@@ -1266,24 +1290,25 @@ window.addEventListener('DOMContentLoaded', () => {
       alert("¡Sincronización completada! Se enviaron todos los registros pendientes.");
     }
 
-    // HELPER PARA MINI BADGES Y PASOS
+    // BADGES BADGE FORMATTER
     function obtenerBadgesRegistro(reg) {
-      const st = (reg.estatus || '').toString().trim();
-      let badgeEstatus = '';
-      let badgePaso = '';
+      const estatus = reg.estatus || (reg.tiene_disposicion ? "Terminado" : "Nuevo");
+      let estatusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-circle-dot me-1"></i>Nuevo</span>';
+      let etapaBadge = '<span class="badge bg-secondary">Paso 1: Registrado</span>';
 
-      if (st === 'Terminado' || reg.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
-        badgeEstatus = '<span class="badge bg-success"><i class="fa-solid fa-check-circle me-1"></i>Terminado</span>';
-        badgePaso = '<span class="badge bg-dark"><i class="fa-solid fa-flag-checkered me-1"></i>Paso 3: Cerrado</span>';
-      } else if (st === 'En Proceso') {
-        badgeEstatus = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-arrows-spin me-1"></i>En Proceso</span>';
-        badgePaso = '<span class="badge bg-info text-dark"><i class="fa-solid fa-clock me-1"></i>Paso 2: Sorteo NC</span>';
-      } else {
-        badgeEstatus = '<span class="badge bg-danger"><i class="fa-solid fa-circle-exclamation me-1"></i>Nuevo</span>';
-        badgePaso = '<span class="badge bg-secondary"><i class="fa-solid fa-1 me-1"></i>Paso 1: Registrado</span>';
+      if (estatus === 'En Proceso') {
+        estatusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>En Proceso</span>';
+        etapaBadge = '<span class="badge bg-info text-dark">Paso 2: Sorteo NC</span>';
+      } else if (estatus === 'Terminado' || reg.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
+        estatusBadge = '<span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Terminado</span>';
+        etapaBadge = '<span class="badge bg-dark">Paso 3: Cerrado</span>';
       }
 
-      return { badgeEstatus, badgePaso };
+      let tipoClass = 'bg-primary';
+      if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') tipoClass = 'bg-danger';
+      if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') tipoClass = 'bg-warning text-dark';
+
+      return { estatusBadge, etapaBadge, tipoClass };
     }
 
     // RENDERIZAR TABLA DE VER REGISTROS (PESTAÑA 2)
@@ -1293,7 +1318,7 @@ window.addEventListener('DOMContentLoaded', () => {
       tbody.innerHTML = "";
 
       if (registrosPersistentes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-4">No hay registros almacenados. Crea un nuevo registro o sincroniza con GitHub.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No hay registros almacenados. Crea un nuevo registro o sincroniza con GitHub.</td></tr>`;
         actualizarContadorPersistente();
         return;
       }
@@ -1301,25 +1326,22 @@ window.addEventListener('DOMContentLoaded', () => {
       registrosPersistentes.forEach((reg) => {
         const tr = document.createElement('tr');
         const folio = reg.folio_oc || reg.folio || 'N/A';
-        const { badgeEstatus, badgePaso } = obtenerBadgesRegistro(reg);
-
-        let tipoClass = 'bg-primary';
-        if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') tipoClass = 'bg-danger';
-        if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') tipoClass = 'bg-warning text-dark';
+        const badges = obtenerBadgesRegistro(reg);
 
         tr.innerHTML = `
           <td class="fw-bold text-primary">${folio}</td>
-          <td><span class="badge ${tipoClass}">${reg.tipo_envio || reg.tipo || 'Proceso'}</span></td>
+          <td><span class="badge ${badges.tipoClass}">${reg.tipo_envio || reg.tipo || 'Proceso'}</span></td>
           <td class="small text-muted">${reg.fecha || 'Reciente'}</td>
           <td class="fw-bold">${reg.parte || '-'}</td>
           <td>${reg.cantidad || '1'}</td>
           <td class="small">${reg.almacen_origen || reg.almacen || ''} / ${reg.area || ''}</td>
           <td class="text-danger fw-bold small">${reg.no_conformancia || '-'}</td>
-          <td>${badgePaso}</td>
-          <td>${badgeEstatus}</td>
+          <td class="small">${reg.operador || 'Inspector'}</td>
+          <td>${badges.estatusBadge} ${badges.etapaBadge}</td>
           <td class="text-center">
-            <button class="btn btn-sm btn-warning fw-bold shadow-sm me-1" onclick="irADisposicionDesdeFolio('${folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
-            <button class="btn btn-sm btn-outline-info" onclick="verDetalleModal('${folio}')" title="Ver Detalle"><i class="fa-solid fa-eye"></i></button>
+            <button class="btn btn-sm btn-warning fw-bold shadow-sm me-1 mb-1" onclick="irADisposicionDesdeFolio('${folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Disposición</button>
+            <button class="btn btn-sm btn-outline-info me-1 mb-1" onclick="verDetalleModal('${folio}')" title="Ver Detalle / Historial"><i class="fa-solid fa-eye me-1"></i>Detalle</button>
+            <button class="btn btn-sm btn-outline-dark mb-1" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1329,12 +1351,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function filtrarTablaRegistros() {
-      const searchElem = document.getElementById('searchRegistros');
-      const query = searchElem ? searchElem.value.toLowerCase() : '';
-      
-      const filterElem = document.getElementById('filterTipo');
-      const filterTipo = filterElem ? filterElem.value : 'ALL';
-      
+      const searchInput = document.getElementById('searchRegistros');
+      const filterSelect = document.getElementById('filterTipo');
+      if (!searchInput || !filterSelect) return;
+
+      const query = searchInput.value.toLowerCase();
+      const filterTipo = filterSelect.value;
       const rows = document.querySelectorAll('#tbodyRegistros tr');
 
       rows.forEach(row => {
@@ -1342,10 +1364,16 @@ window.addEventListener('DOMContentLoaded', () => {
         const matchesQuery = text.includes(query);
         
         let matchesTipo = true;
-        if (filterTipo === 'PENDING') {
-          matchesTipo = text.includes('nuevo') || text.includes('en proceso') || text.includes('paso 1') || text.includes('paso 2');
-        } else if (filterTipo === 'DONE') {
-          matchesTipo = text.includes('terminado') || text.includes('paso 3');
+        if (filterTipo === 'PENDING_DISP') {
+          matchesTipo = text.includes('nuevo') || text.includes('en proceso');
+        } else if (filterTipo === 'DONE_DISP') {
+          matchesTipo = text.includes('terminado');
+        } else if (filterTipo === 'EST_NUEVO') {
+          matchesTipo = text.includes('nuevo');
+        } else if (filterTipo === 'EST_PROCESO') {
+          matchesTipo = text.includes('en proceso');
+        } else if (filterTipo === 'EST_TERMINADO') {
+          matchesTipo = text.includes('terminado');
         } else if (filterTipo !== 'ALL') {
           matchesTipo = text.includes(filterTipo.toLowerCase());
         }
@@ -1368,19 +1396,38 @@ window.addEventListener('DOMContentLoaded', () => {
       seleccionarRegistroParaDisposicion(folio);
     }
 
-    // MODAL DETALLE
+    // MODAL DETALLE & HISTORIAL CRONOLÓGICO
     function verDetalleModal(folio) {
       const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
       if (!reg) return;
 
       const tit = document.getElementById('modalDetalleTitulo');
-      if (tit) tit.innerText = `Detalle del Registro: ${reg.folio_oc || reg.folio}`;
+      if (tit) tit.innerText = `Detalle & Historial del Folio: ${reg.folio_oc || reg.folio}`;
       
-      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2" style="max-height:250px;">` : '<p class="text-muted italic">Sin foto adjunta</p>';
+      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2 shadow-sm" style="max-height:220px;" onclick="abrirFotoModalGrande('${reg.foto_b64}', '${reg.folio_oc || reg.folio}')" style="cursor:pointer;">` : '<p class="text-muted italic">Sin foto adjunta</p>';
       
-      const body = document.getElementById('modalDetalleCuerpo');
-      if (body) {
-        body.innerHTML = `
+      const historial = reg.historial || [
+        { fecha: reg.fecha || 'Inicial', evento: 'Registro de Inspección', usuario: reg.operador || 'Inspector', detalle: reg.detalle_nc || 'Incidencia inicial', estatus: reg.estatus || 'Nuevo' }
+      ];
+
+      let timelineHtml = '<div class="list-group mb-3">';
+      historial.forEach((h, idx) => {
+        timelineHtml += `
+          <div class="list-group-item border-start border-3 border-primary bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong class="text-primary"><i class="fa-solid fa-clock-rotate-left me-1"></i>${h.evento}</strong>
+              <span class="badge bg-dark">${h.fecha}</span>
+            </div>
+            <p class="small m-0 text-dark"><strong>Usuario:</strong> ${h.usuario} | <strong>Estatus:</strong> ${h.estatus}</p>
+            <p class="small text-muted m-0 mt-1"><em>${h.detalle}</em></p>
+          </div>
+        `;
+      });
+      timelineHtml += '</div>';
+
+      const cuerpo = document.getElementById('modalDetalleCuerpo');
+      if (cuerpo) {
+        cuerpo.innerHTML = `
           <div class="row g-2">
             <div class="col-6"><strong>Folio:</strong> ${reg.folio_oc || reg.folio}</div>
             <div class="col-6"><strong>Tipo:</strong> ${reg.tipo_envio || reg.tipo}</div>
@@ -1389,33 +1436,41 @@ window.addEventListener('DOMContentLoaded', () => {
             <div class="col-6"><strong>Almacén:</strong> ${reg.almacen_origen || reg.almacen} (${reg.locacion_origen || ''})</div>
             <div class="col-6"><strong>Área:</strong> ${reg.area}</div>
             <div class="col-6"><strong>No Conformancia:</strong> <span class="text-danger fw-bold">${reg.no_conformancia}</span></div>
-            <div class="col-6"><strong>Detalle / Causa:</strong> ${reg.detalle_nc}</div>
-            <div class="col-6"><strong>Inspector/Operador:</strong> ${reg.operador} (Turno ${reg.turno})</div>
-            <div class="col-6"><strong>Estatus Actual:</strong> <span class="fw-bold">${reg.estatus || 'Nuevo'}</span></div>
+            <div class="col-6"><strong>Inspector:</strong> ${reg.operador} (Turno ${reg.turno})</div>
           </div>
+          
+          <hr>
+          <h6 class="fw-bold text-dark"><i class="fa-solid fa-timeline me-1 text-primary"></i>Línea de Tiempo del Historial:</h6>
+          ${timelineHtml}
+
           <hr>
           <div class="text-center">
-            <h6>Fotografía de Evidencia:</h6>
+            <h6>Fotografía de Evidencia (Clic para ver en HD):</h6>
             ${fotoHtml}
           </div>
         `;
       }
 
-      const btnIr = document.getElementById('btnModalIrDisposicion');
-      if (btnIr) {
-        btnIr.onclick = () => {
+      const btnDisp = document.getElementById('btnModalIrDisposicion');
+      if (btnDisp) {
+        btnDisp.onclick = () => {
           const modalEl = document.getElementById('modalDetalleRegistro');
-          const modal = bootstrap.Modal.getInstance(modalEl);
-          if (modal) modal.hide();
+          if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+          }
           irADisposicionDesdeFolio(folio);
         };
       }
 
-      const myModal = new bootstrap.Modal(document.getElementById('modalDetalleRegistro'));
-      myModal.show();
+      const modalEl = document.getElementById('modalDetalleRegistro');
+      if (modalEl) {
+        const myModal = new bootstrap.Modal(modalEl);
+        myModal.show();
+      }
     }
 
-    // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN Y ACTUALIZACIÓN DESDE GITHUB
+    // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN
     async function cargarRegistrosGitHub() {
       const container = document.getElementById('listaIncidencias');
       const loading = document.getElementById('loadingRegistros');
@@ -1432,17 +1487,23 @@ window.addEventListener('DOMContentLoaded', () => {
         const res = await fetch(csvUrl);
         if (res.ok) {
           const text = await res.text();
-          const lineas = text.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+          const lineas = text.split(/
+?
+/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
           
           if (lineas.length > 1) {
             const remotos = lineas.slice(1).map((line) => {
               const cols = line.split(",").map(c => c.replace(/^"|"$/g, '').trim());
               return {
                 folio: cols[0] || 'N/A',
+                folio_oc: cols[0] || 'N/A',
                 tipo: cols[1] || 'Proceso',
+                tipo_envio: cols[1] || 'Proceso',
                 fecha: cols[2] || '',
                 almacen: cols[3] || '',
+                almacen_origen: cols[3] || '',
                 locacion: cols[4] || '',
+                locacion_origen: cols[4] || '',
                 parte: cols[5] || '',
                 cantidad: cols[6] || '1',
                 estampa: cols[7] || '',
@@ -1451,7 +1512,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 operador: cols[10] || '',
                 turno: cols[11] || '',
                 area: cols[12] || '',
-                foto_b64: cols[13] || ''
+                estatus: cols[13] || 'Nuevo',
+                foto_b64: cols[14] || ''
               };
             });
 
@@ -1460,9 +1522,7 @@ window.addEventListener('DOMContentLoaded', () => {
             renderizarTablaRegistros();
           }
         }
-      } catch (err) {
-        console.log("Usando datos persistentes locales.");
-      }
+      } catch (err) {}
 
       if (loading) loading.style.display = "none";
     }
@@ -1479,14 +1539,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
       lista.forEach(reg => {
         const folio = reg.folio_oc || reg.folio;
-        const { badgeEstatus, badgePaso } = obtenerBadgesRegistro(reg);
+        const badges = obtenerBadgesRegistro(reg);
 
         const cardHtml = `
           <div class="col-md-6 col-lg-4 mb-3">
             <div class="card record-card p-3 shadow-sm border-start border-4 border-primary">
-              <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
                 <span class="badge bg-primary fw-bold">${folio}</span>
-                <div class="d-flex gap-1">${badgePaso} ${badgeEstatus}</div>
+                <div>
+                  ${badges.estatusBadge}
+                  ${badges.etapaBadge}
+                </div>
               </div>
               <h6 class="fw-bold mb-1 text-dark">Parte: ${reg.parte} (${reg.cantidad} pzas)</h6>
               <p class="small text-danger m-0 fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>${reg.no_conformancia}</p>
@@ -1494,8 +1557,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 <span><i class="fa-solid fa-location-dot me-1"></i>${reg.almacen_origen || reg.almacen || ''}</span>
                 <span><i class="fa-solid fa-user me-1"></i>${reg.operador || 'Inspector'}</span>
               </div>
-              <div class="mt-3 border-top pt-2 text-center">
-                <button class="btn btn-sm btn-warning w-100 fw-bold shadow-sm" onclick="seleccionarRegistroParaDisposicion('${folio}')"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
+              <div class="mt-3 border-top pt-2 d-flex gap-1">
+                <button class="btn btn-sm btn-warning fw-bold flex-grow-1 shadow-sm" onclick="seleccionarRegistroParaDisposicion('${folio}')"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
+                <button class="btn btn-sm btn-outline-dark" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
               </div>
             </div>
           </div>
@@ -1505,10 +1569,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function seleccionarRegistroParaDisposicion(folio) {
-      let reg = registrosPersistentes.find(r => (r.folio_oc || r.folio || '').toString().trim() === (folio || '').toString().trim());
-      if (!reg) {
-        reg = { folio_oc: folio, parte: 'Por Confirmar', no_conformancia: 'Evaluación Pendiente', estatus: 'Nuevo' };
-      }
+      const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
+      if (!reg) return;
 
       const panel = document.getElementById('panelEvaluacionDisposicion');
       if (panel) panel.style.display = 'block';
@@ -1516,18 +1578,16 @@ window.addEventListener('DOMContentLoaded', () => {
       const tit = document.getElementById('dispFolioTitulo');
       if (tit) tit.innerText = `${folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
 
-      // Precargar datos si ya existían
       if (reg.disp_destino) document.getElementById('disp_destino').value = reg.disp_destino;
       if (reg.disp_responsable) document.getElementById('disp_responsable').value = reg.disp_responsable;
       if (reg.disp_piezas_buenas) document.getElementById('disp_piezas_buenas').value = reg.disp_piezas_buenas;
       if (reg.disp_piezas_malas) document.getElementById('disp_piezas_malas').value = reg.disp_piezas_malas;
-      if (reg.estatus) document.getElementById('disp_estatus').value = reg.estatus;
-      
-      if (reg.por_que_1) document.getElementById('por_que_1').value = reg.por_que_1;
-      if (reg.por_que_2) document.getElementById('por_que_2').value = reg.por_que_2;
-      if (reg.por_que_3) document.getElementById('por_que_3').value = reg.por_que_3;
-      if (reg.por_que_4) document.getElementById('por_que_4').value = reg.por_que_4;
-      if (reg.por_que_5) document.getElementById('por_que_5').value = reg.por_que_5;
+      if (reg.disp_estatus) document.getElementById('disp_estatus').value = reg.disp_estatus;
+      if (reg.disp_porque1) document.getElementById('disp_porque1').value = reg.disp_porque1;
+      if (reg.disp_porque2) document.getElementById('disp_porque2').value = reg.disp_porque2;
+      if (reg.disp_porque3) document.getElementById('disp_porque3').value = reg.disp_porque3;
+      if (reg.disp_porque4) document.getElementById('disp_porque4').value = reg.disp_porque4;
+      if (reg.disp_porque5) document.getElementById('disp_porque5').value = reg.disp_porque5;
       if (reg.disp_accion_correctiva) document.getElementById('disp_accion_correctiva').value = reg.disp_accion_correctiva;
 
       if (panel) panel.scrollIntoView({ behavior: 'smooth' });
@@ -1540,345 +1600,114 @@ window.addEventListener('DOMContentLoaded', () => {
 
     async function guardarDisposicion(e) {
       e.preventDefault();
-      const folio = document.getElementById('dispFolioTitulo').innerText.split(" ")[0];
-      const estatusSeleccionado = document.getElementById('disp_estatus').value;
+      const titElem = document.getElementById('dispFolioTitulo');
+      if (!titElem) return;
+      const folio = titElem.innerText.split(" ")[0];
       
-      const pq1 = document.getElementById('por_que_1').value.trim();
-      const pq2 = document.getElementById('por_que_2').value.trim();
-      const pq3 = document.getElementById('por_que_3').value.trim();
-      const pq4 = document.getElementById('por_que_4').value.trim();
-      const pq5 = document.getElementById('por_que_5').value.trim();
-      const accion = document.getElementById('disp_accion_correctiva').value.trim();
-
-      const resumen5Porques = `5-Porqués: [1] ${pq1} | [2] ${pq2} | [3] ${pq3} | [4] ${pq4} | [5-Causa Raíz] ${pq5}`;
+      const causaFinal = document.getElementById('disp_porque5').value.trim() || document.getElementById('disp_porque1').value.trim() || "Evaluado";
+      const estatusFinal = document.getElementById('disp_estatus').value;
 
       const payloadDisposicion = {
         tipo_envio: "Evaluación y Disposición",
         folio_oc: folio,
-        no_conformancia: estatusSeleccionado === 'Terminado' ? "DISPOSICIÓN REGISTRADA" : "EN DISPOSICIÓN",
-        detalle_nc: `Destino: ${document.getElementById('disp_destino').value} | Buenas: ${document.getElementById('disp_piezas_buenas').value} | Malas: ${document.getElementById('disp_piezas_malas').value} | ${resumen5Porques} | Acción: ${accion}`,
+        no_conformancia: "DISPOSICIÓN REGISTRADA",
+        detalle_nc: `Destino: ${document.getElementById('disp_destino').value} | Sorteo (Buenas: ${document.getElementById('disp_piezas_buenas').value}, Malas: ${document.getElementById('disp_piezas_malas').value}) | 5-Porqués Causa Raíz: ${causaFinal} | Acción: ${document.getElementById('disp_accion_correctiva').value}`,
         operador: "Inspector de Calidad",
-        foto_b64: "",
-        estatus: estatusSeleccionado,
         disp_destino: document.getElementById('disp_destino').value,
         disp_responsable: document.getElementById('disp_responsable').value,
         disp_piezas_buenas: document.getElementById('disp_piezas_buenas').value,
         disp_piezas_malas: document.getElementById('disp_piezas_malas').value,
-        por_que_1: pq1,
-        por_que_2: pq2,
-        por_que_3: pq3,
-        por_que_4: pq4,
-        por_que_5: pq5,
-        disp_accion_correctiva: accion,
-        tiene_disposicion: true
+        disp_estatus: document.getElementById('disp_estatus').value,
+        disp_porque1: document.getElementById('disp_porque1').value,
+        disp_porque2: document.getElementById('disp_porque2').value,
+        disp_porque3: document.getElementById('disp_porque3').value,
+        disp_porque4: document.getElementById('disp_porque4').value,
+        disp_porque5: document.getElementById('disp_porque5').value,
+        disp_accion_correctiva: document.getElementById('disp_accion_correctiva').value,
+        estatus: estatusFinal,
+        foto_b64: "",
+        tiene_disposicion: true,
+        correos_notificacion: localStorage.getItem('NOTIF_EMAILS') || '',
+        enviar_email: localStorage.getItem('NOTIF_SEND_DISP') !== 'false'
       };
 
-      guardarRegistroPersistenteLocal(payloadDisposicion);
+      guardarRegistroPersistenteLocal(payloadDisposicion, "Disposición Asignada: " + payloadDisposicion.disp_destino + " | Estatus: " + estatusFinal);
       await enviarPayloadProxy(payloadDisposicion);
       
       cerrarPanelDisposicion();
       cargarRegistrosGitHub();
-      cargarGaleriaFotos();
-
-      // DETECTAR SI LA PÁGINA FUE ABIERTA POR ESCANEO DE QR EXTERNO CON PARAMETRO ?folio=...
-      const urlParams = new URLSearchParams(window.location.search);
-      const folioParam = urlParams.get('folio') || urlParams.get('oc') || urlParams.get('disposicion');
-      if (folioParam) {
-        console.log("Detectado Folio en URL por escaneo QR:", folioParam);
-        setTimeout(() => {
-          irADisposicionDesdeFolio(folioParam.trim());
-        }, 800);
-      }
-      renderizarTablaRegistros();
     }
 
-    // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX) O FALLBACK CSV
-    function exportarCatalogosExcelXLSX() {
-      if (typeof XLSX === 'undefined') {
-        alert("Librería SheetJS no detectada. Generando respaldo en CSV de contingencia...");
-        exportarCatIndividualCSV();
-        return;
-      }
+    // PESTAÑA 6: GALERÍA DE FOTOS EN HD
+    async function cargarGaleriaFotos() {
+      const container = document.getElementById('containerGaleriaFotos');
+      if (!container) return;
+      container.innerHTML = '<div class="text-center py-4 w-100"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Cargando fotos de evidencia...</p></div>';
 
-      try {
-        const wb = XLSX.utils.book_new();
+      let htmlFotos = "";
+      let contador = 0;
 
-        const mapTabs = [
-          { key: 'almacenes', name: 'Almacenes' },
-          { key: 'areas', name: 'Areas' },
-          { key: 'partes', name: 'Partes' },
-          { key: 'estampas', name: 'Estampas' },
-          { key: 'defectos', name: 'Defectos_NC' },
-          { key: 'defectosSecundarios', name: 'Defectos_Secundarios' },
-          { key: 'medidas', name: 'Medidas' }
-        ];
-
-        mapTabs.forEach(item => {
-          const data = catalogosLocal[item.key] || [];
-          const ws = XLSX.utils.json_to_sheet(data);
-          XLSX.utils.book_append_sheet(wb, ws, item.name);
-        });
-
-        XLSX.writeFile(wb, 'catalogos_maestros_plantilla.xlsx');
-      } catch (e) {
-        alert("Error al construir Excel XLSX: " + e.message + ". Generando CSV...");
-        exportarCatIndividualCSV();
-      }
-    }
-
-    function exportarCatIndividualCSV() {
-      const elem = document.getElementById('exp_cat_individual_tipo');
-      const tipo = elem ? elem.value : 'almacenes';
-      const datos = catalogosLocal[tipo] || [];
-      if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
-      
-      let csvContent = "sep=,\n" + Object.keys(datos[0]).join(",") + "\n";
-      datos.forEach(row => {
-        csvContent += Object.values(row).map(function(v){ return "\"" + (v || "").toString().replace(/"/g, '""') + "\""; }).join(",") + "\n";
-      });
-      downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
-    }
-
-    function exportarRegistrosCSV() {
-      if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
-      let csvContent = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_URL\n";
-      registrosPersistentes.forEach(r => {
-        const fila = [
-          r.folio_oc || r.folio || '',
-          r.tipo_envio || r.tipo || '',
-          r.fecha || '',
-          r.almacen_origen || r.almacen || '',
-          r.locacion_origen || r.locacion || '',
-          r.parte || '',
-          r.cantidad || '1',
-          r.estampa || '',
-          r.no_conformancia || '',
-          r.detalle_nc || '',
-          r.operador || '',
-          r.turno || '1',
-          r.area || '',
-          r.estatus || 'Nuevo',
-          r.foto_b64 || ''
-        ];
-        csvContent += fila.map(function(v){ return "\"" + (v || "").toString().replace(/"/g, '""') + "\""; }).join(",") + "\n";
-      });
-      downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
-    }
-
-    function exportarRegistrosJSON() {
-      const jsonContent = JSON.stringify(registrosPersistentes, null, 2);
-      downloadFile(jsonContent, 'registro_incidencias_locales.json', 'application/json');
-    }
-
-    // FUNCIÓN UNIVERSAL DE DESCARGA ADAPTATIVA PARA MÓVILES Y NAVEGADORES
-    function downloadFile(content, fileName, mimeType) {
-      try {
-        const blob = new Blob(["﻿" + content], { type: mimeType });
-        if (navigator.msSaveOrOpenBlob) {
-          navigator.msSaveOrOpenBlob(blob, fileName);
-          return;
+      registrosPersistentes.forEach(reg => {
+        if (reg.foto_b64 && reg.foto_b64.startsWith('data:image')) {
+          contador++;
+          const folio = reg.folio_oc || reg.folio;
+          htmlFotos += `
+            <div class="col-6 col-md-4 col-lg-3 card-foto-item">
+              <div class="card h-100 shadow-sm border p-2">
+                <img src="${reg.foto_b64}" class="galeria-img" onclick="abrirFotoModalGrande('${reg.foto_b64}', '${folio}')" alt="Foto ${folio}">
+                <div class="card-body p-2 text-center">
+                  <span class="badge bg-primary fw-bold">${folio}</span>
+                  <p class="small text-muted m-0 mt-1">${reg.parte || 'Foto Evidencia'}</p>
+                </div>
+              </div>
+            </div>
+          `;
         }
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = fileName;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        }, 200);
-      } catch(e) {
-        alert("Error al descargar archivo: " + e.message);
-      }
-    }
-
-    // IMPORTAR CATÁLOGOS
-    function importarCatalogos() {
-      const fileInput = document.getElementById('fileImportCatalogos');
-      const file = fileInput ? fileInput.files[0] : null;
-      const selector = document.getElementById('imp_cat_tipo_selector');
-      const tipo = selector ? selector.value : 'xlsx_multi';
-
-      if (!file) { alert("Por favor selecciona un archivo."); return; }
-
-      const reader = new FileReader();
-
-      if (file.name.endsWith('.xlsx') || tipo === 'xlsx_multi') {
-        reader.onload = function(e) {
-          try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            
-            const tabMap = {
-              'Almacenes': 'almacenes',
-              'Areas': 'areas',
-              'Partes': 'partes',
-              'Estampas': 'estampas',
-              'Defectos_NC': 'defectos',
-              'Defectos_Secundarios': 'defectosSecundarios',
-              'Medidas': 'medidas'
-            };
-
-            workbook.SheetNames.forEach(sheetName => {
-              const catKey = tabMap[sheetName] || sheetName.toLowerCase();
-              if (catalogosLocal.hasOwnProperty(catKey) || tabMap[sheetName]) {
-                const sheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(sheet);
-                if (json.length > 0) {
-                  catalogosLocal[tabMap[sheetName] || catKey] = json;
-                }
-              }
-            });
-
-            localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
-            cargarCatalogosFormulario();
-      sincronizarCatalogosGitHub();
-            alert("¡Libro de Excel (.xlsx) importado exitosamente! Catálogos actualizados.");
-          } catch(err) {
-            alert("Error al leer el archivo Excel: " + err.message);
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      } 
-      else {
-        reader.onload = function(e) {
-          const content = e.target.result;
-          try {
-            if (file.name.endsWith('.json')) {
-              const parsed = JSON.parse(content);
-              if (Array.isArray(parsed)) {
-                catalogosLocal[tipo] = parsed;
-              } else {
-                Object.assign(catalogosLocal, parsed);
-              }
-              localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
-              alert("¡Catálogo importado desde JSON!");
-            } else {
-              const lineas = content.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
-              if (lineas.length > 1) {
-                const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
-                const items = lineas.slice(1).map(l => {
-                  const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
-                  let obj = {};
-                  headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
-                  return obj;
-                });
-                catalogosLocal[tipo] = items;
-                localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
-                alert(`¡Catálogo '${tipo}' importado exitosamente desde CSV!`);
-              }
-            }
-            cargarCatalogosFormulario();
-      sincronizarCatalogosGitHub();
-          } catch(err) {
-            alert("Error al procesar archivo: " + err.message);
-          }
-        };
-        reader.readAsText(file);
-      }
-    }
-
-    // IMPORTAR REGISTROS HISTÓRICOS
-    function importarRegistros() {
-      const fileInput = document.getElementById('fileImportRegistros');
-      const file = fileInput ? fileInput.files[0] : null;
-      if (!file) { alert("Selecciona un archivo."); return; }
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const content = e.target.result;
-        try {
-          if (file.name.endsWith('.json')) {
-            const parsed = JSON.parse(content);
-            if (Array.isArray(parsed)) {
-              parsed.forEach(r => guardarRegistroPersistenteLocal(r));
-              alert(`¡Se importaron ${parsed.length} registros desde JSON!`);
-            }
-          } else {
-            const lineas = content.split("\n").filter(l => l.trim().length > 0 && !l.startsWith("sep="));
-            if (lineas.length > 1) {
-              const items = lineas.slice(1).map(l => {
-                const cols = l.split(",").map(c => c.replace(/^"|"$/g, '').trim());
-                return {
-                  folio_oc: cols[0] || 'OC-999',
-                  tipo_envio: cols[1] || 'Proceso',
-                  fecha: cols[2] || '',
-                  almacen_origen: cols[3] || '',
-                  locacion_origen: cols[4] || '',
-                  parte: cols[5] || '',
-                  cantidad: cols[6] || '1',
-                  estampa: cols[7] || '',
-                  no_conformancia: cols[8] || '',
-                  detalle_nc: cols[9] || '',
-                  operador: cols[10] || '',
-                  turno: cols[11] || '1',
-                  area: cols[12] || '',
-                  estatus: cols[13] || 'Nuevo',
-                  foto_b64: cols[14] || ''
-                };
-              });
-
-              items.forEach(r => guardarRegistroPersistenteLocal(r));
-              alert(`¡Se importaron ${items.length} registros desde CSV!`);
-            }
-          }
-          renderizarTablaRegistros();
-        } catch(err) {
-          alert("Error al importar registros: " + err.message);
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    // REGISTRO DE SERVICE WORKER PARA INSTALACIÓN PWA
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker PWA registrado exitosamente:', reg.scope))
-          .catch(err => console.log('Error al registrar Service Worker PWA:', err));
       });
-    }
 
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const btn = document.getElementById('btnInstallPwa');
-      if (btn) {
-        btn.className = 'btn btn-sm btn-warning fw-bold shadow-sm ms-2 mt-2 d-inline-block pulse-btn';
-        btn.innerHTML = '<i class="fa-solid fa-download me-1"></i>📲 Instalar App en Dispositivo';
-      }
-    });
-
-    function instalarPwa() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('El usuario aceptó instalar la App PWA');
-          }
-          deferredPrompt = null;
-        });
+      if (contador === 0) {
+        container.innerHTML = '<div class="alert alert-info text-center w-100"><i class="fa-solid fa-images me-2"></i>No se encontraron fotografías guardadas localmente. Toma una foto al crear un nuevo registro.</div>';
       } else {
-        alert("INSTRUCCIONES DE INSTALACIÓN:
-
-📱 En Android / Chrome / Edge:
-1. Toca los 3 puntos del menú del navegador.
-2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.
-
-🍏 En iPhone / iPad (Safari):
-1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).
-2. Selecciona 'Agregar al inicio'.
-
-💻 En PC / Mac:
-1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.
-2. Haz clic en 'Instalar'.");
+        container.innerHTML = htmlFotos;
       }
     }
 
-    // FUNCIONES DE CONFIGURACIÓN DE SISTEMA Y CORREOS
+    function filtrarGaleriaFotos() {
+      const searchElem = document.getElementById('searchFotos');
+      if (!searchElem) return;
+      const query = searchElem.value.toLowerCase();
+      const items = document.querySelectorAll('.card-foto-item');
+
+      items.forEach(item => {
+        if (item.innerText.toLowerCase().includes(query)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    function abrirFotoModalGrande(src, folio) {
+      const imgView = document.getElementById('imgFotoGrandeView');
+      if (imgView) imgView.src = src;
+
+      const sub = document.getElementById('modalFotoSubtitulo');
+      if (sub) sub.innerText = `Fotografía de Evidencia HD - Folio: ${folio}`;
+
+      const btnDl = document.getElementById('btnDescargarFotoGrande');
+      if (btnDl) {
+        btnDl.href = src;
+        btnDl.download = `evidencia_${folio}.png`;
+      }
+
+      const modalEl = document.getElementById('modalFotoGrande');
+      if (modalEl) {
+        const myModal = new bootstrap.Modal(modalEl);
+        myModal.show();
+      }
+    }
+
+    // PESTAÑA 7: CONFIGURACIÓN DE SISTEMA
     function cargarConfiguracionSistema() {
       const emailsInput = document.getElementById('notifEmails');
       if (emailsInput) {
@@ -1930,6 +1759,255 @@ window.addEventListener('DOMContentLoaded', () => {
 Los correos configurados recibirán notificaciones automáticamente cuando se envíen registros o disposiciones.");
     }
 
+    // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX)
+    function exportarCatalogosExcelXLSX() {
+      if (typeof XLSX === 'undefined') {
+        alert("Librería SheetJS no detectada. Generando respaldo en CSV de contingencia...");
+        exportarCatIndividualCSV();
+        return;
+      }
+
+      try {
+        const wb = XLSX.utils.book_new();
+
+        const mapTabs = [
+          { key: 'almacenes', name: 'Almacenes' },
+          { key: 'areas', name: 'Areas' },
+          { key: 'partes', name: 'Partes' },
+          { key: 'estampas', name: 'Estampas' },
+          { key: 'defectos', name: 'Defectos_NC' },
+          { key: 'defectosSecundarios', name: 'Defectos_Secundarios' },
+          { key: 'medidas', name: 'Medidas' }
+        ];
+
+        mapTabs.forEach(item => {
+          const data = catalogosLocal[item.key] || [];
+          const ws = XLSX.utils.json_to_sheet(data);
+          XLSX.utils.book_append_sheet(wb, ws, item.name);
+        });
+
+        XLSX.writeFile(wb, 'catalogos_maestros_plantilla.xlsx');
+      } catch (e) {
+        alert("Error al construir Excel XLSX: " + e.message + ". Generando CSV...");
+        exportarCatIndividualCSV();
+      }
+    }
+
+    function exportarCatIndividualCSV() {
+      const tipoElem = document.getElementById('exp_cat_individual_tipo');
+      const tipo = tipoElem ? tipoElem.value : 'almacenes';
+      const datos = catalogosLocal[tipo] || [];
+      if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
+      
+      let csvContent = "sep=,
+" + Object.keys(datos[0]).join(",") + "
+";
+      datos.forEach(row => {
+        csvContent += Object.values(row).map(function(v){ return '"' + (v || '').toString().replace(/"/g, '""') + '"'; }).join(",") + "
+";
+      });
+      downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
+    }
+
+    function exportarRegistrosCSV() {
+      if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
+      let csvContent = "sep=,
+Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_URL
+";
+      registrosPersistentes.forEach(r => {
+        const fila = [
+          r.folio_oc || r.folio || '',
+          r.tipo_envio || r.tipo || '',
+          r.fecha || '',
+          r.almacen_origen || r.almacen || '',
+          r.locacion_origen || r.locacion || '',
+          r.parte || '',
+          r.cantidad || '1',
+          r.estampa || '',
+          r.no_conformancia || '',
+          r.detalle_nc || '',
+          r.operador || '',
+          r.turno || '1',
+          r.area || '',
+          r.estatus || 'Nuevo',
+          r.foto_b64 || ''
+        ];
+        csvContent += fila.map(function(v){ return '"' + (v || '').toString().replace(/"/g, '""') + '"'; }).join(",") + "
+";
+      });
+      downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
+    }
+
+    function exportarRegistrosJSON() {
+      const jsonContent = JSON.stringify(registrosPersistentes, null, 2);
+      downloadFile(jsonContent, 'registro_incidencias_locales.json', 'application/json');
+    }
+
+    // DESCARGA ADAPTATIVA
+    function downloadFile(content, fileName, mimeType) {
+      try {
+        const blob = new Blob(["﻿" + content], { type: mimeType });
+        if (navigator.msSaveOrOpenBlob) {
+          navigator.msSaveOrOpenBlob(blob, fileName);
+          return;
+        }
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 200);
+      } catch(e) {
+        alert("Error al descargar archivo: " + e.message);
+      }
+    }
+
+    // IMPORTAR CATÁLOGOS CON TRATAMIENTO ROBUSTO DE LÍNEAS
+    function importarCatalogos() {
+      const fileInput = document.getElementById('fileImportCatalogos');
+      if (!fileInput) { alert("Error: Campo de archivo no encontrado."); return; }
+      const file = fileInput.files[0];
+      const selector = document.getElementById('imp_cat_tipo_selector');
+      const tipo = selector ? selector.value : 'xlsx_multi';
+
+      if (!file) { alert("Por favor selecciona un archivo."); return; }
+
+      const reader = new FileReader();
+
+      if (file.name.endsWith('.xlsx') || tipo === 'xlsx_multi') {
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            const tabMap = {
+              'Almacenes': 'almacenes',
+              'Areas': 'areas',
+              'Partes': 'partes',
+              'Estampas': 'estampas',
+              'Defectos_NC': 'defectos',
+              'Defectos_Secundarios': 'defectosSecundarios',
+              'Medidas': 'medidas'
+            };
+
+            workbook.SheetNames.forEach(sheetName => {
+              const catKey = tabMap[sheetName] || sheetName.toLowerCase();
+              if (catalogosLocal.hasOwnProperty(catKey) || tabMap[sheetName]) {
+                const sheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                if (json.length > 0) {
+                  catalogosLocal[tabMap[sheetName] || catKey] = json;
+                }
+              }
+            });
+
+            localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+            cargarCatalogosFormulario();
+            alert("¡Libro de Excel (.xlsx) importado exitosamente! Catálogos actualizados.");
+          } catch(err) {
+            alert("Error al leer el archivo Excel: " + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } 
+      else {
+        reader.onload = function(e) {
+          const content = e.target.result;
+          try {
+            if (file.name.endsWith('.json')) {
+              const parsed = JSON.parse(content);
+              if (Array.isArray(parsed)) {
+                catalogosLocal[tipo] = parsed;
+              } else {
+                Object.assign(catalogosLocal, parsed);
+              }
+              localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+              alert("¡Catálogo importado desde JSON!");
+            } else {
+              const lineas = content.split(/
+?
+/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+              if (lineas.length > 1) {
+                const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
+                const items = lineas.slice(1).map(l => {
+                  const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
+                  let obj = {};
+                  headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
+                  return obj;
+                });
+                catalogosLocal[tipo] = items;
+                localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+                alert(`¡Catálogo '${tipo}' importado exitosamente desde CSV!`);
+              }
+            }
+            cargarCatalogosFormulario();
+          } catch(err) {
+            alert("Error al procesar archivo: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    // IMPORTAR REGISTROS
+    function importarRegistros() {
+      const fileInput = document.getElementById('fileImportRegistros');
+      if (!fileInput) { alert("Error: Campo 'fileImportRegistros' no encontrado."); return; }
+      const file = fileInput.files[0];
+      if (!file) { alert("Selecciona un archivo CSV o JSON de registros."); return; }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        try {
+          if (file.name.endsWith('.json')) {
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed)) {
+              parsed.forEach(r => guardarRegistroPersistenteLocal(r, "Importado desde JSON"));
+              alert(`¡Se importaron ${parsed.length} registros desde JSON!`);
+            }
+          } else {
+            const lineas = content.split(/
+?
+/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+            if (lineas.length > 1) {
+              const items = lineas.slice(1).map(l => {
+                const cols = l.split(",").map(c => c.replace(/^"|"$/g, '').trim());
+                return {
+                  folio_oc: cols[0] || 'OC-999',
+                  tipo_envio: cols[1] || 'Proceso',
+                  fecha: cols[2] || '',
+                  almacen_origen: cols[3] || '',
+                  locacion_origen: cols[4] || '',
+                  parte: cols[5] || '',
+                  cantidad: cols[6] || '1',
+                  estampa: cols[7] || '',
+                  no_conformancia: cols[8] || '',
+                  detalle_nc: cols[9] || '',
+                  operador: cols[10] || '',
+                  turno: cols[11] || '1',
+                  area: cols[12] || '',
+                  estatus: cols[13] || 'Nuevo',
+                  foto_b64: cols[14] || ''
+                };
+              });
+
+              items.forEach(r => guardarRegistroPersistenteLocal(r, "Importado desde CSV"));
+              alert(`¡Se importaron ${items.length} registros desde CSV!`);
+            }
+          }
+          renderizarTablaRegistros();
+        } catch(err) {
+          alert("Error al importar registros: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
   </script>
 </body>
 </html>
