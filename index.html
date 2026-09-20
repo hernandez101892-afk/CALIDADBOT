@@ -64,19 +64,7 @@
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
       } else {
-        alert("INSTRUCCIONES DE INSTALACIÓN:
-
-📱 En Android / Chrome / Edge:
-1. Toca los 3 puntos del menú del navegador.
-2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.
-
-🍏 En iPhone / iPad (Safari):
-1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).
-2. Selecciona 'Agregar al inicio'.
-
-💻 En PC / Mac:
-1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.
-2. Haz clic en 'Instalar'.");
+        alert("INSTRUCCIONES DE INSTALACIÓN:\n\n📱 En Android / Chrome / Edge:\n1. Toca los 3 puntos del menú del navegador.\n2. Selecciona \"Instalar aplicación\" o \"Agregar a la pantalla principal\".\n\n🍏 En iPhone / iPad (Safari):\n1. Toca el botón \"Compartir\" (cuadrado con flecha hacia arriba).\n2. Selecciona \"Agregar al inicio\".\n\n💻 En PC / Mac:\n1. Haz clic en el ícono de \"+\" o la computadora en la barra de direcciones del navegador.\n2. Selecciona \"Instalar\".");
       }
     }
 
@@ -1783,7 +1771,8 @@
       
       let csvContent = "sep=,\n" + Object.keys(datos[0]).join(",") + "\n";
       datos.forEach(row => {
-        csvContent += Object.values(row).map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
+        csvContent += Object.values(row).map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "
+";
       });
       downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
     }
@@ -1809,7 +1798,8 @@
           r.estatus || 'Nuevo',
           r.foto_b64 || ''
         ];
-        csvContent += fila.map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
+        csvContent += fila.map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "
+";
       });
       downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
     }
