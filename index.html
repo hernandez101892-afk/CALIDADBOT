@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v30)</title>
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v32)</title>
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,7 +26,7 @@
     .card-header { font-weight: bold; border-radius: 12px 12px 0 0 !important; }
     .btn-custom { border-radius: 8px; font-weight: 600; padding: 10px 18px; }
     #reader { width: 100%; border-radius: 10px; overflow: hidden; }
-    #canvasFirma { border: 2px dashed #ccc; border-radius: 8px; background: #fff; cursor: crosshair; width: 100%; height: 140px; }
+    #canvasFirma { border: 2px dashed #0d6efd; border-radius: 8px; background: #ffffff; cursor: crosshair; width: 100%; height: 150px; touch-action: none; }
     .badge-offline { background-color: #ffc107; color: #000; font-weight: bold; padding: 6px 12px; border-radius: 20px; }
     .badge-online { background-color: #198754; color: #fff; font-weight: bold; padding: 6px 12px; border-radius: 20px; }
     .nav-pills .nav-link { font-weight: bold; border-radius: 10px; margin-right: 4px; padding: 10px 14px; font-size: 0.90rem; }
@@ -44,15 +44,15 @@
   </style>
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      window.addEventListener('load', function() {
         navigator.serviceWorker.register('sw.js')
-          .then(reg => { reg.update().catch(() => {}); })
-          .catch(err => {});
+          .then(function(reg) { if (reg && reg.update) reg.update().catch(function(){}); })
+          .catch(function(err) {});
       });
     }
 
     let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
+    window.addEventListener('beforeinstallprompt', function(e) {
       e.preventDefault();
       deferredPrompt = e;
       const btn = document.getElementById('btnInstallPwa');
@@ -62,33 +62,21 @@
     function instalarPwa() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+        deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
       } else {
-        alert("INSTRUCCIONES DE INSTALACIÓN:
-
-📱 En Android / Chrome / Edge:
-1. Toca los 3 puntos del menú del navegador.
-2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.
-
-🍏 En iPhone / iPad (Safari):
-1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).
-2. Selecciona 'Agregar al inicio'.
-
-💻 En PC / Mac:
-1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.
-2. Haz clic en 'Instalar'.");
+        alert("INSTRUCCIONES DE INSTALACIÓN:\n\n📱 En Android / Chrome / Edge:\n1. Toca los 3 puntos del menú del navegador.\n2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.\n\n🍏 En iPhone / iPad (Safari):\n1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).\n2. Selecciona 'Agregar al inicio'.\n\n💻 En PC / Mac:\n1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.\n2. Haz clic en 'Instalar'.");
       }
     }
 
     function forzarLimpiezaCacheWeb() {
       if (confirm("¿Deseas forzar la actualización de la página y limpiar la caché del navegador?")) {
         if ('caches' in window) {
-          caches.keys().then(names => {
+          caches.keys().then(function(names) {
             for (let name of names) caches.delete(name);
           });
         }
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
             for (let registration of registrations) registration.unregister();
           });
         }
@@ -165,10 +153,10 @@
         <!-- BOTÓN ESCÁNER QR -->
         <div class="card bg-light">
           <div class="card-body text-center p-2">
-            <button class="btn btn-outline-primary w-100 btn-custom" onclick="toggleQrScanner()"><i class="fa-solid fa-qrcode me-2"></i>Escanear Código QR / Código de Barras</button>
+            <button type="button" class="btn btn-outline-primary w-100 btn-custom" onclick="toggleQrScanner()"><i class="fa-solid fa-qrcode me-2"></i>Escanear Código QR / Código de Barras</button>
             <div id="qrReaderContainer" class="mt-2" style="display:none;">
               <div id="reader"></div>
-              <button class="btn btn-sm btn-danger mt-2" onclick="toggleQrScanner()"><i class="fa-solid fa-xmark me-1"></i>Cerrar Cámara</button>
+              <button type="button" class="btn btn-sm btn-danger mt-2" onclick="toggleQrScanner()"><i class="fa-solid fa-xmark me-1"></i>Cerrar Cámara</button>
             </div>
           </div>
         </div>
@@ -267,8 +255,10 @@
               <!-- FIRMA DIGITAL -->
               <div class="mt-3">
                 <label class="form-label fw-bold"><i class="fa-solid fa-signature me-1"></i>Firma Digital del Inspector (Opcional):</label>
-                <canvas id="canvasFirma"></canvas>
-                <div class="text-end">
+                <div class="border rounded p-1 bg-white position-relative">
+                  <canvas id="canvasFirma"></canvas>
+                </div>
+                <div class="text-end mt-1">
                   <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limpiarFirma()"><i class="fa-solid fa-eraser me-1"></i>Limpiar Firma</button>
                 </div>
               </div>
@@ -284,15 +274,16 @@
 
       </div>
 
-      <!-- PESTAÑA 2: VER REGISTROS PERSISTENTES Y NAVEGAR A DISPOSICIÓN -->
+
+      <!-- PESTAÑA 2: VER REGISTROS PERSISTENTES -->
       <div class="tab-pane fade" id="tab-ver-registros" role="tabpanel">
         
         <div class="card">
           <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span><i class="fa-solid fa-database me-2"></i>Histórico de Registros (<span id="cantRegistrosPersistentes">0</span>)</span>
             <div>
-              <button class="btn btn-sm btn-outline-light me-1" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Sincronizar GitHub</button>
-              <button class="btn btn-sm btn-danger" onclick="limpiarRegistrosLocales()"><i class="fa-solid fa-trash me-1"></i>Vaciar Local</button>
+              <button type="button" class="btn btn-sm btn-outline-light me-1" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Sincronizar GitHub</button>
+              <button type="button" class="btn btn-sm btn-danger" onclick="limpiarRegistrosLocales()"><i class="fa-solid fa-trash me-1"></i>Vaciar Local</button>
             </div>
           </div>
           <div class="card-body">
@@ -319,7 +310,7 @@
                 </select>
               </div>
               <div class="col-md-3">
-                <button class="btn btn-primary w-100 fw-bold" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-sync me-1"></i>Refrescar Tabla</button>
+                <button type="button" class="btn btn-primary w-100 fw-bold" onclick="renderizarTablaRegistros()"><i class="fa-solid fa-sync me-1"></i>Refrescar Tabla</button>
               </div>
             </div>
 
@@ -351,13 +342,14 @@
 
       </div>
 
-      <!-- PESTAÑA 3: DISPOSICIÓN Y CIERRE DE INCIDENCIAS -->
+
+      <!-- PESTAÑA 3: DISPOSICIÓN Y CIERRE -->
       <div class="tab-pane fade" id="tab-disposicion" role="tabpanel">
         
         <div class="card">
           <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
             <span><i class="fa-solid fa-gavel me-2"></i>Seleccionar Registro para Disposición</span>
-            <button class="btn btn-sm btn-light" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Actualizar Lista</button>
+            <button type="button" class="btn btn-sm btn-light" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Actualizar Lista</button>
           </div>
           <div class="card-body">
             <p class="text-muted small m-0 mb-3">Haz clic en el botón <strong>"Evaluar Disposición"</strong> de cualquier registro para abrir la evaluación de 3 Pasos (Destino, Sorteo y Análisis 5-Porqués).</p>
@@ -426,7 +418,7 @@
                 </div>
               </div>
 
-              <!-- PASO 3: ANÁLISIS COMPLETO DE LOS 5 PORQUÉS Y CAUSA RAÍZ -->
+              <!-- PASO 3: ANÁLISIS DE LOS 5 PORQUÉS -->
               <h6 class="fw-bold text-primary border-bottom pb-1 mb-3"><i class="fa-solid fa-3 me-1"></i>Paso 3: Análisis de Causa Raíz (5 Porqués) & Acción Correctiva</h6>
               
               <div class="row g-2 mb-3 bg-light p-3 rounded border">
@@ -448,7 +440,7 @@
                 </div>
                 <div class="col-12 mb-2">
                   <label class="form-label fw-bold text-danger"><i class="fa-solid fa-bullseye me-1"></i>5º Por qué (CAUSA RAÍZ FINAL):</label>
-                  <input type="text" class="form-control form-control-sm border-danger fw-bold" id="disp_porque5" placeholder="Ej: Falta de checklist obligatorio de mantenimiento preventivo de herramental">
+                  <input type="text" class="form-control form-control-sm border-danger fw-bold" id="disp_porque5" placeholder="Ej: Falta de checklist obligatorio de mantenimiento preventivo">
                 </div>
               </div>
 
@@ -469,7 +461,8 @@
 
       </div>
 
-      <!-- PESTAÑA 4: IMPORTAR Y EXPORTAR CATÁLOGOS Y REGISTROS -->
+
+      <!-- PESTAÑA 4: IMPORTAR Y EXPORTAR -->
       <div class="tab-pane fade" id="tab-import-export" role="tabpanel">
         
         <div class="row g-4">
@@ -483,7 +476,7 @@
                   <p class="text-muted small">Genera y descarga copias de seguridad de tus catálogos locales y registros directamente en tu dispositivo.</p>
                   
                   <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-file-excel me-1 text-success"></i>Libro de Catálogos Completo (Excel Multi-Hoja):</h6>
-                  <button class="btn btn-success fw-bold w-100 mb-3 shadow-sm" onclick="exportarCatalogosExcelXLSX()"><i class="fa-solid fa-file-excel me-2"></i>Descargar Plantilla / Libro de Catálogos Completo (.xlsx)</button>
+                  <button type="button" class="btn btn-success fw-bold w-100 mb-3 shadow-sm" onclick="exportarCatalogosExcelXLSX()"><i class="fa-solid fa-file-excel me-2"></i>Descargar Plantilla / Libro de Catálogos Completo (.xlsx)</button>
 
                   <h6 class="fw-bold text-dark mt-2"><i class="fa-solid fa-list-check me-1 text-primary"></i>Exportación Individual en CSV:</h6>
                   <div class="input-group mb-3">
@@ -495,17 +488,17 @@
                       <option value="defectos">Defectos Principales (NC)</option>
                       <option value="defectosSecundarios">Defectos Secundarios</option>
                     </select>
-                    <button class="btn btn-outline-primary btn-sm" onclick="exportarCatIndividualCSV()"><i class="fa-solid fa-file-csv me-1"></i>Descargar CSV</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportarCatIndividualCSV()"><i class="fa-solid fa-file-csv me-1"></i>Descargar CSV</button>
                   </div>
 
                   <h6 class="fw-bold text-dark mt-3"><i class="fa-solid fa-database me-1 text-success"></i>Exportar Registros Persistentes:</h6>
                   <div class="d-flex gap-2">
-                    <button class="btn btn-outline-success btn-sm w-50 fw-bold" onclick="exportarRegistrosCSV()"><i class="fa-solid fa-file-excel me-1"></i>Registros CSV (sep=,)</button>
-                    <button class="btn btn-outline-secondary btn-sm w-50 fw-bold" onclick="exportarRegistrosJSON()"><i class="fa-solid fa-code me-1"></i>Registros JSON</button>
+                    <button type="button" class="btn btn-outline-success btn-sm w-50 fw-bold" onclick="exportarRegistrosCSV()"><i class="fa-solid fa-file-excel me-1"></i>Registros CSV (sep=,)</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm w-50 fw-bold" onclick="exportarRegistrosJSON()"><i class="fa-solid fa-code me-1"></i>Registros JSON</button>
                   </div>
                 </div>
                 <div class="mt-4 alert alert-info small m-0">
-                  <i class="fa-solid fa-circle-info me-1"></i>El libro Excel Multi-Hoja (.xlsx) genera 7 pestañas independientes (Almacenes, Áreas, Partes, Estampas, Defectos, etc.) listas para editar e importar.
+                  <i class="fa-solid fa-circle-info me-1"></i>El libro Excel Multi-Hoja (.xlsx) genera pestañas independientes listas para editar e importar.
                 </div>
               </div>
             </div>
@@ -530,7 +523,7 @@
                     <option value="defectosSecundarios">Defectos Secundarios</option>
                   </select>
                   <input type="file" id="fileImportCatalogos" accept=".xlsx,.csv,.json" class="form-control form-control-sm mb-2">
-                  <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="importarCatalogos()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Catálogo(s)</button>
+                  <button type="button" class="btn btn-primary btn-sm w-100 fw-bold" onclick="importarCatalogos()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Catálogo(s)</button>
                 </div>
 
                 <hr>
@@ -538,7 +531,7 @@
                 <div class="mb-3">
                   <label class="form-label fw-bold">2. Importar Registros de Incidencias Históricos (CSV / JSON):</label>
                   <input type="file" id="fileImportRegistros" accept=".csv,.json" class="form-control form-control-sm mb-2">
-                  <button class="btn btn-success btn-sm w-100 fw-bold" onclick="importarRegistros()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Registros</button>
+                  <button type="button" class="btn btn-success btn-sm w-100 fw-bold" onclick="importarRegistros()"><i class="fa-solid fa-upload me-1"></i>Cargar e Importar Registros</button>
                 </div>
 
               </div>
@@ -548,6 +541,7 @@
         </div>
 
       </div>
+
 
       <!-- PESTAÑA 5: ARCHIVOS Y EXCEL -->
       <div class="tab-pane fade" id="tab-archivos" role="tabpanel">
@@ -562,7 +556,7 @@
                 <div>
                   <i class="fa-solid fa-file-excel text-success me-2 fs-5"></i>
                   <strong>Abrir Directo en la App de Microsoft Excel</strong>
-                  <div class="small text-muted font-normal">Ejecuta la app de Excel instalada en tu dispositivo usando el protocolo nativo ms-excel.</div>
+                  <div class="small text-muted font-normal">Ejecuta la app de Excel instalada en tu dispositivo.</div>
                 </div>
                 <span class="badge bg-success rounded-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
               </a>
@@ -571,7 +565,7 @@
                 <div>
                   <i class="fa-solid fa-download text-primary me-2 fs-5"></i>
                   <strong>Descargar CSV Formateado (sep=,)</strong>
-                  <div class="small text-muted">Descarga directa compatible con Excel en español e inglés.</div>
+                  <div class="small text-muted">Descarga directa compatible con Excel.</div>
                 </div>
                 <span class="badge bg-primary rounded-pill"><i class="fa-solid fa-download"></i></span>
               </a>
@@ -580,7 +574,7 @@
                 <div>
                   <i class="fa-solid fa-images text-warning me-2 fs-5"></i>
                   <strong>Galería de Fotografías de Evidencia</strong>
-                  <div class="small text-muted">Acceder a todas las fotos almacenadas en GitHub.</div>
+                  <div class="small text-muted">Acceder a todas las fotos en GitHub.</div>
                 </div>
                 <span class="badge bg-warning text-dark rounded-pill"><i class="fa-solid fa-folder-open"></i></span>
               </a>
@@ -598,40 +592,41 @@
 
       </div>
 
-      <!-- PESTAÑA 6: GALERÍA DE FOTOS DE EVIDENCIA -->
+
+      <!-- PESTAÑA 6: GALERÍA DE FOTOS -->
       <div class="tab-pane fade" id="tab-galeria" role="tabpanel">
         
         <div class="card">
           <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-            <span><i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia (GitHub & Local)</span>
-            <button class="btn btn-sm btn-dark" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-rotate me-1"></i>Refrescar Galería</button>
+            <span><i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia</span>
+            <button type="button" class="btn btn-sm btn-dark" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-rotate me-1"></i>Refrescar Galería</button>
           </div>
           <div class="card-body">
-            <p class="text-muted small">Haz clic en cualquier miniatura para ver la fotografía en alta resolución y descargar la imagen original:</p>
+            <p class="text-muted small">Haz clic en cualquier miniatura para ver la fotografía en alta resolución:</p>
 
             <div class="row g-2 mb-3">
               <div class="col-md-8">
                 <input type="text" id="searchFotos" class="form-control" placeholder="Filtrar por Folio OC, Número de Parte o Inspector..." onkeyup="filtrarGaleriaFotos()">
               </div>
               <div class="col-md-4">
-                <button class="btn btn-outline-warning text-dark w-100 fw-bold" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-filter me-1"></i>Actualizar Galería</button>
+                <button type="button" class="btn btn-outline-warning text-dark w-100 fw-bold" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-filter me-1"></i>Actualizar Galería</button>
               </div>
             </div>
 
             <div id="containerGaleriaFotos" class="row g-3">
-              <!-- Las miniaturas se cargan dinámicamente -->
+              <!-- Se carga dinámicamente -->
             </div>
           </div>
         </div>
 
       </div>
 
-      <!-- PESTAÑA 7: CONFIGURACIÓN DE ALERTAS, CORREOS Y SERVIDOR -->
+
+      <!-- PESTAÑA 7: CONFIGURACIÓN -->
       <div class="tab-pane fade" id="tab-config" role="tabpanel">
         
         <div class="row g-4">
           
-          <!-- TARJETA CONFIGURACIÓN DE CORREOS -->
           <div class="col-md-7">
             <div class="card border-primary shadow-sm h-100">
               <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -639,11 +634,11 @@
                 <span class="badge bg-light text-primary">Email Alerts</span>
               </div>
               <div class="card-body">
-                <p class="text-muted small">Configura las direcciones de correo a las que el servidor de Google Apps Script enviará una alerta automática cada vez que se registre una inspección o una disposición.</p>
+                <p class="text-muted small">Configura las direcciones de correo a las que el servidor enviará alertas automáticas de inspección y disposición.</p>
                 
                 <div class="mb-3">
                   <label class="form-label fw-bold"><i class="fa-solid fa-at me-1 text-primary"></i>Correos Destinatarios (Separados por coma):</label>
-                  <textarea id="notifEmails" class="form-control" rows="3" placeholder="ejemplo: supervisor_calidad@planta.com, gerente@planta.com, inspeccion@planta.com"></textarea>
+                  <textarea id="notifEmails" class="form-control" rows="3" placeholder="ejemplo: supervisor_calidad@planta.com, gerente@planta.com"></textarea>
                   <small class="text-muted">Puedes agregar múltiples cuentas separadas por comas.</small>
                 </div>
 
@@ -651,24 +646,19 @@
                 
                 <div class="form-check form-switch mb-2">
                   <input class="form-check-input" type="checkbox" id="chkNotifNuevoReg" checked>
-                  <label class="form-check-label fw-bold" for="chkNotifNuevoReg">Enviar correo al crear un <strong>Nuevo Registro de Inspección</strong></label>
+                  <label class="form-check-label fw-bold" for="chkNotifNuevoReg">Enviar correo al crear un <strong>Nuevo Registro</strong></label>
                 </div>
 
                 <div class="form-check form-switch mb-3">
                   <input class="form-check-input" type="checkbox" id="chkNotifDisposicion" checked>
-                  <label class="form-check-label fw-bold" for="chkNotifDisposicion">Enviar correo al registrar evaluación de <strong>Disposición NC (5 Porqués)</strong></label>
+                  <label class="form-check-label fw-bold" for="chkNotifDisposicion">Enviar correo al evaluar <strong>Disposición NC (5 Porqués)</strong></label>
                 </div>
 
-                <div class="alert alert-info small mb-3">
-                  <i class="fa-solid fa-circle-info me-1"></i>Los correos se envían a través del servicio de Google Apps Script cuando la app transmite los datos.
-                </div>
-
-                <button class="btn btn-success fw-bold w-100 shadow-sm btn-custom" onclick="guardarConfiguracionSistema()"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Configuración de Correos</button>
+                <button type="button" class="btn btn-success fw-bold w-100 shadow-sm btn-custom" onclick="guardarConfiguracionSistema()"><i class="fa-solid fa-floppy-disk me-2"></i>Guardar Configuración de Correos</button>
               </div>
             </div>
           </div>
 
-          <!-- TARJETA CONFIGURACIÓN SERVIDOR PROXY Y PWA -->
           <div class="col-md-5">
             <div class="card border-dark shadow-sm h-100">
               <div class="card-header bg-dark text-white"><i class="fa-solid fa-server me-2"></i>Servidor Proxy & App Web PWA</div>
@@ -677,19 +667,18 @@
                   <div class="mb-3">
                     <label class="form-label fw-bold text-dark mb-1"><i class="fa-solid fa-gears me-1 text-primary"></i>URL del Servidor Proxy (Google Apps Script):</label>
                     <input type="text" id="proxyUrlConfig" class="form-control form-control-sm mb-2" placeholder="https://script.google.com/macros/s/.../exec">
-                    <small class="text-muted">Enlace de implementación web para sincronización con GitHub y correo.</small>
                   </div>
 
                   <hr>
 
                   <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-mobile-screen-button me-1 text-success"></i>Estado PWA en el Dispositivo:</h6>
-                  <p class="text-muted small">Instala esta aplicación web en la pantalla de inicio de tu teléfono móvil para un acceso directo nativo e inspección offline.</p>
+                  <p class="text-muted small">Instala esta aplicación web en la pantalla de inicio de tu teléfono móvil.</p>
                   
-                  <button id="btnInstallPwaConfig" class="btn btn-outline-warning text-dark fw-bold w-100 shadow-sm mb-2" onclick="instalarPwa()"><i class="fa-solid fa-download me-1"></i>📲 Instalar App en Dispositivo</button>
+                  <button type="button" id="btnInstallPwaConfig" class="btn btn-outline-warning text-dark fw-bold w-100 shadow-sm mb-2" onclick="instalarPwa()"><i class="fa-solid fa-download me-1"></i>📲 Instalar App en Dispositivo</button>
                 </div>
 
                 <div class="mt-3 text-center">
-                  <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="guardarConfiguracionSistema()"><i class="fa-solid fa-check me-1"></i>Aplicar Todos los Cambios</button>
+                  <button type="button" class="btn btn-primary btn-sm w-100 fw-bold" onclick="guardarConfiguracionSistema()"><i class="fa-solid fa-check me-1"></i>Aplicar Todos los Cambios</button>
                 </div>
               </div>
             </div>
@@ -699,11 +688,11 @@
 
       </div>
 
-    </div>
+    </div> <!-- FIN DE mainTabsContent -->
 
-  </div>
+  </div> <!-- FIN DE container-fluid -->
 
-  <!-- MODAL PARA VER DETALLE / HISTORIAL -->
+  <!-- MODAL DETALLE / HISTORIAL -->
   <div class="modal fade" id="modalDetalleRegistro" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
@@ -711,9 +700,7 @@
           <h5 class="modal-title fw-bold" id="modalDetalleTitulo">Detalle del Registro & Historial</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body" id="modalDetalleCuerpo">
-          <!-- Se llena dinámicamente -->
-        </div>
+        <div class="modal-body" id="modalDetalleCuerpo"></div>
         <div class="modal-footer">
           <button type="button" class="btn btn-warning fw-bold" id="btnModalIrDisposicion"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -722,7 +709,7 @@
     </div>
   </div>
 
-  <!-- MODAL VISTA PREVIA FOTO EN GRANDE -->
+  <!-- MODAL FOTO GRANDE -->
   <div class="modal fade" id="modalFotoGrande" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content bg-dark text-white">
@@ -742,7 +729,7 @@
     </div>
   </div>
 
-  <!-- MODAL GENERADOR Y CONSULTA CÓDIGO QR -->
+  <!-- MODAL GENERADOR Y CONSULTA QR -->
   <div class="modal fade" id="modalQrGenerado" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -754,9 +741,6 @@
           <p class="text-muted small m-0 fw-bold" id="modalQrFolioTitulo">Etiqueta QR de Inspección</p>
           <div id="qrContainerModal" class="d-flex justify-content-center align-items-center my-3 p-3 bg-light rounded border shadow-sm" style="min-height: 230px;"></div>
           <small class="text-muted d-block break-all" id="modalQrUrlTexto"></small>
-          <div class="alert alert-info small mt-3 mb-0">
-            <i class="fa-solid fa-circle-info me-1"></i>Escanea este código QR con cualquier cámara o desde la App Web para ir directo a la evaluación de Disposición NC.
-          </div>
         </div>
         <div class="modal-footer d-flex justify-content-between">
           <button type="button" class="btn btn-warning fw-bold" id="btnModalQrIrDisposicion"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición Ahora</button>
@@ -769,7 +753,7 @@
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V30 -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA Y ROBUSTA APP WEB V32 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbzGpkcgt4Elocfep6VW4hMKZ42yBAX_dKhz6iJZtkFmc8fES9TxJwyW2x-j1bN8jH9H/exec";
     
@@ -858,11 +842,12 @@
 
     let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS')) || DEFAULT_CATALOGOS;
 
-    window.addEventListener('DOMContentLoaded', () => {
+    // INICIALIZACIÓN PRINCIPAL AL CARGAR EL DOM
+    window.addEventListener('DOMContentLoaded', function() {
       const proxyInput = document.getElementById('proxyUrl');
       if (proxyInput) {
         proxyInput.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
-        proxyInput.addEventListener('change', () => localStorage.setItem('PROXY_URL', proxyInput.value));
+        proxyInput.addEventListener('change', function() { localStorage.setItem('PROXY_URL', proxyInput.value); });
       }
 
       inicializarFirmaCanvas();
@@ -878,13 +863,17 @@
       const urlParams = new URLSearchParams(window.location.search);
       const targetFolioParam = urlParams.get('folio');
       if (targetFolioParam) {
-        setTimeout(() => {
+        setTimeout(function() {
           irADisposicionDesdeFolio(targetFolioParam);
         }, 600);
       }
 
       window.addEventListener('online', actualizarEstadoRed);
       window.addEventListener('offline', actualizarEstadoRed);
+
+      window.addEventListener('resize', function() {
+        ajustarTamanoCanvas();
+      });
     });
 
     function actualizarEstadoRed() {
@@ -896,28 +885,119 @@
         sincronizarColaOffline();
       } else {
         netBadge.className = 'badge-offline mt-2 d-inline-block';
-        netBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>Sin Conexión (Modo Offline - Guardando en Memoria Persistente)';
+        netBadge.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>Sin Conexión (Modo Offline)';
       }
     }
 
+    // FIRMA DIGITAL TOUCH & MOUSE ROBUSTA
+    let isDrawing = false;
+    let canvas = null;
+    let ctx = null;
+
+    function inicializarFirmaCanvas() {
+      canvas = document.getElementById('canvasFirma');
+      if (!canvas) return;
+      ctx = canvas.getContext('2d');
+      ajustarTamanoCanvas();
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', startDrawing, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', stopDrawing);
+      canvas.addEventListener('touchcancel', stopDrawing);
+    }
+
+    function ajustarTamanoCanvas() {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width || canvas.offsetWidth || 300;
+      const h = rect.height || canvas.offsetHeight || 150;
+      canvas.width = w;
+      canvas.height = h;
+    }
+
+    function getCanvasPos(e) {
+      if (!canvas) return { x: 0, y: 0 };
+      const rect = canvas.getBoundingClientRect();
+      let clientX = e.clientX;
+      let clientY = e.clientY;
+
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      }
+
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      if (e.cancelable) e.preventDefault();
+      const pos = getCanvasPos(e);
+      if (ctx) {
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
+      draw(e);
+    }
+
+    function stopDrawing(e) {
+      if (isDrawing) {
+        if (e) draw(e);
+        isDrawing = false;
+        if (ctx) ctx.beginPath();
+      }
+    }
+
+    function draw(e) {
+      if (!isDrawing || !ctx) return;
+      if (e.cancelable) e.preventDefault();
+      const pos = getCanvasPos(e);
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#000000';
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function limpiarFirma() {
+      if (canvas && ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+      }
+    }
+
+    // CARGAR CATÁLOGOS Y DATALISTS
     function formatearItemCatalogo(x) {
       if (!x) return "";
       if (typeof x === 'string') return x;
       const cod = x.numero || x.codigo || x.NUMERO || x.CODIGO || x.id || "";
       const nom = x.nombre || x.descripcion || x.NOMBRE || x.DESCRIPCION || x.usuario || "";
       const extra = x.medida || x.MEDIDA || "";
-      
       if (cod && nom) return `${cod} - ${nom}${extra ? ' ('+extra+')' : ''}`;
       if (nom) return nom;
       if (cod) return cod;
-      return JSON.stringify(x);
+      return String(x);
     }
 
     function poblarDatalist(idList, items) {
       const dl = document.getElementById(idList);
       if (!dl) return;
       dl.innerHTML = "";
-      items.forEach(val => {
+      items.forEach(function(val) {
         const textStr = formatearItemCatalogo(val);
         if (textStr) {
           const opt = document.createElement('option');
@@ -953,15 +1033,13 @@
           const res = await fetch(baseUrl + item.file + "?t=" + Date.now());
           if (res.ok) {
             const text = await res.text();
-            const lineas = text.split(/
-?
-/).filter(l => l.trim().length > 0 && !l.startsWith('sep='));
+            const lineas = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith('sep='); });
             if (lineas.length > 1) {
-              const headers = lineas[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-              const parsedItems = lineas.slice(1).map(l => {
-                const cols = l.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+              const headers = lineas[0].split(',').map(function(h) { return h.replace(/^"|"$/g, '').trim(); });
+              const parsedItems = lineas.slice(1).map(function(l) {
+                const cols = l.split(',').map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
                 let obj = {};
-                headers.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
+                headers.forEach(function(h, idx) { obj[h] = cols[idx] || ''; });
                 return obj;
               });
               if (parsedItems.length > 0) {
@@ -975,15 +1053,16 @@
       cargarCatalogosFormulario();
     }
 
+    // ESCÁNER QR
     function toggleQrScanner() {
       const container = document.getElementById('qrReaderContainer');
       if (!container) return;
       if (isQrScanning) {
         if (html5QrCode) {
-          html5QrCode.stop().then(() => {
+          html5QrCode.stop().then(function() {
             container.style.display = 'none';
             isQrScanning = false;
-          }).catch(err => console.log(err));
+          }).catch(function(err) { console.log(err); });
         }
       } else {
         container.style.display = 'block';
@@ -991,24 +1070,21 @@
         html5QrCode.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
-          (decodedText) => {
+          function(decodedText) {
             const folioInput = document.getElementById('folio_oc');
-            
             let folio = decodedText;
             if (decodedText.includes('folio=')) {
               const match = decodedText.match(/folio=([^&]+)/);
               if (match) folio = decodeURIComponent(match[1]);
             }
-
             if (folioInput) folioInput.value = folio;
             toggleQrScanner();
-
-            alert("🔍 Código QR Escaneado con Éxito:\n" + folio + "\n\nRedirigiendo a la pantalla de Disposición...");
+            alert("🔍 QR Escaneado: " + folio);
             irADisposicionDesdeFolio(folio);
           },
-          (errorMessage) => {}
-        ).then(() => { isQrScanning = true; })
-        .catch(err => { alert("No se pudo iniciar la cámara: " + err); });
+          function(errorMessage) {}
+        ).then(function() { isQrScanning = true; })
+        .catch(function(err) { alert("No se pudo iniciar la cámara: " + err); });
       }
     }
 
@@ -1031,7 +1107,7 @@
 
       const btnDisp = document.getElementById('btnModalQrIrDisposicion');
       if (btnDisp) {
-        btnDisp.onclick = () => {
+        btnDisp.onclick = function() {
           const modalEl = document.getElementById('modalQrGenerado');
           if (modalEl) {
             const modal = bootstrap.Modal.getInstance(modalEl);
@@ -1048,45 +1124,9 @@
       }
     }
 
-    let isDrawing = false;
-    let canvas, ctx;
-
-    function inicializarFirmaCanvas() {
-      canvas = document.getElementById('canvasFirma');
-      if (!canvas) return;
-      ctx = canvas.getContext('2d');
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-
-      canvas.addEventListener('mousedown', startDrawing);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('mouseup', stopDrawing);
-      canvas.addEventListener('touchstart', startDrawing);
-      canvas.addEventListener('touchmove', draw);
-      canvas.addEventListener('touchend', stopDrawing);
-    }
-
-    function startDrawing(e) { isDrawing = true; draw(e); }
-    function stopDrawing() { isDrawing = false; ctx.beginPath(); }
-    function draw(e) {
-      if (!isDrawing) return;
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = '#000';
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    }
-    function limpiarFirma() { if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
     function procesarFoto(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
       const reader = new FileReader();
       reader.onload = function(evt) {
         fotoBase64 = evt.target.result;
@@ -1096,9 +1136,10 @@
           img.style.display = 'block';
         }
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(files[0]);
     }
 
+    // REGISTROS PERSISTENTES LOCALES
     function cargarRegistrosPersistentesLocales() {
       const stored = localStorage.getItem('CALIDAD_REGISTROS');
       if (stored) {
@@ -1114,7 +1155,9 @@
       if (!targetFolio) return;
 
       const nowStr = nuevoReg.fecha || new Date().toLocaleString();
-      const index = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio || '').toString().trim() === targetFolio);
+      const index = registrosPersistentes.findIndex(function(r) {
+        return (r.folio_oc || r.folio || '').toString().trim() === targetFolio;
+      });
       
       let historialPrev = [];
 
@@ -1152,7 +1195,7 @@
       let conDisp = 0;
       let pendDisp = 0;
 
-      registrosPersistentes.forEach(r => {
+      registrosPersistentes.forEach(function(r) {
         const est = r.estatus || (r.tiene_disposicion ? "Terminado" : "Nuevo");
         if (est === "Terminado" || r.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
           conDisp++;
@@ -1184,8 +1227,9 @@
       }
     }
 
+    // ENVIAR Y GUARDAR REGISTRO
     async function guardarRegistro(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       const btn = document.getElementById('btnSubmit');
       if (btn) {
         btn.disabled = true;
@@ -1193,7 +1237,8 @@
       }
 
       const nowStr = new Date().toLocaleString();
-      const folio = document.getElementById('folio_oc').value.trim();
+      const folioInput = document.getElementById('folio_oc');
+      const folio = folioInput ? folioInput.value.trim() : ("OC-" + Date.now());
 
       const payload = {
         folio_oc: folio,
@@ -1222,7 +1267,7 @@
         let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
         cola.push(payload);
         localStorage.setItem('COLA_OFFLINE', JSON.stringify(cola));
-        alert("Registro guardado localmente de forma PERSISTENTE en la App Web. Se sincronizará con GitHub al recuperar conexión.");
+        alert("Registro guardado localmente de forma PERSISTENTE.");
         resetForm();
         if (btn) {
           btn.disabled = false;
@@ -1252,13 +1297,13 @@
 
         const resJson = await response.json();
         if (resJson.status === 'ok') {
-          alert("¡ÉXITO!\n\n" + resJson.mensaje);
+          alert("¡ÉXITO! " + resJson.mensaje);
           resetForm();
         } else {
-          alert("Guardado localmente. Servidor respondió: " + resJson.mensaje);
+          alert("Guardado localmente. Mensaje servidor: " + resJson.mensaje);
         }
       } catch (err) {
-        alert("Registro guardado localmente en la app. Mensaje de servidor: " + err.toString());
+        alert("Registro guardado localmente en la app.");
       }
     }
 
@@ -1279,7 +1324,7 @@
         await enviarPayloadProxy(item);
       }
       localStorage.removeItem('COLA_OFFLINE');
-      alert("¡Sincronización completada! Se enviaron todos los registros pendientes.");
+      alert("¡Sincronización completada!");
     }
 
     function obtenerBadgesRegistro(reg) {
@@ -1299,7 +1344,7 @@
       if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') tipoClass = 'bg-danger';
       if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') tipoClass = 'bg-warning text-dark';
 
-      return { estatusBadge, etapaBadge, tipoClass };
+      return { estatusBadge: estatusBadge, etapaBadge: etapaBadge, tipoClass: tipoClass };
     }
 
     function renderizarTablaRegistros() {
@@ -1313,7 +1358,7 @@
         return;
       }
 
-      registrosPersistentes.forEach((reg) => {
+      registrosPersistentes.forEach(function(reg) {
         const tr = document.createElement('tr');
         const folio = reg.folio_oc || reg.folio || 'N/A';
         const badges = obtenerBadgesRegistro(reg);
@@ -1329,9 +1374,9 @@
           <td class="small">${reg.operador || 'Inspector'}</td>
           <td>${badges.estatusBadge} ${badges.etapaBadge}</td>
           <td class="text-center">
-            <button class="btn btn-sm btn-warning fw-bold shadow-sm me-1 mb-1" onclick="irADisposicionDesdeFolio('${folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Disposición</button>
-            <button class="btn btn-sm btn-outline-info me-1 mb-1" onclick="verDetalleModal('${folio}')" title="Ver Detalle / Historial"><i class="fa-solid fa-eye me-1"></i>Detalle</button>
-            <button class="btn btn-sm btn-outline-dark mb-1" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
+            <button type="button" class="btn btn-sm btn-warning fw-bold shadow-sm me-1 mb-1" onclick="irADisposicionDesdeFolio('${folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Disposición</button>
+            <button type="button" class="btn btn-sm btn-outline-info me-1 mb-1" onclick="verDetalleModal('${folio}')" title="Ver Detalle / Historial"><i class="fa-solid fa-eye me-1"></i>Detalle</button>
+            <button type="button" class="btn btn-sm btn-outline-dark mb-1" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1349,7 +1394,7 @@
       const filterTipo = filterSelect.value;
       const rows = document.querySelectorAll('#tbodyRegistros tr');
 
-      rows.forEach(row => {
+      rows.forEach(function(row) {
         const text = row.innerText.toLowerCase();
         const matchesQuery = text.includes(query);
         
@@ -1386,20 +1431,20 @@
     }
 
     function verDetalleModal(folio) {
-      const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
+      const reg = registrosPersistentes.find(function(r) { return (r.folio_oc || r.folio) === folio; });
       if (!reg) return;
 
       const tit = document.getElementById('modalDetalleTitulo');
       if (tit) tit.innerText = `Detalle & Historial del Folio: ${reg.folio_oc || reg.folio}`;
       
-      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2 shadow-sm" style="max-height:220px;" onclick="abrirFotoModalGrande('${reg.foto_b64}', '${reg.folio_oc || reg.folio}')" style="cursor:pointer;">` : '<p class="text-muted italic">Sin foto adjunta</p>';
+      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2 shadow-sm" style="max-height:220px; cursor:pointer;" onclick="abrirFotoModalGrande('${reg.foto_b64}', '${reg.folio_oc || reg.folio}')">` : '<p class="text-muted italic">Sin foto adjunta</p>';
       
       const historial = reg.historial || [
         { fecha: reg.fecha || 'Inicial', evento: 'Registro de Inspección', usuario: reg.operador || 'Inspector', detalle: reg.detalle_nc || 'Incidencia inicial', estatus: reg.estatus || 'Nuevo' }
       ];
 
       let timelineHtml = '<div class="list-group mb-3">';
-      historial.forEach((h, idx) => {
+      historial.forEach(function(h) {
         timelineHtml += `
           <div class="list-group-item border-start border-3 border-primary bg-light">
             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -1426,11 +1471,9 @@
             <div class="col-6"><strong>No Conformancia:</strong> <span class="text-danger fw-bold">${reg.no_conformancia}</span></div>
             <div class="col-6"><strong>Inspector:</strong> ${reg.operador} (Turno ${reg.turno})</div>
           </div>
-          
           <hr>
           <h6 class="fw-bold text-dark"><i class="fa-solid fa-timeline me-1 text-primary"></i>Línea de Tiempo del Historial:</h6>
           ${timelineHtml}
-
           <hr>
           <div class="text-center">
             <h6>Fotografía de Evidencia (Clic para ver en HD):</h6>
@@ -1441,7 +1484,7 @@
 
       const btnDisp = document.getElementById('btnModalIrDisposicion');
       if (btnDisp) {
-        btnDisp.onclick = () => {
+        btnDisp.onclick = function() {
           const modalEl = document.getElementById('modalDetalleRegistro');
           if (modalEl) {
             const modal = bootstrap.Modal.getInstance(modalEl);
@@ -1474,13 +1517,11 @@
         const res = await fetch(csvUrl);
         if (res.ok) {
           const text = await res.text();
-          const lineas = text.split(/
-?
-/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+          const lineas = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
           
           if (lineas.length > 1) {
-            const remotos = lineas.slice(1).map((line) => {
-              const cols = line.split(",").map(c => c.replace(/^"|"$/g, '').trim());
+            const remotos = lineas.slice(1).map(function(line) {
+              const cols = line.split(",").map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
               return {
                 folio: cols[0] || 'N/A',
                 folio_oc: cols[0] || 'N/A',
@@ -1504,7 +1545,7 @@
               };
             });
 
-            remotos.forEach(r => guardarRegistroPersistenteLocal(r));
+            remotos.forEach(function(r) { guardarRegistroPersistenteLocal(r); });
             renderizarTarjetasDisposicion(registrosPersistentes);
             renderizarTablaRegistros();
           }
@@ -1524,7 +1565,7 @@
         return;
       }
 
-      lista.forEach(reg => {
+      lista.forEach(function(reg) {
         const folio = reg.folio_oc || reg.folio;
         const badges = obtenerBadgesRegistro(reg);
 
@@ -1545,8 +1586,8 @@
                 <span><i class="fa-solid fa-user me-1"></i>${reg.operador || 'Inspector'}</span>
               </div>
               <div class="mt-3 border-top pt-2 d-flex gap-1">
-                <button class="btn btn-sm btn-warning fw-bold flex-grow-1 shadow-sm" onclick="seleccionarRegistroParaDisposicion('${folio}')"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
-                <button class="btn btn-sm btn-outline-dark" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
+                <button type="button" class="btn btn-sm btn-warning fw-bold flex-grow-1 shadow-sm" onclick="seleccionarRegistroParaDisposicion('${folio}')"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
+                <button type="button" class="btn btn-sm btn-outline-dark" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
               </div>
             </div>
           </div>
@@ -1556,7 +1597,7 @@
     }
 
     function seleccionarRegistroParaDisposicion(folio) {
-      const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
+      const reg = registrosPersistentes.find(function(r) { return (r.folio_oc || r.folio) === folio; });
       if (!reg) return;
 
       const panel = document.getElementById('panelEvaluacionDisposicion');
@@ -1586,7 +1627,7 @@
     }
 
     async function guardarDisposicion(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       const titElem = document.getElementById('dispFolioTitulo');
       if (!titElem) return;
       const folio = titElem.innerText.split(" ")[0];
@@ -1633,7 +1674,7 @@
       let htmlFotos = "";
       let contador = 0;
 
-      registrosPersistentes.forEach(reg => {
+      registrosPersistentes.forEach(function(reg) {
         if (reg.foto_b64 && reg.foto_b64.startsWith('data:image')) {
           contador++;
           const folio = reg.folio_oc || reg.folio;
@@ -1664,7 +1705,7 @@
       const query = searchElem.value.toLowerCase();
       const items = document.querySelectorAll('.card-foto-item');
 
-      items.forEach(item => {
+      items.forEach(function(item) {
         if (item.innerText.toLowerCase().includes(query)) {
           item.style.display = '';
         } else {
@@ -1739,12 +1780,12 @@
         if (proxyOld) proxyOld.value = val;
       }
 
-      alert("¡Configuración guardada exitosamente!\n\nLos correos configurados recibirán notificaciones automáticamente cuando se envíen registros o disposiciones.");
+      alert("¡Configuración guardada exitosamente!");
     }
 
     function exportarCatalogosExcelXLSX() {
       if (typeof XLSX === 'undefined') {
-        alert("Librería SheetJS no detectada. Generando respaldo en CSV de contingencia...");
+        alert("Librería SheetJS no detectada. Generando respaldo en CSV...");
         exportarCatIndividualCSV();
         return;
       }
@@ -1762,7 +1803,7 @@
           { key: 'medidas', name: 'Medidas' }
         ];
 
-        mapTabs.forEach(item => {
+        mapTabs.forEach(function(item) {
           const data = catalogosLocal[item.key] || [];
           const ws = XLSX.utils.json_to_sheet(data);
           XLSX.utils.book_append_sheet(wb, ws, item.name);
@@ -1770,7 +1811,7 @@
 
         XLSX.writeFile(wb, 'catalogos_maestros_plantilla.xlsx');
       } catch (e) {
-        alert("Error al construir Excel XLSX: " + e.message + ". Generando CSV...");
+        alert("Error al construir Excel XLSX: " + e.message);
         exportarCatIndividualCSV();
       }
     }
@@ -1782,9 +1823,8 @@
       if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
       
       let csvContent = "sep=,\n" + Object.keys(datos[0]).join(",") + "\n";
-      datos.forEach(row => {
-        csvContent += Object.values(row).map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "
-";
+      datos.forEach(function(row) {
+        csvContent += Object.values(row).map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
       });
       downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
     }
@@ -1792,7 +1832,7 @@
     function exportarRegistrosCSV() {
       if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
       let csvContent = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_URL\n";
-      registrosPersistentes.forEach(r => {
+      registrosPersistentes.forEach(function(r) {
         const fila = [
           r.folio_oc || r.folio || '',
           r.tipo_envio || r.tipo || '',
@@ -1810,8 +1850,7 @@
           r.estatus || 'Nuevo',
           r.foto_b64 || ''
         ];
-        csvContent += fila.map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "
-";
+        csvContent += fila.map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
       });
       downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
     }
@@ -1823,7 +1862,7 @@
 
     function downloadFile(content, fileName, mimeType) {
       try {
-        const blob = new Blob(["﻿" + content], { type: mimeType });
+        const blob = new Blob(["\ufeff" + content], { type: mimeType });
         if (navigator.msSaveOrOpenBlob) {
           navigator.msSaveOrOpenBlob(blob, fileName);
           return;
@@ -1835,7 +1874,7 @@
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
-        setTimeout(() => {
+        setTimeout(function() {
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
         }, 200);
@@ -1872,7 +1911,7 @@
               'Medidas': 'medidas'
             };
 
-            workbook.SheetNames.forEach(sheetName => {
+            workbook.SheetNames.forEach(function(sheetName) {
               const catKey = tabMap[sheetName] || sheetName.toLowerCase();
               if (catalogosLocal.hasOwnProperty(catKey) || tabMap[sheetName]) {
                 const sheet = workbook.Sheets[sheetName];
@@ -1906,15 +1945,13 @@
               localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
               alert("¡Catálogo importado desde JSON!");
             } else {
-              const lineas = content.split(/
-?
-/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+              const lineas = content.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
               if (lineas.length > 1) {
-                const headers = lineas[0].split(",").map(h => h.replace(/^"|"$/g, '').trim());
-                const items = lineas.slice(1).map(l => {
-                  const parts = l.split(",").map(p => p.replace(/^"|"$/g, '').trim());
+                const headers = lineas[0].split(",").map(function(h) { return h.replace(/^"|"$/g, '').trim(); });
+                const items = lineas.slice(1).map(function(l) {
+                  const parts = l.split(",").map(function(p) { return p.replace(/^"|"$/g, '').trim(); });
                   let obj = {};
-                  headers.forEach((h, idx) => { obj[h] = parts[idx] || ""; });
+                  headers.forEach(function(h, idx) { obj[h] = parts[idx] || ""; });
                   return obj;
                 });
                 catalogosLocal[tipo] = items;
@@ -1945,16 +1982,14 @@
           if (file.name.endsWith('.json')) {
             const parsed = JSON.parse(content);
             if (Array.isArray(parsed)) {
-              parsed.forEach(r => guardarRegistroPersistenteLocal(r, "Importado desde JSON"));
+              parsed.forEach(function(r) { guardarRegistroPersistenteLocal(r, "Importado desde JSON"); });
               alert(`¡Se importaron ${parsed.length} registros desde JSON!`);
             }
           } else {
-            const lineas = content.split(/
-?
-/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+            const lineas = content.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
             if (lineas.length > 1) {
-              const items = lineas.slice(1).map(l => {
-                const cols = l.split(",").map(c => c.replace(/^"|"$/g, '').trim());
+              const items = lineas.slice(1).map(function(l) {
+                const cols = l.split(",").map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
                 return {
                   folio_oc: cols[0] || 'OC-999',
                   tipo_envio: cols[1] || 'Proceso',
@@ -1974,7 +2009,7 @@
                 };
               });
 
-              items.forEach(r => guardarRegistroPersistenteLocal(r, "Importado desde CSV"));
+              items.forEach(function(r) { guardarRegistroPersistenteLocal(r, "Importado desde CSV"); });
               alert(`¡Se importaron ${items.length} registros desde CSV!`);
             }
           }
