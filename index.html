@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (Catálogos Inteligentes v23)</title>
-  <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CalidadApp">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3593/3593452.png">
   <meta name="theme-color" content="#0d6efd">
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,6 +17,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- HTML5 QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- SheetJS para Excel Multi-Hoja (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -52,6 +58,7 @@
   <div class="header-title text-center">
     <h3 class="m-0 fw-bold"><i class="fa-solid fa-clipboard-check me-2"></i>Control de Calidad, Disposición y Catálogos</h3>
     <small id="netStatus" class="badge-online mt-2 d-inline-block"><i class="fa-solid fa-wifi me-1"></i>En Línea (Sincronización Directa + Persistencia Local)</small>
+    <button id="btnInstallPwa" class="btn btn-sm btn-warning fw-bold shadow-sm ms-2 mt-2 d-inline-block" onclick="instalarPwa()"><i class="fa-solid fa-mobile-screen-button me-1"></i>📲 Instalar App en Dispositivo</button>
   </div>
 
   <div class="container-fluid px-3 px-md-4 mb-5">
@@ -97,6 +104,9 @@
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-galeria-btn" data-bs-toggle="pill" data-bs-target="#tab-galeria" type="button" role="tab" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-images me-1"></i> 6. Galería de Fotos</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-config-btn" data-bs-toggle="pill" data-bs-target="#tab-config" type="button" role="tab" onclick="cargarConfiguracionSistema()"><i class="fa-solid fa-gear me-1"></i> 7. Configuración</button>
       </li>
     </ul>
 
@@ -602,6 +612,32 @@
 
   </div>
 
+  
+  <!-- MODAL CÓDIGO QR GENERADO -->
+  <div class="modal fade" id="modalQrGenerado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-primary shadow-lg">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-qrcode me-2"></i>Código QR de Inspección Generado</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-4">
+          <div class="badge bg-success mb-2 px-3 py-2 fs-6"><i class="fa-solid fa-check-circle me-1"></i>¡Registro Guardado Exitosamente!</div>
+          <h5 class="fw-bold text-dark mt-2 mb-1" id="modalQrFolioTitulo">OC-XXXXXX</h5>
+          <p class="text-muted small mb-3">Escanea este código QR con la cámara de cualquier celular para ir directo a la evaluación de disposición de esta orden de control.</p>
+
+          <div id="qrContainerModal" class="d-flex justify-content-center align-items-center my-3 p-3 bg-light rounded border shadow-sm" style="min-height: 230px;"></div>
+
+          <p class="small text-break text-muted bg-white p-2 rounded border font-monospace" id="modalQrUrlTexto"></p>
+        </div>
+        <div class="modal-footer d-flex justify-content-between bg-light">
+          <button type="button" class="btn btn-warning fw-bold shadow-sm" id="btnModalQrIrDisposicion"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición Ahora</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL PARA VER DETALLE / FOTO -->
   <div class="modal fade" id="modalDetalleRegistro" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -645,7 +681,7 @@
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V20 -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V25 - Google QR API -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbzGpkcgt4Elocfep6VW4hMKZ42yBAX_dKhz6iJZtkFmc8fES9TxJwyW2x-j1bN8jH9H/exec";
     
@@ -856,6 +892,17 @@ window.addEventListener('DOMContentLoaded', () => {
       // CARGAR REGISTROS DESDE GITHUB AUTOMÁTICAMENTE AL ABRIR LA APP WEB
       cargarRegistrosGitHub();
       cargarGaleriaFotos();
+      cargarConfiguracionSistema();
+
+      // DETECTAR SI LA PÁGINA FUE ABIERTA POR ESCANEO DE QR EXTERNO CON PARAMETRO ?folio=...
+      const urlParams = new URLSearchParams(window.location.search);
+      const folioParam = urlParams.get('folio') || urlParams.get('oc') || urlParams.get('disposicion');
+      if (folioParam) {
+        console.log("Detectado Folio en URL por escaneo QR:", folioParam);
+        setTimeout(() => {
+          irADisposicionDesdeFolio(folioParam.trim());
+        }, 800);
+      }
 
       window.addEventListener('online', actualizarEstadoRed);
       window.addEventListener('offline', actualizarEstadoRed);
@@ -896,6 +943,72 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // ESCÁNER QR
+    
+    // PROCESAR QR ESCANEADO (INTERNO Y EXTERNO)
+    function procesarQrEscaneado(rawText) {
+      if (!rawText) return;
+      rawText = rawText.trim();
+      let folio = rawText;
+
+      try {
+        if (rawText.startsWith('http://') || rawText.startsWith('https://')) {
+          const urlObj = new URL(rawText);
+          folio = urlObj.searchParams.get('folio') || urlObj.searchParams.get('oc') || urlObj.searchParams.get('disposicion') || rawText;
+        } else if (rawText.includes('folio=')) {
+          const match = rawText.match(/[?&]folio=([^&]+)/);
+          if (match) folio = decodeURIComponent(match[1]);
+        }
+      } catch(err) {
+        console.log("Error al parsear URL QR:", err);
+      }
+
+      folio = folio.trim();
+      
+      const folioInput = document.getElementById('folio_oc');
+      if (folioInput) folioInput.value = folio;
+
+      alert("🔍 Código QR Escaneado con Éxito:\n" + folio + "\n\nRedirigiendo a la pantalla de Disposición...");
+      irADisposicionDesdeFolio(folio);
+    }
+
+    // MOSTRAR MODAL Y GENERAR CÓDIGO QR AUTOMÁTICO
+    function mostrarQrGeneradoModal(folio) {
+      const baseUrl = window.location.origin + window.location.pathname;
+      const targetUrl = baseUrl + '?folio=' + encodeURIComponent(folio);
+      
+      const qrContainer = document.getElementById('qrContainerModal');
+      if (qrContainer) {
+        qrContainer.innerHTML = "";
+        
+        const googleQrUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=280x280&chld=M|2&chl=' + encodeURIComponent(targetUrl);
+        qrContainer.innerHTML = '<img src="' + googleQrUrl + '" class="img-fluid rounded border shadow-sm" alt="Código QR Google Chart" style="max-width:280px; width:100%; height:auto;">';
+      }
+
+      const titEl = document.getElementById('modalQrFolioTitulo');
+      if (titEl) titEl.innerText = `Etiqueta QR Folio: ${folio}`;
+
+      const urlEl = document.getElementById('modalQrUrlTexto');
+      if (urlEl) urlEl.innerText = targetUrl;
+
+      const btnDisp = document.getElementById('btnModalQrIrDisposicion');
+      if (btnDisp) {
+        btnDisp.onclick = () => {
+          const modalEl = document.getElementById('modalQrGenerado');
+          if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+          }
+          irADisposicionDesdeFolio(folio);
+        };
+      }
+
+      const modalEl = document.getElementById('modalQrGenerado');
+      if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      }
+    }
+
     function toggleQrScanner() {
       const container = document.getElementById('qrReaderContainer');
       if (!container) return;
@@ -913,10 +1026,8 @@ window.addEventListener('DOMContentLoaded', () => {
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
           (decodedText) => {
-            const folioInput = document.getElementById('folio_oc');
-            if (folioInput) folioInput.value = decodedText;
-            alert("Código escaneado con éxito: " + decodedText);
             toggleQrScanner();
+            procesarQrEscaneado(decodedText);
           },
           (errorMessage) => {}
         ).then(() => { isQrScanning = true; })
@@ -1084,7 +1195,9 @@ window.addEventListener('DOMContentLoaded', () => {
         turno: document.getElementById('turno').value,
         foto_b64: fotoBase64,
         estatus: "Nuevo",
-        tiene_disposicion: false
+        tiene_disposicion: false,
+        correos_notificacion: localStorage.getItem('NOTIF_EMAILS') || '',
+        enviar_email: localStorage.getItem('NOTIF_SEND_REG') !== 'false'
       };
 
       // Guardar de inmediato en memoria persistente
@@ -1094,8 +1207,8 @@ window.addEventListener('DOMContentLoaded', () => {
         let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
         cola.push(payload);
         localStorage.setItem('COLA_OFFLINE', JSON.stringify(cola));
-        alert("Registro guardado localmente de forma PERSISTENTE en la App Web. Se sincronizará con GitHub al recuperar conexión.");
         resetForm();
+        mostrarQrGeneradoModal(folio);
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
@@ -1122,8 +1235,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const resJson = await response.json();
         if (resJson.status === 'ok') {
-          alert("¡ÉXITO!\n\n" + resJson.mensaje);
           resetForm();
+          mostrarQrGeneradoModal(folio);
         } else {
           alert("Guardado localmente. Servidor respondió: " + resJson.mensaje);
         }
@@ -1392,8 +1505,10 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function seleccionarRegistroParaDisposicion(folio) {
-      const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
-      if (!reg) return;
+      let reg = registrosPersistentes.find(r => (r.folio_oc || r.folio || '').toString().trim() === (folio || '').toString().trim());
+      if (!reg) {
+        reg = { folio_oc: folio, parte: 'Por Confirmar', no_conformancia: 'Evaluación Pendiente', estatus: 'Nuevo' };
+      }
 
       const panel = document.getElementById('panelEvaluacionDisposicion');
       if (panel) panel.style.display = 'block';
@@ -1464,6 +1579,16 @@ window.addEventListener('DOMContentLoaded', () => {
       cerrarPanelDisposicion();
       cargarRegistrosGitHub();
       cargarGaleriaFotos();
+
+      // DETECTAR SI LA PÁGINA FUE ABIERTA POR ESCANEO DE QR EXTERNO CON PARAMETRO ?folio=...
+      const urlParams = new URLSearchParams(window.location.search);
+      const folioParam = urlParams.get('folio') || urlParams.get('oc') || urlParams.get('disposicion');
+      if (folioParam) {
+        console.log("Detectado Folio en URL por escaneo QR:", folioParam);
+        setTimeout(() => {
+          irADisposicionDesdeFolio(folioParam.trim());
+        }, 800);
+      }
       renderizarTablaRegistros();
     }
 
@@ -1706,6 +1831,105 @@ window.addEventListener('DOMContentLoaded', () => {
       };
       reader.readAsText(file);
     }
+
+    // REGISTRO DE SERVICE WORKER PARA INSTALACIÓN PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker PWA registrado exitosamente:', reg.scope))
+          .catch(err => console.log('Error al registrar Service Worker PWA:', err));
+      });
+    }
+
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('btnInstallPwa');
+      if (btn) {
+        btn.className = 'btn btn-sm btn-warning fw-bold shadow-sm ms-2 mt-2 d-inline-block pulse-btn';
+        btn.innerHTML = '<i class="fa-solid fa-download me-1"></i>📲 Instalar App en Dispositivo';
+      }
+    });
+
+    function instalarPwa() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('El usuario aceptó instalar la App PWA');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert("INSTRUCCIONES DE INSTALACIÓN:
+
+📱 En Android / Chrome / Edge:
+1. Toca los 3 puntos del menú del navegador.
+2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.
+
+🍏 En iPhone / iPad (Safari):
+1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).
+2. Selecciona 'Agregar al inicio'.
+
+💻 En PC / Mac:
+1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.
+2. Haz clic en 'Instalar'.");
+      }
+    }
+
+    // FUNCIONES DE CONFIGURACIÓN DE SISTEMA Y CORREOS
+    function cargarConfiguracionSistema() {
+      const emailsInput = document.getElementById('notifEmails');
+      if (emailsInput) {
+        emailsInput.value = localStorage.getItem('NOTIF_EMAILS') || '';
+      }
+
+      const chkReg = document.getElementById('chkNotifNuevoReg');
+      if (chkReg) {
+        chkReg.checked = localStorage.getItem('NOTIF_SEND_REG') !== 'false';
+      }
+
+      const chkDisp = document.getElementById('chkNotifDisposicion');
+      if (chkDisp) {
+        chkDisp.checked = localStorage.getItem('NOTIF_SEND_DISP') !== 'false';
+      }
+
+      const proxyConfig = document.getElementById('proxyUrlConfig');
+      if (proxyConfig) {
+        proxyConfig.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
+      }
+    }
+
+    function guardarConfiguracionSistema() {
+      const emailsInput = document.getElementById('notifEmails');
+      if (emailsInput) {
+        localStorage.setItem('NOTIF_EMAILS', emailsInput.value.trim());
+      }
+
+      const chkReg = document.getElementById('chkNotifNuevoReg');
+      if (chkReg) {
+        localStorage.setItem('NOTIF_SEND_REG', chkReg.checked ? 'true' : 'false');
+      }
+
+      const chkDisp = document.getElementById('chkNotifDisposicion');
+      if (chkDisp) {
+        localStorage.setItem('NOTIF_SEND_DISP', chkDisp.checked ? 'true' : 'false');
+      }
+
+      const proxyConfig = document.getElementById('proxyUrlConfig');
+      if (proxyConfig && proxyConfig.value.trim()) {
+        const val = proxyConfig.value.trim();
+        localStorage.setItem('PROXY_URL', val);
+        const proxyOld = document.getElementById('proxyUrl');
+        if (proxyOld) proxyOld.value = val;
+      }
+
+      alert("¡Configuración guardada exitosamente!
+
+Los correos configurados recibirán notificaciones automáticamente cuando se envíen registros o disposiciones.");
+    }
+
   </script>
 </body>
 </html>
