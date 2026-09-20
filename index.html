@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v29)</title>
+  <title>Sistema de Control de Calidad, Disposición y Catálogos - Planta (v30)</title>
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -64,7 +64,19 @@
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
       } else {
-        alert("INSTRUCCIONES DE INSTALACIÓN:\n\n📱 En Android / Chrome / Edge:\n1. Toca los 3 puntos del menú del navegador.\n2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.\n\n🍏 En iPhone / iPad (Safari):\n1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).\n2. Selecciona 'Agregar al inicio'.\n\n💻 En PC / Mac:\n1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.\n2. Haz clic en 'Instalar'.");
+        alert("INSTRUCCIONES DE INSTALACIÓN:
+
+📱 En Android / Chrome / Edge:
+1. Toca los 3 puntos del menú del navegador.
+2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.
+
+🍏 En iPhone / iPad (Safari):
+1. Toca el botón 'Compartir' (cuadrado con flecha hacia arriba).
+2. Selecciona 'Agregar al inicio'.
+
+💻 En PC / Mac:
+1. Haz clic en el ícono de '+' o la computadora en la barra de direcciones del navegador.
+2. Haz clic en 'Instalar'.");
       }
     }
 
@@ -144,7 +156,7 @@
       </li>
     </ul>
 
-    <!-- CONTENEDOR DE PESTAÑAS (TODAS LAS 7 PESTAÑAS DENTRO DE mainTabsContent) -->
+    <!-- CONTENEDOR DE PESTAÑAS -->
     <div class="tab-content" id="mainTabsContent">
 
       <!-- PESTAÑA 1: NUEVO REGISTRO -->
@@ -272,7 +284,6 @@
 
       </div>
 
-
       <!-- PESTAÑA 2: VER REGISTROS PERSISTENTES Y NAVEGAR A DISPOSICIÓN -->
       <div class="tab-pane fade" id="tab-ver-registros" role="tabpanel">
         
@@ -339,7 +350,6 @@
         </div>
 
       </div>
-
 
       <!-- PESTAÑA 3: DISPOSICIÓN Y CIERRE DE INCIDENCIAS -->
       <div class="tab-pane fade" id="tab-disposicion" role="tabpanel">
@@ -459,7 +469,6 @@
 
       </div>
 
-
       <!-- PESTAÑA 4: IMPORTAR Y EXPORTAR CATÁLOGOS Y REGISTROS -->
       <div class="tab-pane fade" id="tab-import-export" role="tabpanel">
         
@@ -540,7 +549,6 @@
 
       </div>
 
-
       <!-- PESTAÑA 5: ARCHIVOS Y EXCEL -->
       <div class="tab-pane fade" id="tab-archivos" role="tabpanel">
         
@@ -590,7 +598,6 @@
 
       </div>
 
-
       <!-- PESTAÑA 6: GALERÍA DE FOTOS DE EVIDENCIA -->
       <div class="tab-pane fade" id="tab-galeria" role="tabpanel">
         
@@ -618,7 +625,6 @@
         </div>
 
       </div>
-
 
       <!-- PESTAÑA 7: CONFIGURACIÓN DE ALERTAS, CORREOS Y SERVIDOR -->
       <div class="tab-pane fade" id="tab-config" role="tabpanel">
@@ -693,9 +699,9 @@
 
       </div>
 
-    </div> <!-- FIN DE mainTabsContent -->
+    </div>
 
-  </div> <!-- FIN DE container-fluid -->
+  </div>
 
   <!-- MODAL PARA VER DETALLE / HISTORIAL -->
   <div class="modal fade" id="modalDetalleRegistro" tabindex="-1" aria-hidden="true">
@@ -763,7 +769,7 @@
   <!-- BOOTSTRAP JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V29 -->
+  <!-- LÓGICA JAVASCRIPT COMPLETA APP WEB V30 -->
   <script>
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbzGpkcgt4Elocfep6VW4hMKZ42yBAX_dKhz6iJZtkFmc8fES9TxJwyW2x-j1bN8jH9H/exec";
     
@@ -772,7 +778,7 @@
     let isQrScanning = false;
     let registrosPersistentes = [];
 
-    // CATÁLOGOS LOCALES BASE (Fallback / Editable)
+    // CATÁLOGOS LOCALES BASE
     let DEFAULT_CATALOGOS = {
       almacenes: [
         { numero: "201101", nombre: "High Runner Bins - Line 1" },
@@ -866,11 +872,9 @@
       actualizarEstadoRed();
       cargarConfiguracionSistema();
       
-      // CARGAR REGISTROS Y GALERÍA DESDE GITHUB
       cargarRegistrosGitHub();
       cargarGaleriaFotos();
 
-      // VERIFICAR SI LA URL TRAE UN FOLIO EN PARÁMETROS (Ej: ?folio=OC-984512)
       const urlParams = new URLSearchParams(window.location.search);
       const targetFolioParam = urlParams.get('folio');
       if (targetFolioParam) {
@@ -896,7 +900,6 @@
       }
     }
 
-    // CARGAR Y POBLAR CATALOGOS CON SOPORTE UNIVERSAL DE FORMATO
     function formatearItemCatalogo(x) {
       if (!x) return "";
       if (typeof x === 'string') return x;
@@ -972,7 +975,6 @@
       cargarCatalogosFormulario();
     }
 
-    // ESCÁNER QR
     function toggleQrScanner() {
       const container = document.getElementById('qrReaderContainer');
       if (!container) return;
@@ -1001,10 +1003,7 @@
             if (folioInput) folioInput.value = folio;
             toggleQrScanner();
 
-            alert("🔍 Código QR Escaneado con Éxito:
-" + folio + "
-
-Redirigiendo a la pantalla de Disposición...");
+            alert("🔍 Código QR Escaneado con Éxito:\n" + folio + "\n\nRedirigiendo a la pantalla de Disposición...");
             irADisposicionDesdeFolio(folio);
           },
           (errorMessage) => {}
@@ -1013,7 +1012,6 @@ Redirigiendo a la pantalla de Disposición...");
       }
     }
 
-    // MOSTRAR MODAL Y GENERAR CÓDIGO QR AUTOMÁTICO USANDO GOOGLE CHARTS API
     function mostrarQrGeneradoModal(folio) {
       const baseUrl = window.location.origin + window.location.pathname;
       const targetUrl = baseUrl + '?folio=' + encodeURIComponent(folio);
@@ -1050,7 +1048,6 @@ Redirigiendo a la pantalla de Disposición...");
       }
     }
 
-    // CANVAS FIRMA
     let isDrawing = false;
     let canvas, ctx;
 
@@ -1102,7 +1099,6 @@ Redirigiendo a la pantalla de Disposición...");
       reader.readAsDataURL(file);
     }
 
-    // MANEJO DE REGISTROS PERSISTENTES LOCALES Y HISTORIAL
     function cargarRegistrosPersistentesLocales() {
       const stored = localStorage.getItem('CALIDAD_REGISTROS');
       if (stored) {
@@ -1188,7 +1184,6 @@ Redirigiendo a la pantalla de Disposición...");
       }
     }
 
-    // ENVIAR NUEVO REGISTRO
     async function guardarRegistro(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
@@ -1221,7 +1216,6 @@ Redirigiendo a la pantalla de Disposición...");
         enviar_email: localStorage.getItem('NOTIF_SEND_REG') !== 'false'
       };
 
-      // Guardar de inmediato en memoria persistente
       guardarRegistroPersistenteLocal(payload, "Registro inicial creado por " + payload.operador);
 
       if (!navigator.onLine) {
@@ -1258,9 +1252,7 @@ Redirigiendo a la pantalla de Disposición...");
 
         const resJson = await response.json();
         if (resJson.status === 'ok') {
-          alert("¡ÉXITO!
-
-" + resJson.mensaje);
+          alert("¡ÉXITO!\n\n" + resJson.mensaje);
           resetForm();
         } else {
           alert("Guardado localmente. Servidor respondió: " + resJson.mensaje);
@@ -1290,7 +1282,6 @@ Redirigiendo a la pantalla de Disposición...");
       alert("¡Sincronización completada! Se enviaron todos los registros pendientes.");
     }
 
-    // BADGES BADGE FORMATTER
     function obtenerBadgesRegistro(reg) {
       const estatus = reg.estatus || (reg.tiene_disposicion ? "Terminado" : "Nuevo");
       let estatusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-circle-dot me-1"></i>Nuevo</span>';
@@ -1311,7 +1302,6 @@ Redirigiendo a la pantalla de Disposición...");
       return { estatusBadge, etapaBadge, tipoClass };
     }
 
-    // RENDERIZAR TABLA DE VER REGISTROS (PESTAÑA 2)
     function renderizarTablaRegistros() {
       const tbody = document.getElementById('tbodyRegistros');
       if (!tbody) return;
@@ -1386,7 +1376,6 @@ Redirigiendo a la pantalla de Disposición...");
       });
     }
 
-    // NAVEGAR DIRECTAMENTE A PESTAÑA DISPOSICIÓN CON EL FOLIO SELECCIONADO
     function irADisposicionDesdeFolio(folio) {
       const tabBtn = document.getElementById('tab-disposicion-btn');
       if (tabBtn) {
@@ -1396,7 +1385,6 @@ Redirigiendo a la pantalla de Disposición...");
       seleccionarRegistroParaDisposicion(folio);
     }
 
-    // MODAL DETALLE & HISTORIAL CRONOLÓGICO
     function verDetalleModal(folio) {
       const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio) === folio);
       if (!reg) return;
@@ -1470,7 +1458,6 @@ Redirigiendo a la pantalla de Disposición...");
       }
     }
 
-    // PESTAÑA 3: CARGAR REGISTROS PARA DISPOSICIÓN
     async function cargarRegistrosGitHub() {
       const container = document.getElementById('listaIncidencias');
       const loading = document.getElementById('loadingRegistros');
@@ -1638,7 +1625,6 @@ Redirigiendo a la pantalla de Disposición...");
       cargarRegistrosGitHub();
     }
 
-    // PESTAÑA 6: GALERÍA DE FOTOS EN HD
     async function cargarGaleriaFotos() {
       const container = document.getElementById('containerGaleriaFotos');
       if (!container) return;
@@ -1707,7 +1693,6 @@ Redirigiendo a la pantalla de Disposición...");
       }
     }
 
-    // PESTAÑA 7: CONFIGURACIÓN DE SISTEMA
     function cargarConfiguracionSistema() {
       const emailsInput = document.getElementById('notifEmails');
       if (emailsInput) {
@@ -1754,12 +1739,9 @@ Redirigiendo a la pantalla de Disposición...");
         if (proxyOld) proxyOld.value = val;
       }
 
-      alert("¡Configuración guardada exitosamente!
-
-Los correos configurados recibirán notificaciones automáticamente cuando se envíen registros o disposiciones.");
+      alert("¡Configuración guardada exitosamente!\n\nLos correos configurados recibirán notificaciones automáticamente cuando se envíen registros o disposiciones.");
     }
 
-    // EXPORTAR E IMPORTAR CON EXCEL MULTI-HOJA (.XLSX)
     function exportarCatalogosExcelXLSX() {
       if (typeof XLSX === 'undefined') {
         alert("Librería SheetJS no detectada. Generando respaldo en CSV de contingencia...");
@@ -1799,21 +1781,16 @@ Los correos configurados recibirán notificaciones automáticamente cuando se en
       const datos = catalogosLocal[tipo] || [];
       if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
       
-      let csvContent = "sep=,
-" + Object.keys(datos[0]).join(",") + "
-";
+      let csvContent = "sep=,\n" + Object.keys(datos[0]).join(",") + "\n";
       datos.forEach(row => {
-        csvContent += Object.values(row).map(function(v){ return '"' + (v || '').toString().replace(/"/g, '""') + '"'; }).join(",") + "
-";
+        csvContent += Object.values(row).map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
       });
       downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
     }
 
     function exportarRegistrosCSV() {
       if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
-      let csvContent = "sep=,
-Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_URL
-";
+      let csvContent = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_URL\n";
       registrosPersistentes.forEach(r => {
         const fila = [
           r.folio_oc || r.folio || '',
@@ -1832,8 +1809,7 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
           r.estatus || 'Nuevo',
           r.foto_b64 || ''
         ];
-        csvContent += fila.map(function(v){ return '"' + (v || '').toString().replace(/"/g, '""') + '"'; }).join(",") + "
-";
+        csvContent += fila.map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
       });
       downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
     }
@@ -1843,7 +1819,6 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
       downloadFile(jsonContent, 'registro_incidencias_locales.json', 'application/json');
     }
 
-    // DESCARGA ADAPTATIVA
     function downloadFile(content, fileName, mimeType) {
       try {
         const blob = new Blob(["﻿" + content], { type: mimeType });
@@ -1867,15 +1842,15 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
       }
     }
 
-    // IMPORTAR CATÁLOGOS CON TRATAMIENTO ROBUSTO DE LÍNEAS
     function importarCatalogos() {
       const fileInput = document.getElementById('fileImportCatalogos');
       if (!fileInput) { alert("Error: Campo de archivo no encontrado."); return; }
-      const file = fileInput.files[0];
+      const files = fileInput.files;
       const selector = document.getElementById('imp_cat_tipo_selector');
       const tipo = selector ? selector.value : 'xlsx_multi';
 
-      if (!file) { alert("Por favor selecciona un archivo."); return; }
+      if (!files || files.length === 0) { alert("Por favor selecciona un archivo."); return; }
+      const file = files[0];
 
       const reader = new FileReader();
 
@@ -1954,12 +1929,12 @@ Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,O
       }
     }
 
-    // IMPORTAR REGISTROS
     function importarRegistros() {
       const fileInput = document.getElementById('fileImportRegistros');
       if (!fileInput) { alert("Error: Campo 'fileImportRegistros' no encontrado."); return; }
-      const file = fileInput.files[0];
-      if (!file) { alert("Selecciona un archivo CSV o JSON de registros."); return; }
+      const files = fileInput.files;
+      if (!files || files.length === 0) { alert("Selecciona un archivo CSV o JSON de registros."); return; }
+      const file = files[0];
 
       const reader = new FileReader();
       reader.onload = function(e) {
