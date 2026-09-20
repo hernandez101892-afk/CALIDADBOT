@@ -991,7 +991,90 @@
     }
 
     // CARGAR CATÁLOGOS Y DATALISTS
-    function formatearItemCatalogo(x) {
+    
+    // HELPER PARA FORMATEAR FECHA Y HORA LOCAL (MÉXICO/LATAM)
+    function formatearFechaHora(fechaStr) {
+      if (!fechaStr) return 'Reciente';
+      const str = fechaStr.toString().trim();
+      if (!str || str === 'N/A' || str === 'undefined') return 'Reciente';
+
+      if (str.includes('/') && str.includes(':') && !str.includes('T')) {
+        return str;
+      }
+
+      try {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+          const dia = String(d.getDate()).padStart(2, '0');
+          const mes = String(d.getMonth() + 1).padStart(2, '0');
+          const anio = d.getFullYear();
+          
+          let horas = d.getHours();
+          const minutos = String(d.getMinutes()).padStart(2, '0');
+          const segundos = String(d.getSeconds()).padStart(2, '0');
+          const ampm = horas >= 12 ? 'PM' : 'AM';
+          horas = horas % 12;
+          horas = horas ? horas : 12;
+          const horasStr = String(horas).padStart(2, '0');
+
+          return `${dia}/${mes}/${anio} ${horasStr}:${minutos}:${segundos} ${ampm}`;
+        }
+      } catch(e) {}
+
+      return str;
+    }
+
+    // HELPER PARA NORMALIZAR REGISTROS Y EVITAR URLS EN EL CAMPO ESTATUS
+    function parsearFilaCsv(linea, headers) {
+      const cols = linea.split(',').map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
+      let obj = {};
+      
+      if (headers && headers.length > 0) {
+        headers.forEach(function(h, idx) {
+          const keyClean = h.toLowerCase().replace(/[^a-z0-9_]/g, '');
+          obj[keyClean] = cols[idx] || '';
+        });
+      }
+
+      const res = {
+        folio: obj.folio_oc || obj.folio || cols[0] || 'N/A',
+        folio_oc: obj.folio_oc || obj.folio || cols[0] || 'N/A',
+        tipo: obj.tipo_envio || obj.tipo || cols[1] || 'Proceso',
+        tipo_envio: obj.tipo_envio || obj.tipo || cols[1] || 'Proceso',
+        fecha: obj.fecha || cols[2] || '',
+        almacen: obj.almacen_origen || obj.almacen || cols[3] || '',
+        almacen_origen: obj.almacen_origen || obj.almacen || cols[3] || '',
+        locacion: obj.locacion_origen || obj.locacion || cols[4] || '',
+        locacion_origen: obj.locacion_origen || obj.locacion || cols[4] || '',
+        parte: obj.parte || cols[5] || '',
+        cantidad: obj.cantidad || cols[6] || '1',
+        estampa: obj.estampa || cols[7] || '',
+        no_conformancia: obj.no_conformancia || obj.defecto || cols[8] || '',
+        detalle_nc: obj.detalle_nc || cols[9] || '',
+        operador: obj.operador || cols[10] || '',
+        turno: obj.turno || cols[11] || '',
+        area: obj.area || cols[12] || '',
+        estatus: obj.estatus || cols[13] || 'Nuevo',
+        foto_b64: obj.foto_b64 || obj.foto_url || obj.foto || cols[14] || ''
+      };
+
+      let estClean = (res.estatus || '').toString().trim();
+      let fotoClean = (res.foto_b64 || '').toString().trim();
+
+      if (estClean.startsWith('http://') || estClean.startsWith('https://') || estClean.startsWith('data:image')) {
+        if (!fotoClean) fotoClean = estClean;
+        estClean = 'Nuevo';
+      }
+
+      res.estatus = estClean || 'Nuevo';
+      res.foto_b64 = fotoClean;
+      res.fecha = formatearFechaHora(res.fecha);
+
+      return res;
+    }
+
+
+function formatearItemCatalogo(x) {
       if (!x) return "";
       if (typeof x === 'string') return x;
       const cod = x.numero || x.codigo || x.NUMERO || x.CODIGO || x.id || "";
@@ -1135,44 +1218,94 @@
       }
     }
 
-    function procesarFoto(e) {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const MAX_SIZE = 800;
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
+    
+    // MANEJO DE FOTOGRAFÍAS MÚLTIPLES (MÍNIMO 3, MÁXIMO 5)
+    let fotosBase64Array = [];
+
+    function procesarFotosMultiples(e) {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      if (fotosBase64Array.length + files.length > 5) {
+        alert("⚠️ Solo se permiten máximo 5 fotografías de evidencia por registro.");
+      }
+
+      const filesToProcess = files.slice(0, 5 - fotosBase64Array.length);
+
+      let processedCount = 0;
+      filesToProcess.forEach(function(file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxDim = 800;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
             }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedB64 = canvas.toDataURL('image/jpeg', 0.6);
+
+            if (fotosBase64Array.length < 5) {
+              fotosBase64Array.push(compressedB64);
             }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          fotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
-          const imgPreview = document.getElementById('fotoPreview');
-          if (imgPreview) {
-            imgPreview.src = fotoBase64;
-            imgPreview.style.display = 'block';
-          }
+
+            processedCount++;
+            if (processedCount === filesToProcess.length) {
+              renderizarGridFotosPreview();
+            }
+          };
+          img.src = evt.target.result;
         };
-        img.src = evt.target.result;
-      };
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      });
     }
+
+    function eliminarFotoBase64(idx) {
+      fotosBase64Array.splice(idx, 1);
+      renderizarGridFotosPreview();
+    }
+
+    function renderizarGridFotosPreview() {
+      const grid = document.getElementById('fotosPreviewGrid');
+      const badge = document.getElementById('fotosContadorBadge');
+      if (!grid) return;
+
+      grid.innerHTML = "";
+      const count = fotosBase64Array.length;
+
+      if (badge) {
+        if (count >= 3 && count <= 5) {
+          badge.innerHTML = `<span class="badge bg-success fs-6"><i class="fa-solid fa-check me-1"></i>${count} de 5 fotos cargadas (Cumple requisito mínimo)</span>`;
+        } else {
+          badge.innerHTML = `<span class="badge bg-danger fs-6"><i class="fa-solid fa-triangle-exclamation me-1"></i>${count} de 3 fotos cargadas (Se requieren al menos ${3 - count} fotos más)</span>`;
+        }
+      }
+
+      fotosBase64Array.forEach(function(b64, idx) {
+        const col = document.createElement('div');
+        col.className = "col-4 col-md-3 position-relative";
+        col.innerHTML = `
+          <div class="card h-100 p-1 shadow-sm border">
+            <img src="${b64}" class="img-fluid rounded" style="max-height:100px; object-fit:cover;">
+            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle" style="padding:2px 6px;" onclick="eliminarFotoBase64(${idx})" title="Eliminar Foto">&times;</button>
+          </div>
+        `;
+        grid.appendChild(col);
+      });
+    }
+
 
     // REGISTROS PERSISTENTES LOCALES
     function cargarRegistrosPersistentesLocales() {
