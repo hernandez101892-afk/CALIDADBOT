@@ -1454,9 +1454,8 @@ function formatearItemCatalogo(x) {
     }
 
     async function enviarPayloadProxy(payload) {
-      const proxyUrl = (localStorage.getItem('PROXY_URL') || PROXY_DEFAULT).trim();
-      if (!proxyUrl) return false;
-
+      const proxyElem = document.getElementById('proxyUrl');
+      const proxyUrl = (proxyElem ? proxyElem.value : '') || PROXY_DEFAULT;
       try {
         const response = await fetch(proxyUrl, {
           method: 'POST',
@@ -1465,36 +1464,940 @@ function formatearItemCatalogo(x) {
         });
 
         const resJson = await response.json();
-        console.log("Respuesta Servidor Proxy/GAS:", resJson);
-
-        if (resJson.status === 'ok' || resJson.status === 'partial_error') {
-          let diagMsg = (resJson.status === 'ok') ? "¡ÉXITO EN EL SERVIDOR!\n\n" : "⚠️ PROCESADO CON ADVERTENCIAS EN EL SERVIDOR:\n\n";
-          
-          if (resJson.diagnostico) {
-            diagMsg += "📊 Google Sheets: " + (resJson.diagnostico.sheets.ok ? "✅ " : "❌ ") + resJson.diagnostico.sheets.detalle + "\n";
-            diagMsg += "🐙 GitHub CSV: " + (resJson.diagnostico.github.ok ? "✅ " : "⚠️ ") + (resJson.diagnostico.github.detalle || resJson.diagnostico.github.error) + "\n";
-            diagMsg += "✉️ Notificación Email: " + (resJson.diagnostico.email.ok ? "✅ " : "⚠️ ") + (resJson.diagnostico.email.detalle || resJson.diagnostico.email.error) + "\n";
-          } else {
-            diagMsg += resJson.mensaje || "Registro procesado.";
-          }
-
-          if (resJson.logs && Array.isArray(resJson.logs)) {
-            console.log("=== LOGS DEL SERVIDOR ===");
-            resJson.logs.forEach(l => console.log(l));
-          }
-
-          alert(diagMsg);
+        if (resJson.status === 'ok') {
+          alert("¡ÉXITO! " + resJson.mensaje);
           resetForm();
-          return true;
         } else {
-          alert("⚠️ Guardado localmente. El servidor respondió con error: " + (resJson.mensaje || "Error desconocido") + "\n" + (resJson.error || ""));
-          return false;
+          alert("Guardado localmente. Mensaje servidor: " + resJson.mensaje);
         }
       } catch (err) {
-        console.warn("Servidor proxy/GAS inaccesible. Modo offline activo.", err);
-        return false;
+        alert("Registro guardado localmente en la app.");
       }
     }
+
+    function resetForm() {
+      const f = document.getElementById('formCalidad');
+      if (f) f.reset();
+      const img = document.getElementById('fotoPreview');
+      if (img) img.style.display = 'none';
+      fotoBase64 = "";
+      limpiarFirma();
+    }
+
+    async function sincronizarColaOffline() {
+      let cola = JSON.parse(localStorage.getItem('COLA_OFFLINE') || '[]');
+      if (cola.length === 0) return;
+
+      for (const item of cola) {
+        await enviarPayloadProxy(item);
+      }
+      localStorage.removeItem('COLA_OFFLINE');
+      alert("¡Sincronización completada!");
+    }
+
+    function obtenerBadgesRegistro(reg) {
+      const estatus = reg.estatus || (reg.tiene_disposicion ? "Terminado" : "Nuevo");
+      let estatusBadge = '<span class="badge bg-danger"><i class="fa-solid fa-circle-dot me-1"></i>Nuevo</span>';
+      let etapaBadge = '<span class="badge bg-secondary">Paso 1: Registrado</span>';
+
+      if (estatus === 'En Proceso') {
+        estatusBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>En Proceso</span>';
+        etapaBadge = '<span class="badge bg-info text-dark">Paso 2: Sorteo NC</span>';
+      } else if (estatus === 'Terminado' || reg.no_conformancia === 'DISPOSICIÓN REGISTRADA') {
+        estatusBadge = '<span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Terminado</span>';
+        etapaBadge = '<span class="badge bg-dark">Paso 3: Cerrado</span>';
+      }
+
+      let tipoClass = 'bg-primary';
+      if (reg.tipo === 'Rechazo' || reg.tipo_envio === 'Rechazo') tipoClass = 'bg-danger';
+      if (reg.tipo === 'Contención' || reg.tipo_envio === 'Contención') tipoClass = 'bg-warning text-dark';
+
+      return { estatusBadge: estatusBadge, etapaBadge: etapaBadge, tipoClass: tipoClass };
+    }
+
+    function renderizarTablaRegistros() {
+      const tbody = document.getElementById('tbodyRegistros');
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      if (registrosPersistentes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted py-4">No hay registros almacenados. Crea un nuevo registro o sincroniza con GitHub.</td></tr>`;
+        actualizarContadorPersistente();
+        return;
+      }
+
+      registrosPersistentes.forEach(function(reg) {
+        const tr = document.createElement('tr');
+        const folio = reg.folio_oc || reg.folio || 'N/A';
+        const badges = obtenerBadgesRegistro(reg);
+        const photos = obtenerArrayFotos(reg);
+
+        let photosHtml = '';
+        if (photos.length > 0) {
+          photos.forEach(function(p, pIdx) {
+            photosHtml += `<img src="${p}" class="img-thumbnail me-1 mb-1" style="width: 45px; height: 45px; object-fit: cover; cursor: pointer;" onclick="abrirFotoModalGrande('${p}', '${folio} - Foto ${pIdx+1}')" title="Foto ${pIdx+1}">`;
+          });
+        } else {
+          photosHtml = '<span class="text-muted small">Sin fotos</span>';
+        }
+
+        tr.innerHTML = `
+          <td class="fw-bold text-primary">${folio}</td>
+          <td><span class="badge ${badges.tipoClass}">${reg.tipo_envio || reg.tipo || 'Proceso'}</span></td>
+          <td class="small text-muted">${reg.fecha || 'Reciente'}</td>
+          <td class="fw-bold">${reg.parte || '-'}</td>
+          <td>${reg.cantidad || '1'}</td>
+          <td class="small">${reg.almacen_origen || reg.almacen || ''} / ${reg.area || ''}</td>
+          <td class="text-danger fw-bold small">${reg.no_conformancia || '-'}</td>
+          <td class="small">${reg.operador || 'Inspector'}</td>
+          <td>${badges.estatusBadge} ${badges.etapaBadge}</td>
+          <td><div class="d-flex flex-wrap align-items-center">${photosHtml}</div></td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-warning fw-bold shadow-sm me-1 mb-1" onclick="irADisposicionDesdeFolio('${folio}')" title="Evaluar Disposición"><i class="fa-solid fa-gavel me-1"></i>Disposición</button>
+            <button type="button" class="btn btn-sm btn-outline-info me-1 mb-1" onclick="verDetalleModal('${folio}')" title="Ver Detalle / Historial"><i class="fa-solid fa-eye me-1"></i>Detalle</button>
+            <button type="button" class="btn btn-sm btn-outline-dark mb-1" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      actualizarContadorPersistente();
+    }
+
+    function filtrarTablaRegistros() {
+      const searchInput = document.getElementById('searchRegistros');
+      const filterSelect = document.getElementById('filterTipo');
+      if (!searchInput || !filterSelect) return;
+
+      const query = searchInput.value.toLowerCase();
+      const filterTipo = filterSelect.value;
+      const rows = document.querySelectorAll('#tbodyRegistros tr');
+
+      rows.forEach(function(row) {
+        const text = row.innerText.toLowerCase();
+        const matchesQuery = text.includes(query);
+        
+        let matchesTipo = true;
+        if (filterTipo === 'PENDING_DISP') {
+          matchesTipo = text.includes('nuevo') || text.includes('en proceso');
+        } else if (filterTipo === 'DONE_DISP') {
+          matchesTipo = text.includes('terminado');
+        } else if (filterTipo === 'EST_NUEVO') {
+          matchesTipo = text.includes('nuevo');
+        } else if (filterTipo === 'EST_PROCESO') {
+          matchesTipo = text.includes('en proceso');
+        } else if (filterTipo === 'EST_TERMINADO') {
+          matchesTipo = text.includes('terminado');
+        } else if (filterTipo !== 'ALL') {
+          matchesTipo = text.includes(filterTipo.toLowerCase());
+        }
+
+        if (matchesQuery && matchesTipo) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function irADisposicionDesdeFolio(folio) {
+      const tabBtn = document.getElementById('tab-disposicion-btn');
+      if (tabBtn) {
+        const tab = new bootstrap.Tab(tabBtn);
+        tab.show();
+      }
+      seleccionarRegistroParaDisposicion(folio);
+    }
+
+    function verDetalleModal(folio) {
+      const reg = registrosPersistentes.find(function(r) { return (r.folio_oc || r.folio) === folio; });
+      if (!reg) return;
+
+      const tit = document.getElementById('modalDetalleTitulo');
+      if (tit) tit.innerText = `Detalle & Historial del Folio: ${reg.folio_oc || reg.folio}`;
+      
+      let fotoHtml = reg.foto_b64 ? `<img src="${reg.foto_b64}" class="img-fluid rounded border my-2 shadow-sm" style="max-height:220px; cursor:pointer;" onclick="abrirFotoModalGrandePorFolio('${reg.folio_oc || reg.folio}')">` : '<p class="text-muted italic">Sin foto adjunta</p>';
+      
+      const historial = reg.historial || [
+        { fecha: reg.fecha || 'Inicial', evento: 'Registro de Inspección', usuario: reg.operador || 'Inspector', detalle: reg.detalle_nc || 'Incidencia inicial', estatus: reg.estatus || 'Nuevo' }
+      ];
+
+      let timelineHtml = '<div class="list-group mb-3">';
+      historial.forEach(function(h) {
+        timelineHtml += `
+          <div class="list-group-item border-start border-3 border-primary bg-light">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong class="text-primary"><i class="fa-solid fa-clock-rotate-left me-1"></i>${h.evento}</strong>
+              <span class="badge bg-dark">${h.fecha}</span>
+            </div>
+            <p class="small m-0 text-dark"><strong>Usuario:</strong> ${h.usuario} | <strong>Estatus:</strong> ${h.estatus}</p>
+            <p class="small text-muted m-0 mt-1"><em>${h.detalle}</em></p>
+          </div>
+        `;
+      });
+      timelineHtml += '</div>';
+
+      const cuerpo = document.getElementById('modalDetalleCuerpo');
+      if (cuerpo) {
+        cuerpo.innerHTML = `
+          <div class="row g-2">
+            <div class="col-6"><strong>Folio:</strong> ${reg.folio_oc || reg.folio}</div>
+            <div class="col-6"><strong>Tipo:</strong> ${reg.tipo_envio || reg.tipo}</div>
+            <div class="col-6"><strong>Número de Parte:</strong> ${reg.parte}</div>
+            <div class="col-6"><strong>Cantidad:</strong> ${reg.cantidad} pzas</div>
+            <div class="col-6"><strong>Almacén:</strong> ${reg.almacen_origen || reg.almacen} (${reg.locacion_origen || ''})</div>
+            <div class="col-6"><strong>Área:</strong> ${reg.area}</div>
+            <div class="col-6"><strong>No Conformancia:</strong> <span class="text-danger fw-bold">${reg.no_conformancia}</span></div>
+            <div class="col-6"><strong>Inspector:</strong> ${reg.operador} (Turno ${reg.turno})</div>
+          </div>
+          <hr>
+          <h6 class="fw-bold text-dark"><i class="fa-solid fa-timeline me-1 text-primary"></i>Línea de Tiempo del Historial:</h6>
+          ${timelineHtml}
+          <hr>
+          <div class="text-center">
+            <h6>Fotografía de Evidencia (Clic para ver en HD):</h6>
+            ${fotoHtml}
+          </div>
+        `;
+      }
+
+      const btnDisp = document.getElementById('btnModalIrDisposicion');
+      if (btnDisp) {
+        btnDisp.onclick = function() {
+          const modalEl = document.getElementById('modalDetalleRegistro');
+          if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+          }
+          irADisposicionDesdeFolio(folio);
+        };
+      }
+
+      const modalEl = document.getElementById('modalDetalleRegistro');
+      if (modalEl) {
+        const myModal = new bootstrap.Modal(modalEl);
+        myModal.show();
+      }
+    }
+
+    async function cargarRegistrosGitHub() {
+      const container = document.getElementById('listaIncidencias');
+      const loading = document.getElementById('loadingRegistros');
+      if (container) container.innerHTML = "";
+      if (loading) loading.style.display = "block";
+
+      if (registrosPersistentes.length > 0) {
+        renderizarTarjetasDisposicion(registrosPersistentes);
+      }
+
+      const csvUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv?t=" + Date.now();
+
+      try {
+        const res = await fetch(csvUrl);
+        if (res.ok) {
+          const text = await res.text();
+          const lineas = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
+          
+          if (lineas.length > 1) {
+            const remotos = lineas.slice(1).map(function(line) {
+              const cols = line.split(",").map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
+              const fotosFromCsv = [cols[14], cols[15], cols[16], cols[17], cols[18]].filter(function(x) { return x && x.trim().length > 5; });
+              return {
+                folio: cols[0] || 'N/A',
+                folio_oc: cols[0] || 'N/A',
+                tipo: cols[1] || 'Proceso',
+                tipo_envio: cols[1] || 'Proceso',
+                fecha: cols[2] || '',
+                almacen: cols[3] || '',
+                almacen_origen: cols[3] || '',
+                locacion: cols[4] || '',
+                locacion_origen: cols[4] || '',
+                parte: cols[5] || '',
+                cantidad: cols[6] || '1',
+                estampa: cols[7] || '',
+                no_conformancia: cols[8] || '',
+                detalle_nc: cols[9] || '',
+                operador: cols[10] || '',
+                turno: cols[11] || '',
+                area: cols[12] || '',
+                estatus: cols[13] || 'Nuevo',
+                foto_b64: cols[14] || '',
+                fotos_array: fotosFromCsv
+              };
+            });
+
+            remotos.forEach(function(r) { guardarRegistroPersistenteLocal(r); });
+            renderizarTarjetasDisposicion(registrosPersistentes);
+            renderizarTablaRegistros();
+          }
+        }
+      } catch (err) {}
+
+      if (loading) loading.style.display = "none";
+    }
+
+    function renderizarTarjetasDisposicion(lista) {
+      const container = document.getElementById('listaIncidencias');
+      if (!container) return;
+      container.innerHTML = "";
+
+      if (lista.length === 0) {
+        container.innerHTML = '<div class="alert alert-info text-center w-100">No hay registros acumulados. Crea un nuevo registro en la Pestaña 1.</div>';
+        return;
+      }
+
+      lista.forEach(function(reg) {
+        const folio = reg.folio_oc || reg.folio;
+        const badges = obtenerBadgesRegistro(reg);
+
+        const cardHtml = `
+          <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card record-card p-3 shadow-sm border-start border-4 border-primary">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-primary fw-bold">${folio}</span>
+                <div>
+                  ${badges.estatusBadge}
+                  ${badges.etapaBadge}
+                </div>
+              </div>
+              <h6 class="fw-bold mb-1 text-dark">Parte: ${reg.parte} (${reg.cantidad} pzas)</h6>
+              <p class="small text-danger m-0 fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i>${reg.no_conformancia}</p>
+              <div class="small text-muted mt-2 d-flex justify-content-between">
+                <span><i class="fa-solid fa-location-dot me-1"></i>${reg.almacen_origen || reg.almacen || ''}</span>
+                <span><i class="fa-solid fa-user me-1"></i>${reg.operador || 'Inspector'}</span>
+              </div>
+              <div class="mt-3 border-top pt-2 d-flex gap-1">
+                <button type="button" class="btn btn-sm btn-warning fw-bold flex-grow-1 shadow-sm" onclick="seleccionarRegistroParaDisposicion('${folio}')"><i class="fa-solid fa-gavel me-1"></i>Evaluar Disposición</button>
+                <button type="button" class="btn btn-sm btn-outline-dark" onclick="mostrarQrGeneradoModal('${folio}')" title="Ver Código QR"><i class="fa-solid fa-qrcode"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+        container.innerHTML += cardHtml;
+      });
+    }
+
+    function seleccionarRegistroParaDisposicion(folio) {
+      const reg = registrosPersistentes.find(function(r) { return (r.folio_oc || r.folio) === folio; });
+      if (!reg) return;
+
+      const panel = document.getElementById('panelEvaluacionDisposicion');
+      if (panel) panel.style.display = 'block';
+
+      const tit = document.getElementById('dispFolioTitulo');
+      if (tit) tit.innerText = `${folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
+
+      if (reg.disp_destino) document.getElementById('disp_destino').value = reg.disp_destino;
+      if (reg.disp_responsable) document.getElementById('disp_responsable').value = reg.disp_responsable;
+      if (reg.disp_piezas_buenas) document.getElementById('disp_piezas_buenas').value = reg.disp_piezas_buenas;
+      if (reg.disp_piezas_malas) document.getElementById('disp_piezas_malas').value = reg.disp_piezas_malas;
+      if (reg.disp_estatus) document.getElementById('disp_estatus').value = reg.disp_estatus;
+      if (reg.disp_porque1) document.getElementById('disp_porque1').value = reg.disp_porque1;
+      if (reg.disp_porque2) document.getElementById('disp_porque2').value = reg.disp_porque2;
+      if (reg.disp_porque3) document.getElementById('disp_porque3').value = reg.disp_porque3;
+      if (reg.disp_porque4) document.getElementById('disp_porque4').value = reg.disp_porque4;
+      if (reg.disp_porque5) document.getElementById('disp_porque5').value = reg.disp_porque5;
+      if (reg.disp_accion_correctiva) document.getElementById('disp_accion_correctiva').value = reg.disp_accion_correctiva;
+
+      if (panel) panel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cerrarPanelDisposicion() {
+      const panel = document.getElementById('panelEvaluacionDisposicion');
+      if (panel) panel.style.display = 'none';
+    }
+
+    async function guardarDisposicion(e) {
+      if (e) e.preventDefault();
+      const titElem = document.getElementById('dispFolioTitulo');
+      if (!titElem) return;
+      const folio = titElem.innerText.split(" ")[0];
+      
+      const causaFinal = document.getElementById('disp_porque5').value.trim() || document.getElementById('disp_porque1').value.trim() || "Evaluado";
+      const estatusFinal = document.getElementById('disp_estatus').value;
+
+      const payloadDisposicion = {
+        tipo_envio: "Evaluación y Disposición",
+        folio_oc: folio,
+        no_conformancia: "DISPOSICIÓN REGISTRADA",
+        detalle_nc: `Destino: ${document.getElementById('disp_destino').value} | Sorteo (Buenas: ${document.getElementById('disp_piezas_buenas').value}, Malas: ${document.getElementById('disp_piezas_malas').value}) | 5-Porqués Causa Raíz: ${causaFinal} | Acción: ${document.getElementById('disp_accion_correctiva').value}`,
+        operador: "Inspector de Calidad",
+        disp_destino: document.getElementById('disp_destino').value,
+        disp_responsable: document.getElementById('disp_responsable').value,
+        disp_piezas_buenas: document.getElementById('disp_piezas_buenas').value,
+        disp_piezas_malas: document.getElementById('disp_piezas_malas').value,
+        disp_estatus: document.getElementById('disp_estatus').value,
+        disp_porque1: document.getElementById('disp_porque1').value,
+        disp_porque2: document.getElementById('disp_porque2').value,
+        disp_porque3: document.getElementById('disp_porque3').value,
+        disp_porque4: document.getElementById('disp_porque4').value,
+        disp_porque5: document.getElementById('disp_porque5').value,
+        disp_accion_correctiva: document.getElementById('disp_accion_correctiva').value,
+        estatus: estatusFinal,
+        foto_b64: "",
+        tiene_disposicion: true,
+        correos_notificacion: localStorage.getItem('NOTIF_EMAILS') || '',
+        enviar_email: localStorage.getItem('NOTIF_SEND_DISP') !== 'false'
+      };
+
+      guardarRegistroPersistenteLocal(payloadDisposicion, "Disposición Asignada: " + payloadDisposicion.disp_destino + " | Estatus: " + estatusFinal);
+      await enviarPayloadProxy(payloadDisposicion);
+      
+      cerrarPanelDisposicion();
+      cargarRegistrosGitHub();
+    }
+
+    async 
+    function obtenerArrayFotos(reg) {
+      if (!reg) return [];
+      let arr = [];
+      
+      if (Array.isArray(reg.fotos_array) && reg.fotos_array.length > 0) {
+        arr = reg.fotos_array;
+      } else if (Array.isArray(reg.foto_b64) && reg.foto_b64.length > 0) {
+        arr = reg.foto_b64;
+      } else {
+        ['foto_b64', 'foto1', 'foto2', 'foto3', 'foto4', 'foto5', 'foto_url'].forEach(function(k) {
+          if (reg[k] && typeof reg[k] === 'string' && reg[k].trim().length > 5) {
+            arr.push(reg[k].trim());
+          }
+        });
+      }
+
+      return arr.map(function(f) {
+        if (!f) return '';
+        f = f.toString().trim();
+        if (f.startsWith('http://') || f.startsWith('https://') || f.startsWith('data:image/')) {
+          return f;
+        }
+        if (f.length > 100 && !f.includes(' ')) {
+          return 'data:image/jpeg;base64,' + f;
+        }
+        return f;
+      }).filter(function(f) { return f.length > 0; });
+    }
+
+    function cargarGaleriaFotos() {
+      const container = document.getElementById('containerGaleriaFotos');
+      if (!container) return;
+      container.innerHTML = '<div class="text-center py-4 w-100"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Cargando fotos de evidencia...</p></div>';
+
+      let htmlFotos = "";
+      let contador = 0;
+
+      registrosPersistentes.forEach(function(reg) {
+        const photos = obtenerArrayFotos(reg);
+        const folio = reg.folio_oc || reg.folio || 'N/A';
+
+        photos.forEach(function(imgSrc, idx) {
+          contador++;
+          htmlFotos += `
+            <div class="col-6 col-md-4 col-lg-3 card-foto-item">
+              <div class="card h-100 shadow-sm border p-2">
+                <img src="${imgSrc}" class="galeria-img" style="height: 180px; object-fit: cover; cursor: pointer; border-radius: 6px;" onclick="abrirFotoModalGrande('${imgSrc}', '${folio} - Foto ${idx+1}')" alt="Foto ${folio}">
+                <div class="card-body p-2 text-center">
+                  <span class="badge bg-primary fw-bold">${folio}</span>
+                  <small class="text-muted d-block mt-1">Fotografía ${idx+1} de ${photos.length}</small>
+                  <p class="small text-muted m-0">${reg.parte || 'Evidencia'}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      });
+
+      if (contador === 0) {
+        container.innerHTML = '<div class="alert alert-info text-center w-100"><i class="fa-solid fa-images me-2"></i>No se encontraron fotografías guardadas. Agrega un nuevo registro con fotos de evidencia (mínimo 3).</div>';
+      } else {
+        container.innerHTML = `<div class="row g-3 w-100">${htmlFotos}</div>`;
+      }
+    }
+
+    function filtrarGaleriaFotos() {
+      const searchElem = document.getElementById('searchFotos');
+      if (!searchElem) return;
+      const query = searchElem.value.toLowerCase();
+      const items = document.querySelectorAll('.card-foto-item');
+
+      items.forEach(function(item) {
+        if (item.innerText.toLowerCase().includes(query)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    
+    function abrirFotoModalGrandePorFolio(folio) {
+      const reg = registrosPersistentes.find(function(r) { return (r.folio_oc || r.folio) === folio; });
+      if (reg && reg.foto_b64) {
+        abrirFotoModalGrande(reg.foto_b64, folio);
+      } else {
+        alert("Fotografía no disponible para el folio: " + folio);
+      }
+    }
+
+    function abrirFotoModalGrande(src, folio) {
+      const imgView = document.getElementById('imgFotoGrandeView');
+      if (imgView) imgView.src = src;
+
+      const sub = document.getElementById('modalFotoSubtitulo');
+      if (sub) sub.innerText = `Fotografía de Evidencia HD - Folio: ${folio}`;
+
+      const btnDl = document.getElementById('btnDescargarFotoGrande');
+      if (btnDl) {
+        btnDl.href = src;
+        btnDl.download = `evidencia_${folio}.png`;
+      }
+
+      const modalEl = document.getElementById('modalFotoGrande');
+      if (modalEl) {
+        const myModal = new bootstrap.Modal(modalEl);
+        myModal.show();
+      }
+    }
+
+    function cargarConfiguracionSistema() {
+      const emailsInput = document.getElementById('notifEmails');
+      if (emailsInput) {
+        emailsInput.value = localStorage.getItem('NOTIF_EMAILS') || '';
+      }
+
+      const chkReg = document.getElementById('chkNotifNuevoReg');
+      if (chkReg) {
+        chkReg.checked = localStorage.getItem('NOTIF_SEND_REG') !== 'false';
+      }
+
+      const chkDisp = document.getElementById('chkNotifDisposicion');
+      if (chkDisp) {
+        chkDisp.checked = localStorage.getItem('NOTIF_SEND_DISP') !== 'false';
+      }
+
+      const proxyConfig = document.getElementById('proxyUrlConfig');
+      if (proxyConfig) {
+        proxyConfig.value = localStorage.getItem('PROXY_URL') || PROXY_DEFAULT;
+      }
+    }
+
+    function guardarConfiguracionSistema() {
+      const emailsInput = document.getElementById('notifEmails');
+      if (emailsInput) {
+        localStorage.setItem('NOTIF_EMAILS', emailsInput.value.trim());
+      }
+
+      const chkReg = document.getElementById('chkNotifNuevoReg');
+      if (chkReg) {
+        safeSetLocalStorage('NOTIF_SEND_REG', chkReg.checked ? 'true' : 'false');
+      }
+
+      const chkDisp = document.getElementById('chkNotifDisposicion');
+      if (chkDisp) {
+        safeSetLocalStorage('NOTIF_SEND_DISP', chkDisp.checked ? 'true' : 'false');
+      }
+
+      const proxyConfig = document.getElementById('proxyUrlConfig');
+      if (proxyConfig && proxyConfig.value.trim()) {
+        const val = proxyConfig.value.trim();
+        safeSetLocalStorage('PROXY_URL', val);
+        const proxyOld = document.getElementById('proxyUrl');
+        if (proxyOld) proxyOld.value = val;
+      }
+
+      alert("¡Configuración guardada exitosamente!");
+    }
+
+    function exportarCatalogosExcelXLSX() {
+      if (typeof XLSX === 'undefined') {
+        alert("Librería SheetJS no detectada. Generando respaldo en CSV...");
+        exportarCatIndividualCSV();
+        return;
+      }
+
+      try {
+        const wb = XLSX.utils.book_new();
+
+        const mapTabs = [
+          { key: 'almacenes', name: 'Almacenes' },
+          { key: 'areas', name: 'Areas' },
+          { key: 'partes', name: 'Partes' },
+          { key: 'estampas', name: 'Estampas' },
+          { key: 'defectos', name: 'Defectos_NC' },
+          { key: 'defectosSecundarios', name: 'Defectos_Secundarios' },
+          { key: 'medidas', name: 'Medidas' }
+        ];
+
+        mapTabs.forEach(function(item) {
+          const data = catalogosLocal[item.key] || [];
+          const ws = XLSX.utils.json_to_sheet(data);
+          XLSX.utils.book_append_sheet(wb, ws, item.name);
+        });
+
+        XLSX.writeFile(wb, 'catalogos_maestros_plantilla.xlsx');
+      } catch (e) {
+        alert("Error al construir Excel XLSX: " + e.message);
+        exportarCatIndividualCSV();
+      }
+    }
+
+    function exportarCatIndividualCSV() {
+      const tipoElem = document.getElementById('exp_cat_individual_tipo');
+      const tipo = tipoElem ? tipoElem.value : 'almacenes';
+      const datos = catalogosLocal[tipo] || [];
+      if (datos.length === 0) { alert("No hay datos en este catálogo."); return; }
+      
+      let csvContent = "sep=,\n" + Object.keys(datos[0]).join(",") + "\n";
+      datos.forEach(function(row) {
+        csvContent += Object.values(row).map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
+      });
+      downloadFile(csvContent, `catalogo_${tipo}.csv`, 'text/csv;charset=utf-8;');
+    }
+
+    function exportarRegistrosCSV() {
+      if (registrosPersistentes.length === 0) { alert("No hay registros almacenados."); return; }
+      let csvContent = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_URL\n";
+      registrosPersistentes.forEach(function(r) {
+        const fila = [
+          r.folio_oc || r.folio || '',
+          r.tipo_envio || r.tipo || '',
+          r.fecha || '',
+          r.almacen_origen || r.almacen || '',
+          r.locacion_origen || r.locacion || '',
+          r.parte || '',
+          r.cantidad || '1',
+          r.estampa || '',
+          r.no_conformancia || '',
+          r.detalle_nc || '',
+          r.operador || '',
+          r.turno || '1',
+          r.area || '',
+          r.estatus || 'Nuevo',
+          r.foto_b64 || ''
+        ];
+        csvContent += fila.map(function(v){ return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(",") + "\n";
+      });
+      downloadFile(csvContent, 'registro_incidencias_locales.csv', 'text/csv;charset=utf-8;');
+    }
+
+    function exportarRegistrosJSON() {
+      const jsonContent = JSON.stringify(registrosPersistentes, null, 2);
+      downloadFile(jsonContent, 'registro_incidencias_locales.json', 'application/json');
+    }
+
+    function downloadFile(content, fileName, mimeType) {
+      try {
+        const blob = new Blob(["\ufeff" + content], { type: mimeType });
+        if (navigator.msSaveOrOpenBlob) {
+          navigator.msSaveOrOpenBlob(blob, fileName);
+          return;
+        }
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(function() {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 200);
+      } catch(e) {
+        alert("Error al descargar archivo: " + e.message);
+      }
+    }
+
+    function importarCatalogos() {
+      const fileInput = document.getElementById('fileImportCatalogos');
+      if (!fileInput) { alert("Error: Campo de archivo no encontrado."); return; }
+      const files = fileInput.files;
+      const selector = document.getElementById('imp_cat_tipo_selector');
+      const tipo = selector ? selector.value : 'xlsx_multi';
+
+      if (!files || files.length === 0) { alert("Por favor selecciona un archivo."); return; }
+      const file = files[0];
+
+      const reader = new FileReader();
+
+      if (file.name.endsWith('.xlsx') || tipo === 'xlsx_multi') {
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            const tabMap = {
+              'Almacenes': 'almacenes',
+              'Areas': 'areas',
+              'Partes': 'partes',
+              'Estampas': 'estampas',
+              'Defectos_NC': 'defectos',
+              'Defectos_Secundarios': 'defectosSecundarios',
+              'Medidas': 'medidas'
+            };
+
+            workbook.SheetNames.forEach(function(sheetName) {
+              const catKey = tabMap[sheetName] || sheetName.toLowerCase();
+              if (catalogosLocal.hasOwnProperty(catKey) || tabMap[sheetName]) {
+                const sheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                if (json.length > 0) {
+                  catalogosLocal[tabMap[sheetName] || catKey] = json;
+                }
+              }
+            });
+
+            localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+            cargarCatalogosFormulario();
+            alert("¡Libro de Excel (.xlsx) importado exitosamente! Catálogos actualizados.");
+          } catch(err) {
+            alert("Error al leer el archivo Excel: " + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } 
+      else {
+        reader.onload = function(e) {
+          const content = e.target.result;
+          try {
+            if (file.name.endsWith('.json')) {
+              const parsed = JSON.parse(content);
+              if (Array.isArray(parsed)) {
+                catalogosLocal[tipo] = parsed;
+              } else {
+                Object.assign(catalogosLocal, parsed);
+              }
+              localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+              alert("¡Catálogo importado desde JSON!");
+            } else {
+              const lineas = content.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
+              if (lineas.length > 1) {
+                const headers = lineas[0].split(",").map(function(h) { return h.replace(/^"|"$/g, '').trim(); });
+                const items = lineas.slice(1).map(function(l) {
+                  const parts = l.split(",").map(function(p) { return p.replace(/^"|"$/g, '').trim(); });
+                  let obj = {};
+                  headers.forEach(function(h, idx) { obj[h] = parts[idx] || ""; });
+                  return obj;
+                });
+                catalogosLocal[tipo] = items;
+                localStorage.setItem('CALIDAD_CATALOGOS', JSON.stringify(catalogosLocal));
+                alert(`¡Catálogo '${tipo}' importado exitosamente desde CSV!`);
+              }
+            }
+            cargarCatalogosFormulario();
+          } catch(err) {
+            alert("Error al procesar archivo: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function importarRegistros() {
+      const fileInput = document.getElementById('fileImportRegistros');
+      if (!fileInput) { alert("Error: Campo 'fileImportRegistros' no encontrado."); return; }
+      const files = fileInput.files;
+      if (!files || files.length === 0) { alert("Selecciona un archivo CSV o JSON de registros."); return; }
+      const file = files[0];
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        try {
+          if (file.name.endsWith('.json')) {
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed)) {
+              parsed.forEach(function(r) { guardarRegistroPersistenteLocal(r, "Importado desde JSON"); });
+              alert(`¡Se importaron ${parsed.length} registros desde JSON!`);
+            }
+          } else {
+            const lineas = content.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
+            if (lineas.length > 1) {
+              const items = lineas.slice(1).map(function(l) {
+                const cols = l.split(",").map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
+                return {
+                  folio_oc: cols[0] || 'OC-999',
+                  tipo_envio: cols[1] || 'Proceso',
+                  fecha: cols[2] || '',
+                  almacen_origen: cols[3] || '',
+                  locacion_origen: cols[4] || '',
+                  parte: cols[5] || '',
+                  cantidad: cols[6] || '1',
+                  estampa: cols[7] || '',
+                  no_conformancia: cols[8] || '',
+                  detalle_nc: cols[9] || '',
+                  operador: cols[10] || '',
+                  turno: cols[11] || '1',
+                  area: cols[12] || '',
+                  estatus: cols[13] || 'Nuevo',
+                  foto_b64: cols[14] || ''
+                };
+              });
+
+              items.forEach(function(r) { guardarRegistroPersistenteLocal(r, "Importado desde CSV"); });
+              alert(`¡Se importaron ${items.length} registros desde CSV!`);
+            }
+          }
+          renderizarTablaRegistros();
+        } catch(err) {
+          alert("Error al importar registros: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+  
+    // =========================================================================
+    // MÓDULO 8: DASHBOARD KPI INTERACTIVO Y ANÁLISIS DE RECEPCIÓN (CHART.JS)
+    // =========================================================================
+    let chartAlmacenInst = null;
+    let chartParteInst = null;
+    let chartTendenciaInst = null;
+
+    function poblarSelectoresFiltroKPI() {
+      const selAlm = document.getElementById('kpi_filtro_almacen');
+      const selParte = document.getElementById('kpi_filtro_parte');
+      if (!selAlm || !selParte) return;
+
+      const almValPrev = selAlm.value;
+      const parteValPrev = selParte.value;
+
+      selAlm.innerHTML = '<option value="ALL">Todos los Almacenes Origen</option>';
+      selParte.innerHTML = '<option value="ALL">Todos los Números de Parte</option>';
+
+      let almacenesUnicos = new Set();
+      let partesUnicas = new Set();
+
+      registrosPersistentes.forEach(function(r) {
+        const alm = (r.almacen_origen || r.almacen || '').trim();
+        const parte = (r.parte || '').trim();
+        if (alm) almacenesUnicos.add(alm);
+        if (parte) partesUnicas.add(parte);
+      });
+
+      Array.from(almacenesUnicos).sort().forEach(function(a) {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        selAlm.appendChild(opt);
+      });
+
+      Array.from(partesUnicas).sort().forEach(function(p) {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        selParte.appendChild(opt);
+      });
+
+      selAlm.value = almValPrev || "ALL";
+      selParte.value = parteValPrev || "ALL";
+    }
+
+    function filtrarPeriodoKPI(tipo) {
+      const inputIni = document.getElementById('kpi_fecha_inicio');
+      const inputFin = document.getElementById('kpi_fecha_fin');
+      const inputSem = document.getElementById('kpi_semana');
+      if (inputSem) inputSem.value = "";
+
+      const hoy = new Date();
+      let fIni = new Date();
+      let fFin = new Date();
+
+      if (tipo === 'hoy') {
+        fIni = hoy;
+        fFin = hoy;
+      } else if (tipo === 'semana') {
+        const day = hoy.getDay() || 7;
+        fIni.setDate(hoy.getDate() - day + 1);
+        fFin.setDate(fIni.getDate() + 6);
+      } else if (tipo === 'mes') {
+        fIni = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        fFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+      } else if (tipo === 'mes_anterior') {
+        fIni = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+        fFin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+      } else if (tipo === 'ano') {
+        fIni = new Date(hoy.getFullYear(), 0, 1);
+        fFin = new Date(hoy.getFullYear(), 11, 31);
+      } else if (tipo === 'todo') {
+        if (inputIni) inputIni.value = "";
+        if (inputFin) inputFin.value = "";
+        actualizarDashboardKPI();
+        return;
+      }
+
+      if (inputIni) inputIni.value = fIni.toISOString().split('T')[0];
+      if (inputFin) inputFin.value = fFin.toISOString().split('T')[0];
+
+      actualizarDashboardKPI();
+    }
+
+    function filtrarPorSemanaKPI() {
+      const inputSem = document.getElementById('kpi_semana');
+      if (!inputSem || !inputSem.value) return;
+
+      const parts = inputSem.value.split('-W');
+      if (parts.length < 2) return;
+
+      const year = parseInt(parts[0], 10);
+      const week = parseInt(parts[1], 10);
+
+      const simple = new Date(year, 0, 1 + (week - 1) * 7);
+      const dow = simple.getDay();
+      const ISOweekStart = simple;
+      if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+      else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+
+      const ISOweekEnd = new Date(ISOweekStart);
+      ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
+
+      const inputIni = document.getElementById('kpi_fecha_inicio');
+      const inputFin = document.getElementById('kpi_fecha_fin');
+      if (inputIni) inputIni.value = ISOweekStart.toISOString().split('T')[0];
+      if (inputFin) inputFin.value = ISOweekEnd.toISOString().split('T')[0];
+
+      actualizarDashboardKPI();
+    }
+
+    function parsearFechaRegistro(fechaStr) {
+      if (!fechaStr) return null;
+      let d = new Date(fechaStr);
+      if (!isNaN(d.getTime())) return d;
+
+      const parts = fechaStr.split(/[\/\s,:-]/);
+      if (parts.length >= 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        d = new Date(year, month, day);
+        if (!isNaN(d.getTime())) return d;
+      }
+      return null;
+    }
+
+    function actualizarDashboardKPI() {
+      poblarSelectoresFiltroKPI();
+
+      const fIniStr = document.getElementById('kpi_fecha_inicio') ? document.getElementById('kpi_fecha_inicio').value : '';
+      const fFinStr = document.getElementById('kpi_fecha_fin') ? document.getElementById('kpi_fecha_fin').value : '';
+      const selAlmVal = document.getElementById('kpi_filtro_almacen') ? document.getElementById('kpi_filtro_almacen').value : 'ALL';
+      const selParteVal = document.getElementById('kpi_filtro_parte') ? document.getElementById('kpi_filtro_parte').value : 'ALL';
+
+      const fIni = fIniStr ? new Date(fIniStr + 'T00:00:00') : null;
+      const fFin = fFinStr ? new Date(fFinStr + 'T23:59:59') : null;
+
+      const filtrados = registrosPersistentes.filter(function(r) {
+        const alm = (r.almacen_origen || r.almacen || '').trim();
+        const parte = (r.parte || '').trim();
+
+        if (selAlmVal !== 'ALL' && alm !== selAlmVal) return false;
+        if (selParteVal !== 'ALL' && parte !== selParteVal) return false;
+
+        if (fIni || fFin) {
+          const regDate = parsearFechaRegistro(r.fecha);
+          if (regDate) {
+            if (fIni && regDate < fIni) return false;
+            if (fFin && regDate > fFin) return false;
+          }
+        }
         return true;
       });
 
