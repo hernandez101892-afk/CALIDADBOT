@@ -1,7 +1,7 @@
 {
   "short_name": "CalidadApp",
-  "name": "Sistema de Control de Calidad y Disposicion",
-  "description": "App Web PWA para inspeccion de calidad, registro de NC, firmas y fotografias.",
+  "name": "Sistema de Control de Calidad y Disposición",
+  "description": "App Web PWA para inspección de calidad, registro de NC, firmas y fotografías.",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3593/3593452.png",
