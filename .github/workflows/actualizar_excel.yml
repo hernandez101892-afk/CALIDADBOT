@@ -1,0 +1,42 @@
+name: Actualizar Excel de Calidad
+
+on:
+  push:
+    paths:
+      - 'ARCHIVOS/registro_incidencias.csv'
+  workflow_dispatch:
+
+jobs:
+  convert-to-excel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar pandas y openpyxl
+        run: pip install pandas openpyxl
+
+      - name: Convertir CSV a Excel (.xlsx)
+        run: |
+          python -c "
+          import pandas as pd, os
+          csv_path = 'ARCHIVOS/registro_incidencias.csv'
+          xlsx_path = 'ARCHIVOS/registro_incidencias.xlsx'
+          if os.path.exists(csv_path):
+              df = pd.read_csv(csv_path, on_bad_lines='skip')
+              df.to_excel(xlsx_path, index=False, sheet_name='REGISTROS')
+              print('Excel actualizado exitosamente')
+          "
+
+      - name: Hacer Commit y Push del Excel
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add ARCHIVOS/registro_incidencias.xlsx
+          git diff-index --quiet HEAD || git commit -m "Auto-actualización de registro_incidencias.xlsx"
+          git push
