@@ -1,16 +1,15 @@
-name: Actualizar Excel de Calidad
+name: Convertir CSV a Excel Automatico
 
 on:
   push:
     paths:
       - 'ARCHIVOS/registro_incidencias.csv'
-  workflow_dispatch:
 
 jobs:
-  convert-to-excel:
+  convertir_a_excel:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repositorio
+      - name: Descargar Repositorio
         uses: actions/checkout@v3
 
       - name: Configurar Python
@@ -18,25 +17,31 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar pandas y openpyxl
-        run: pip install pandas openpyxl
+      - name: Instalar Pandas y OpenPyXL
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl
 
-      - name: Convertir CSV a Excel (.xlsx)
+      - name: Convertir CSV a XLSX
         run: |
           python -c "
-          import pandas as pd, os
+          import pandas as pd
+          import os
+
           csv_path = 'ARCHIVOS/registro_incidencias.csv'
           xlsx_path = 'ARCHIVOS/registro_incidencias.xlsx'
+
           if os.path.exists(csv_path):
-              df = pd.read_csv(csv_path, on_bad_lines='skip')
-              df.to_excel(xlsx_path, index=False, sheet_name='REGISTROS')
-              print('Excel actualizado exitosamente')
+              df = pd.read_csv(csv_path, sep=',', encoding='utf-8-sig')
+              with pd.ExcelWriter(xlsx_path, engine='openpyxl') as writer:
+                  df.to_excel(writer, sheet_name='REGISTROS', index=False)
+              print('✅ Archivo XLSX actualizado exitosamente.')
           "
 
-      - name: Hacer Commit y Push del Excel
+      - name: Guardar Cambios en GitHub
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action Bot"
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
           git add ARCHIVOS/registro_incidencias.xlsx
-          git diff-index --quiet HEAD || git commit -m "Auto-actualización de registro_incidencias.xlsx"
+          git commit -m "Auto-generación de registro_incidencias.xlsx desde CSV" || exit 0
           git push
