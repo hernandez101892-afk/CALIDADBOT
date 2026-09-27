@@ -1030,8 +1030,32 @@
     }
 
     // HELPER PARA NORMALIZAR REGISTROS Y EVITAR URLS EN EL CAMPO ESTATUS
+    function parseCsvLineRobust(linea) {
+      let res = [];
+      let cur = [];
+      let inQuotes = false;
+      for (let i = 0; i < linea.length; i++) {
+        let c = linea[i];
+        if (c === '"') {
+          if (inQuotes && i + 1 < linea.length && linea[i+1] === '"') {
+            cur.push('"');
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          res.push(cur.join('').trim());
+          cur = [];
+        } else {
+          cur.push(c);
+        }
+      }
+      res.push(cur.join('').trim());
+      return res.map(function(v) { return v.replace(/^"|"$/g, '').trim(); });
+    }
+
     function parsearFilaCsv(linea, headers) {
-      const cols = linea.split(',').map(function(c) { return c.replace(/^"|"$/g, '').trim(); });
+      const cols = parseCsvLineRobust(linea);
       let obj = {};
       
       if (headers && headers.length > 0) {
@@ -1041,41 +1065,45 @@
         });
       }
 
-      const res = {
-        folio: obj.folio_oc || obj.folio || cols[0] || 'N/A',
-        folio_oc: obj.folio_oc || obj.folio || cols[0] || 'N/A',
-        tipo: obj.tipo_envio || obj.tipo || cols[1] || 'Proceso',
-        tipo_envio: obj.tipo_envio || obj.tipo || cols[1] || 'Proceso',
-        fecha: obj.fecha || cols[2] || '',
-        almacen: obj.almacen_origen || obj.almacen || cols[3] || '',
-        almacen_origen: obj.almacen_origen || obj.almacen || cols[3] || '',
-        locacion: obj.locacion_origen || obj.locacion || cols[4] || '',
-        locacion_origen: obj.locacion_origen || obj.locacion || cols[4] || '',
-        parte: obj.parte || cols[5] || '',
-        cantidad: obj.cantidad || cols[6] || '1',
-        estampa: obj.estampa || cols[7] || '',
-        no_conformancia: obj.no_conformancia || obj.defecto || cols[8] || '',
-        detalle_nc: obj.detalle_nc || cols[9] || '',
-        operador: obj.operador || cols[10] || '',
-        turno: obj.turno || cols[11] || '',
-        area: obj.area || cols[12] || '',
-        estatus: obj.estatus || cols[13] || 'Nuevo',
-        foto_b64: obj.foto_b64 || obj.foto_url || obj.foto || cols[14] || ''
-      };
+      const f1 = obj.foto_1 || obj.foto_b64 || cols[14] || '';
+      const f2 = obj.foto_2 || cols[15] || '';
+      const f3 = obj.foto_3 || cols[16] || '';
+      const f4 = obj.foto_4 || cols[17] || '';
+      const f5 = obj.foto_5 || cols[18] || '';
 
-      let estClean = (res.estatus || '').toString().trim();
-      let fotoClean = (res.foto_b64 || '').toString().trim();
+      const fotosArr = [f1, f2, f3, f4, f5].filter(function(x) { return x && x.trim().length > 5; });
+      const folioVal = obj.folio_oc || obj.folio || cols[0] || 'N/A';
+
+      let estClean = (obj.estatus || cols[13] || 'Nuevo').toString().trim();
+      let fotoClean = (f1 || '').toString().trim();
 
       if (estClean.startsWith('http://') || estClean.startsWith('https://') || estClean.startsWith('data:image')) {
         if (!fotoClean) fotoClean = estClean;
         estClean = 'Nuevo';
       }
 
-      res.estatus = estClean || 'Nuevo';
-      res.foto_b64 = fotoClean;
-      res.fecha = formatearFechaHora(res.fecha);
-
-      return res;
+      return {
+        folio: folioVal,
+        folio_oc: folioVal,
+        tipo: obj.tipo || obj.tipo_envio || cols[1] || 'Proceso',
+        tipo_envio: obj.tipo || obj.tipo_envio || cols[1] || 'Proceso',
+        fecha: formatearFechaHora(obj.fecha || cols[2] || ''),
+        almacen: obj.almacen || obj.almacen_origen || cols[3] || '',
+        almacen_origen: obj.almacen || obj.almacen_origen || cols[3] || '',
+        locacion: obj.locacion || obj.locacion_origen || cols[4] || '',
+        locacion_origen: obj.locacion || obj.locacion_origen || cols[4] || '',
+        parte: obj.parte || cols[5] || '',
+        cantidad: obj.cantidad || cols[6] || '1',
+        estampa: obj.estampa || cols[7] || '',
+        no_conformancia: obj.defecto || obj.no_conformancia || cols[8] || '',
+        detalle_nc: obj.detalle_nc || cols[9] || '',
+        operador: obj.operador || cols[10] || '',
+        turno: obj.turno || cols[11] || '',
+        area: obj.area || cols[12] || '',
+        estatus: estClean || 'Nuevo',
+        foto_b64: fotoClean,
+        fotos_array: fotosArr
+      };
     }
 
 
@@ -1808,48 +1836,62 @@ function formatearItemCatalogo(x) {
         renderizarTarjetasDisposicion(registrosPersistentes);
       }
 
-      const csvUrl = "https://raw.githubusercontent.com/hernandez101892-afk/CALIDADBOT/main/ARCHIVOS/registro_incidencias.csv?t=" + Date.now();
+      const token = (localStorage.getItem('GITHUB_TOKEN') || '').trim();
+      const owner = "hernandez101892-afk";
+      const repo = "CALIDADBOT";
+      const path = "ARCHIVOS/registro_incidencias.csv";
+      
+      let csvText = "";
 
-      try {
-        const res = await fetch(csvUrl);
-        if (res.ok) {
-          const text = await res.text();
-          const lineas = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
-          
-          if (lineas.length > 1) {
-            const remotos = lineas.slice(1).map(function(line) {
-              const cols = parsearFilaCsv(line);
-              const fotosFromCsv = [cols[14], cols[15], cols[16], cols[17], cols[18]].filter(function(x) { return x && x.trim().length > 5; });
-              return {
-                folio: cols[0] || 'N/A',
-                folio_oc: cols[0] || 'N/A',
-                tipo: cols[1] || 'Proceso',
-                tipo_envio: cols[1] || 'Proceso',
-                fecha: cols[2] || '',
-                almacen: cols[3] || '',
-                almacen_origen: cols[3] || '',
-                locacion: cols[4] || '',
-                locacion_origen: cols[4] || '',
-                parte: cols[5] || '',
-                cantidad: cols[6] || '1',
-                estampa: cols[7] || '',
-                no_conformancia: cols[8] || '',
-                detalle_nc: cols[9] || '',
-                operador: cols[10] || '',
-                turno: cols[11] || '',
-                area: cols[12] || '',
-                estatus: cols[13] || 'Nuevo',
-                foto_b64: cols[14] || '',
-                fotos_array: fotosFromCsv
-              };
-            });
-
-            remotos.forEach(function(r) { guardarRegistroPersistenteLocal(r); });
-            renderizarTarjetasDisposicion(registrosPersistentes);
-            renderizarTablaRegistros();
+      if (token && token.length > 10) {
+        try {
+          const urlApi = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?t=${Date.now()}`;
+          const resApi = await fetch(urlApi, {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Accept": "application/vnd.github.raw+json"
+            }
+          });
+          if (resApi.ok) {
+            csvText = await resApi.text();
           }
+        } catch(e) {
+          console.warn("Intento API REST falló:", e);
         }
-      } catch (err) {}
+      }
+
+      if (!csvText) {
+        try {
+          const urlRaw = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}?t=${Date.now()}`;
+          const resRaw = await fetch(urlRaw);
+          if (resRaw.ok) {
+            csvText = await resRaw.text();
+          }
+        } catch(e) {
+          console.error("Error al descargar CSV de GitHub Raw:", e);
+        }
+      }
+
+      if (csvText && csvText.trim().length > 0) {
+        const lineas = csvText.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
+        if (lineas.length > 1) {
+          const headers = parseCsvLineRobust(lineas[0]);
+          const remotos = lineas.slice(1).map(function(line) {
+            return parsearFilaCsv(line, headers);
+          });
+
+          remotos.forEach(function(r) {
+            if (r.folio_oc && r.folio_oc !== 'N/A') {
+              guardarRegistroPersistenteLocal(r, "Sincronizado desde GitHub");
+            }
+          });
+
+          renderizarTarjetasDisposicion(registrosPersistentes);
+          renderizarTablaRegistros();
+          cargarGaleriaFotos();
+          if (typeof actualizarDashboardKPI === 'function') actualizarDashboardKPI();
+        }
+      }
 
       if (loading) loading.style.display = "none";
     }
@@ -1965,7 +2007,6 @@ function formatearItemCatalogo(x) {
       cargarRegistrosGitHub();
     }
 
-    async 
     function obtenerArrayFotos(reg) {
       if (!reg) return [];
       let arr = [];
@@ -2335,25 +2376,9 @@ function formatearItemCatalogo(x) {
           } else {
             const lineas = content.split(/\r?\n/).filter(function(l) { return l.trim().length > 0 && !l.startsWith("sep="); });
             if (lineas.length > 1) {
+              const headers = parseCsvLineRobust(lineas[0]);
               const items = lineas.slice(1).map(function(l) {
-                const cols = parsearFilaCsv(l);
-                return {
-                  folio_oc: cols[0] || 'OC-999',
-                  tipo_envio: cols[1] || 'Proceso',
-                  fecha: cols[2] || '',
-                  almacen_origen: cols[3] || '',
-                  locacion_origen: cols[4] || '',
-                  parte: cols[5] || '',
-                  cantidad: cols[6] || '1',
-                  estampa: cols[7] || '',
-                  no_conformancia: cols[8] || '',
-                  detalle_nc: cols[9] || '',
-                  operador: cols[10] || '',
-                  turno: cols[11] || '1',
-                  area: cols[12] || '',
-                  estatus: cols[13] || 'Nuevo',
-                  foto_b64: cols[14] || ''
-                };
+                return parsearFilaCsv(l, headers);
               });
 
               items.forEach(function(r) { guardarRegistroPersistenteLocal(r, "Importado desde CSV"); });
