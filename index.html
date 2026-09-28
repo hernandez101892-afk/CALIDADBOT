@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CalidadBot PWA v69 - Android Industrial App</title>
+  <title>CalidadBot PWA v71 - Android Industrial App</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#00008a">
@@ -193,8 +193,8 @@
     <div class="d-flex align-items-center gap-2">
       <i class="fa-solid fa-microchip text-info fs-4"></i>
       <div>
-        <div class="brand-title">CALIDAD BOT PWA v69</div>
-        <div class="badge-status-pwa text-white-50"><i class="fa-solid fa-wifi text-success me-1"></i>En Línea • PWA v69</div>
+        <div class="brand-title">CALIDAD BOT PWA v71</div>
+        <div class="badge-status-pwa text-white-50"><i class="fa-solid fa-wifi text-success me-1"></i>En Línea • PWA v71</div>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
@@ -1048,7 +1048,47 @@
     }
 
     // COMMIT DIRECTO A GITHUB API REST
-    async function sincronizarRegistroDirectoGitHub(payload) {
+        async function subirImagenAGitHub(rawB64, folioOc, idx, token, owner, repo, branch, headers) {
+      if (!rawB64 || typeof rawB64 !== 'string') return '';
+      rawB64 = rawB64.trim();
+      if (rawB64.length < 10) return '';
+      if (rawB64.startsWith('http://') || rawB64.startsWith('https://')) {
+        return rawB64;
+      }
+
+      let cleanB64 = rawB64;
+      if (cleanB64.includes(';base64,')) {
+        cleanB64 = cleanB64.split(';base64,')[1];
+      }
+      cleanB64 = cleanB64.replace(/[\r\n\s]+/g, '');
+
+      if (cleanB64.length < 10) return '';
+
+      const timestamp = Date.now() + Math.floor(Math.random() * 100);
+      const imgFileName = `${folioOc}_${timestamp}_${idx + 1}.jpg`;
+      const imgPath = `ARCHIVOS/imagenes/${imgFileName}`;
+      const imgUrlApi = `https://api.github.com/repos/${owner}/${repo}/contents/${imgPath}`;
+
+      try {
+        const resPutImg = await fetch(imgUrlApi, {
+          method: "PUT",
+          headers: headers,
+          body: JSON.stringify({
+            message: `Subida de evidencia fotográfica ${idx + 1} para Folio ${folioOc}`,
+            content: cleanB64,
+            branch: branch
+          })
+        });
+        if (resPutImg.ok) {
+          return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${imgPath}`;
+        }
+      } catch(eImg) {
+        console.error("Error subiendo imagen a GitHub:", eImg);
+      }
+      return '';
+    }
+
+async function sincronizarRegistroDirectoGitHub(payload) {
       const token = (payload.github_token || localStorage.getItem('GITHUB_TOKEN') || '').trim();
       if (!token || token.length < 10) return false;
 
@@ -1076,12 +1116,35 @@
           contentOld = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_1,Foto_2,Foto_3,Foto_4,Foto_5\n";
         }
 
-        const photos = payload.fotos_array || [];
-        const f1 = (photos[0] || '').replace(/\r/g, '').replace(/\n/g, '');
-        const f2 = (photos[1] || '').replace(/\r/g, '').replace(/\n/g, '');
-        const f3 = (photos[2] || '').replace(/\r/g, '').replace(/\n/g, '');
-        const f4 = (photos[3] || '').replace(/\r/g, '').replace(/\n/g, '');
-        const f5 = (photos[4] || '').replace(/\r/g, '').replace(/\n/g, '');
+        const rawPhotos = payload.fotos_array || (payload.foto_b64 ? [payload.foto_b64] : []);
+        const photoUrls = [];
+
+        for (let i = 0; i < rawPhotos.length && i < 5; i++) {
+          const p = rawPhotos[i];
+          if (p) {
+            if (p.startsWith('http://') || p.startsWith('https://')) {
+              photoUrls.push(p);
+            } else {
+              const urlUploaded = await subirImagenAGitHub(p, payload.folio_oc || payload.folio, i, token, owner, repo, branch, headers);
+              if (urlUploaded) {
+                photoUrls.push(urlUploaded);
+              }
+            }
+          }
+        }
+
+        if (photoUrls.length > 0) {
+          payload.fotos_array = photoUrls;
+          payload.foto_b64 = photoUrls[0];
+          payload.photosJson = JSON.stringify(photoUrls);
+          guardarRegistroPersistenteLocal(payload);
+        }
+
+        const f1 = photoUrls[0] || '';
+        const f2 = photoUrls[1] || '';
+        const f3 = photoUrls[2] || '';
+        const f4 = photoUrls[3] || '';
+        const f5 = photoUrls[4] || '';
 
         const nuevaFila = [
           `"${payload.folio_oc || payload.folio}"`,
@@ -1109,7 +1172,7 @@
         const contentB64 = utf8ToBase64(contentNew);
 
         const bodyPut = {
-          message: `Actualización de Calidad v69: Folio ${payload.folio_oc} [${payload.estatus}]`,
+          message: `Actualización de Calidad v70: Folio ${payload.folio_oc} [${payload.estatus}]`,
           content: contentB64,
           branch: branch
         };
@@ -1167,6 +1230,34 @@
       if (locacionVal.length < 5) {
         alert("⚠️ La Locación debe contener 5 caracteres (Ej: F4RWK).");
         if (locacionInput) locacionInput.focus();
+        return;
+      }
+
+      const almVal = document.getElementById('almacen_origen').value;
+      if (!almVal) {
+        alert("⚠️ Por favor selecciona el Almacén Origen.");
+        document.getElementById('almacen_origen').focus();
+        return;
+      }
+
+      const areaVal = document.getElementById('area').value;
+      if (!areaVal) {
+        alert("⚠️ Por favor selecciona el Origen del Defecto / Área.");
+        document.getElementById('area').focus();
+        return;
+      }
+
+      const parteVal = document.getElementById('parte').value;
+      if (!parteVal) {
+        alert("⚠️ Por favor selecciona el Número de Parte.");
+        document.getElementById('parte').focus();
+        return;
+      }
+
+      const ncVal = document.getElementById('no_conformancia').value;
+      if (!ncVal) {
+        alert("⚠️ Por favor selecciona la No Conformancia / Defecto Principal.");
+        document.getElementById('no_conformancia').focus();
         return;
       }
 
