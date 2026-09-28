@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CalidadBot PWA - Control Industrial & Disposición</title>
+  <title>CalidadBot PWA v58 - Control Industrial & Disposición</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#00008a">
   
@@ -232,7 +232,7 @@
     <div class="container-fluid d-flex justify-content-between align-items-center">
       <div class="app-title">
         <i class="fa-solid fa-microchip text-info"></i>
-        <span>CALIDAD<span style="color: var(--accent-cyan);">BOT</span> <small class="fw-normal text-white-50 fs-6">v52</small></span>
+        <span>CALIDAD<span style="color: var(--accent-cyan);">BOT</span> <small class="fw-normal text-white-50 fs-6">v54</small></span>
       </div>
       <div class="d-flex align-items-center gap-2">
         <span class="status-badge-pwa" id="pwaNetStatus"><i class="fa-solid fa-wifi me-1 text-success"></i>En Línea</span>
@@ -997,7 +997,7 @@
         const contentB64 = utf8ToBase64(contentNew);
 
         const bodyPut = {
-          message: `Actualización de Calidad v52: Folio ${payload.folio_oc} [${payload.estatus}]`,
+          message: `Actualización de Calidad v54: Folio ${payload.folio_oc} [${payload.estatus}]`,
           content: contentB64,
           branch: branch
         };
@@ -1027,6 +1027,130 @@
         alert("⚠️ Por favor espera un segundo mientras se termina de comprimir la fotografía...");
         return;
       }
+
+      const folioInput = document.getElementById('folio_oc');
+      const folio = folioInput ? folioInput.value.trim().toUpperCase() : "";
+
+      if (!/^OC\d{7}$/.test(folio)) {
+        alert("⚠️ El Folio / Orden de Control debe iniciar con 'OC' seguido de exactamente 7 números (Ej: OC1234567).");
+        if (folioInput) folioInput.focus();
+        return;
+      }
+
+      const locacionInput = document.getElementById('locacion_origen');
+      const locacionVal = locacionInput ? locacionInput.value.trim().toUpperCase() : "";
+      if (locacionVal.length !== 5) {
+        alert("⚠️ La Locación debe contener exactamente 5 caracteres (Ej: F4RWK).");
+        if (locacionInput) locacionInput.focus();
+        return;
+      }
+
+      const btn = document.getElementById('btnSubmit');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sincronizando Backend y GitHub...';
+      }
+
+      const nowFechaAuto = new Date().toLocaleString("es-MX");
+      
+      const estampaCode = document.getElementById('estampa').value;
+      const inspectorName = document.getElementById('inspector_estampa').value;
+      const medidaVal = document.getElementById('medida_estampa').value;
+
+      let estampaFinal = estampaCode;
+      if (estampaCode && inspectorName) {
+        estampaFinal = `${estampaCode} - ${inspectorName} (${medidaVal})`;
+      }
+
+      const payload = {
+        folio_oc: folio,
+        tipo_envio: document.getElementById('tipo_envio').value,
+        fecha: nowFechaAuto,
+        almacen_origen: document.getElementById('almacen_origen').value,
+        locacion_origen: locacionVal,
+        area: document.getElementById('area').value,
+        parte: document.getElementById('parte').value,
+        cantidad: document.getElementById('cantidad').value,
+        estampa: estampaFinal,
+        no_conformancia: document.getElementById('no_conformancia').value,
+        detalle_nc: document.getElementById('detalle_nc').value,
+        operador: document.getElementById('operador').value,
+        turno: document.getElementById('turno').value,
+        foto_b64: (fotosBase64Array && fotosBase64Array.length > 0) ? fotosBase64Array[0] : "",
+        fotos_array: fotosBase64Array,
+        estatus: "Nuevo",
+        tiene_disposicion: false,
+        correos_notificacion: localStorage.getItem('NOTIF_EMAILS') || '',
+        enviar_email: localStorage.getItem('NOTIF_SEND_REG') !== 'false',
+        github_token: localStorage.getItem('GITHUB_TOKEN') || ''
+      };
+
+      // 1. Guardado Local Persistente
+      guardarRegistroPersistenteLocal(payload);
+
+      // 2. Intento Directo GitHub
+      let ghDirect = await sincronizarRegistroDirectoGitHub(payload);
+
+      // 3. Intento Servidor Backend Google Apps Script (Servidor Proxy)
+      let proxyRes = await enviarPayloadProxy(payload);
+
+      let msgConfirm = `📋 REPORTE DE CONEXIÓN FRONTEND-BACKEND:
+` +
+                       `------------------------------------
+` +
+                       `• Folio OC: ${payload.folio_oc}
+` +
+                       `• Fecha Captura: ${payload.fecha}
+` +
+                       `• Almacén Origen: ${payload.almacen_origen}
+` +
+                       `• Piezas: ${payload.cantidad} | Turno: ${payload.turno}
+` +
+                       `• Evidencias: ${payload.fotos_array.length} foto(s) comprimida(s)
+` +
+                       `------------------------------------
+` +
+                       `ESTADO DE ALMACENAMIENTO:
+` +
+                       `• Memoria App: ✅ Guardado Localmente
+`;
+
+      if (proxyRes && proxyRes.status === 'ok') {
+        const diagSheets = (proxyRes.diagnostico && proxyRes.diagnostico.sheets) ? proxyRes.diagnostico.sheets : {};
+        const diagGh = (proxyRes.diagnostico && proxyRes.diagnostico.github) ? proxyRes.diagnostico.github : {};
+
+        msgConfirm += `• Google Sheets: ${diagSheets.ok ? '✅ Guardado Exitoso' : '⚠️ ' + (diagSheets.detalle || 'Error')}
+`;
+        
+        if (ghDirect && ghDirect.ok) {
+          msgConfirm += `• GitHub Repository: ✅ Commit Directo Exitoso (SHA: ${ghDirect.sha ? ghDirect.sha.substring(0,7) : 'OK'})
+`;
+        } else if (diagGh.ok) {
+          msgConfirm += `• GitHub Repository: ✅ Commit vía Backend Exitoso (${diagGh.detalle || 'OK'})
+`;
+        } else {
+          msgConfirm += `• GitHub Repository: ⚠️ ${diagGh.detalle || diagGh.error || 'Revisar Token PAT en ScriptProperties'}
+`;
+        }
+      } else {
+        msgConfirm += `• Servidor Backend: ⚠️ ${proxyRes.mensaje || 'Modo Offline / Respuesta pendiente'}
+`;
+      }
+
+      alert(msgConfirm);
+
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Guardar Registro de Inspección';
+      }
+
+      resetForm();
+      mostrarQrGeneradoModal(folio);
+      renderizarTablaRegistros();
+      cargarTarjetasDisposicion();
+      cargarGaleriaFotos();
+      if (typeof actualizarDashboardKPI === 'function') actualizarDashboardKPI();
+    }
 
       const folioInput = document.getElementById('folio_oc');
       const folio = folioInput ? folioInput.value.trim().toUpperCase() : "";
@@ -1132,11 +1256,21 @@
       const proxyElem = document.getElementById('proxyUrlConfig');
       const proxyUrl = (proxyElem ? proxyElem.value : '') || PROXY_DEFAULT;
       try {
-        await fetch(proxyUrl, {
+        const response = await fetch(proxyUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
+        if (response.ok) {
+          const resJson = await response.json();
+          return resJson;
+        } else {
+          return { status: "error", mensaje: `HTTP ${response.status} desde el servidor proxy` };
+        }
+      } catch (err) {
+        return { status: "offline", mensaje: "No se pudo contactar al servidor proxy (Modo Offline)" };
+      }
+    });
       } catch (err) {}
     }
 
@@ -1289,14 +1423,59 @@
       const owner = "hernandez101892-afk";
       const repo = "CALIDADBOT";
       const path = "ARCHIVOS/registro_incidencias.csv";
+      const proxyElem = document.getElementById('proxyUrlConfig');
+      const proxyUrl = (proxyElem ? proxyElem.value : '') || PROXY_DEFAULT;
       
       let csvText = "";
 
+      // Intento 1: API REST de GitHub con token en el navegador
       if (token && token.length > 10) {
         try {
           const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?t=${Date.now()}`, {
             headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github.raw+json" }
           });
+          if (res.ok) csvText = await res.text();
+        } catch(e) {}
+      }
+
+      // Intento 2: Backend Proxy Google Apps Script (Usa el token seguro de ScriptProperties)
+      if (!csvText && proxyUrl) {
+        try {
+          const resProxy = await fetch(`${proxyUrl}?action=read_csv&t=${Date.now()}`);
+          if (resProxy.ok) {
+            const jsonProxy = await resProxy.json();
+            if (jsonProxy.status === "ok" && jsonProxy.csv) {
+              csvText = jsonProxy.csv;
+            }
+          }
+        } catch(e) {}
+      }
+
+      // Intento 3: GitHub Raw Público
+      if (!csvText) {
+        try {
+          const resRaw = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/${path}?t=${Date.now()}`);
+          if (resRaw.ok) csvText = await resRaw.text();
+        } catch(e) {}
+      }
+
+      if (csvText) {
+        const lineas = csvText.split(/\r?\n/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+        if (lineas.length > 1) {
+          const headers = parseCsvLineRobust(lineas[0]);
+          const remotos = lineas.slice(1).map(l => parsearFilaCsv(l, headers));
+          remotos.forEach(r => {
+            if (r.folio_oc && r.folio_oc !== 'N/A') guardarRegistroPersistenteLocal(r);
+          });
+          renderizarTablaRegistros();
+        }
+      }
+
+      if (loading) loading.style.display = 'none';
+      cargarTarjetasDisposicion();
+      cargarGaleriaFotos();
+      if (typeof actualizarDashboardKPI === 'function') actualizarDashboardKPI();
+    });
           if (res.ok) csvText = await res.text();
         } catch(e) {}
       }
