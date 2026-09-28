@@ -172,31 +172,31 @@
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Tipo de Registro:</label>
                   <select class="form-select" id="tipo_envio" required>
-                    <option value="Proceso" selected>Proceso / Recibo</option>
-                    <option value="Contención">Contención / Sorteo</option>
-                    <option value="Rechazo">Rechazo de Calidad</option>
+                    <option value="Proceso" selected>Proceso</option>
+                    <option value="Cliente Interno">Cliente Interno</option>
                   </select>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Folio / Orden de Control (OC):</label>
-                  <input type="text" class="form-control" id="folio_oc" placeholder="Ej: OC-984512" required>
+                  <input type="text" class="form-control" id="folio_oc" placeholder="Ej: OC1234567" pattern="^OC\d{7}$" title="Debe iniciar con 'OC' seguido de exactamente 7 números (Ejemplo: OC1234567)" required>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Almacén Origen:</label>
-                  <input type="text" class="form-control" id="almacen_origen" list="dl_almacenes" placeholder="Ej: 204122 - Foundry" value="204122" onfocus="this.select()" required>
-                  <datalist id="dl_almacenes"></datalist>
+                  <select class="form-select" id="almacen_origen" required>
+                    <option value="">-- Selecciona Almacén Origen --</option>
+                  </select>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label fw-bold">Locación / Ubicación:</label>
-                  <input type="text" class="form-control" id="locacion_origen" placeholder="Ej: F4RWK" value="F4RWK" required>
+                  <label class="form-label fw-bold">Locación / Ubicación (5 Caracteres):</label>
+                  <input type="text" class="form-control" id="locacion_origen" placeholder="Ej: F4RWK" maxlength="5" minlength="5" style="text-transform:uppercase" oninput="this.value = this.value.toUpperCase()" required>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label fw-bold">Área / Proceso:</label>
-                  <input type="text" class="form-control" id="area" list="dl_areas" placeholder="Ej: Calidad / Foundry" value="Calidad" onfocus="this.select()" required>
+                  <label class="form-label fw-bold">Origen del Defecto:</label>
+                  <input type="text" class="form-control" id="area" list="dl_areas" placeholder="Escribe o selecciona Origen del Defecto" onfocus="this.select()" required>
                   <datalist id="dl_areas"></datalist>
                 </div>
 
@@ -212,15 +212,31 @@
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label fw-bold">Estampa / Inspector:</label>
-                  <input type="text" class="form-control" id="estampa" list="dl_estampas" placeholder="Ej: e2 - Inspector E2" value="e2" onfocus="this.select()">
-                  <datalist id="dl_estampas"></datalist>
+                  <label class="form-label fw-bold">Estampa Inspector:</label>
+                  <select class="form-select" id="estampa" onchange="alSeleccionarEstampa()" required>
+                    <option value="">-- Selecciona Estampa Inspector --</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <label class="form-label fw-bold">Medida de Estampa:</label>
+                  <select class="form-select" id="medida_estampa" onchange="alSeleccionarEstampa()" required>
+                    <option value="Chica">Chica (1/8")</option>
+                    <option value="Mediana" selected>Mediana (1/4")</option>
+                    <option value="Grande">Grande (1/2")</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <label class="form-label fw-bold">Inspector Registrado:</label>
+                  <input type="text" class="form-control" id="inspector_estampa" readonly placeholder="Auto-completado por estampa" style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">No Conformancia (Defecto Principal):</label>
-                  <input type="text" class="form-control" id="no_conformancia" list="dl_defectos" placeholder="Selecciona o escribe el defecto" onfocus="this.select()" required>
-                  <datalist id="dl_defectos"></datalist>
+                  <select class="form-select" id="no_conformancia" required>
+                    <option value="">-- Selecciona No Conformancia / Defecto --</option>
+                  </select>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
@@ -230,16 +246,17 @@
                 </div>
 
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label fw-bold">Operador / Responsable:</label>
-                  <input type="text" class="form-control" id="operador" placeholder="Nombre del inspector/operador" value="Inspector">
+                  <label class="form-label fw-bold">Quien Entrega:</label>
+                  <input type="text" class="form-control" id="operador" placeholder="Nombre de la persona que entrega" required>
                 </div>
 
                 <div class="col-md-6 col-lg-4">
                   <label class="form-label fw-bold">Turno:</label>
-                  <select class="form-select" id="turno">
-                    <option value="1" selected>Turno 1</option>
-                    <option value="2">Turno 2</option>
-                    <option value="3">Turno 3</option>
+                  <select class="form-select" id="turno" required>
+                    <option value="LJDA" selected>LJDA</option>
+                    <option value="LJNC">LJNC</option>
+                    <option value="VSD1">VSD1</option>
+                    <option value="VSD2">VSD2</option>
                   </select>
                 </div>
               </div>
@@ -779,81 +796,2130 @@
 
     // CATÁLOGOS LOCALES BASE
     let DEFAULT_CATALOGOS = {
-      almacenes: [
-        { numero: "201101", nombre: "High Runner Bins - Line 1" },
-        { numero: "201102", nombre: "High Runner Bins - Line 2" },
-        { numero: "201103", nombre: "High Runner Bins - Line 3" },
-        { numero: "201109", nombre: "Sub Assy High Runner Bins" },
-        { numero: "201201", nombre: "High Runner Toasters - Line 1" },
-        { numero: "201202", nombre: "High Runner Toasters - Line 2" },
-        { numero: "201203", nombre: "High Runner Toasters - Line 3" },
-        { numero: "201209", nombre: "Sub Assy High Runner Toasters" },
-        { numero: "201301", nombre: "Low/Mid Runner Toaster Bins" },
-        { numero: "204122", nombre: "Foundry / Almacén Central" }
+      "almacenes": [
+            {
+                  "numero": "201101",
+                  "nombre": "High Runner Bins - Line 1"
+            },
+            {
+                  "numero": "201102",
+                  "nombre": "High Runner Bins - Line 2"
+            },
+            {
+                  "numero": "201103",
+                  "nombre": "High Runner Bins - Line 3"
+            },
+            {
+                  "numero": "201109",
+                  "nombre": "Sub Assy High Runner Bins"
+            },
+            {
+                  "numero": "201201",
+                  "nombre": "High Runner Toasters - Line 1"
+            },
+            {
+                  "numero": "201202",
+                  "nombre": "High Runner Toasters - Line 2"
+            },
+            {
+                  "numero": "201203",
+                  "nombre": "High Runner Toasters - Line 3"
+            },
+            {
+                  "numero": "201209",
+                  "nombre": "Sub Assy High Runner Toasters"
+            },
+            {
+                  "numero": "201301",
+                  "nombre": "Low/Mid Runner Toaster Bins"
+            },
+            {
+                  "numero": "201309",
+                  "nombre": "Sub Assy Low/Mid Toaster Bins"
+            },
+            {
+                  "numero": "201401",
+                  "nombre": "Sabre King Slicers"
+            },
+            {
+                  "numero": "201501",
+                  "nombre": "Smallware Timers"
+            },
+            {
+                  "numero": "201601",
+                  "nombre": "NPD"
+            },
+            {
+                  "numero": "201701",
+                  "nombre": "ACSD"
+            },
+            {
+                  "numero": "201709",
+                  "nombre": "ACSD Sub Assy"
+            },
+            {
+                  "numero": "202101",
+                  "nombre": "Display Tech Work Center"
+            },
+            {
+                  "numero": "204101",
+                  "nombre": "Coils Assembly"
+            },
+            {
+                  "numero": "204121",
+                  "nombre": "Coil Pack  Fabrication"
+            },
+            {
+                  "numero": "204122",
+                  "nombre": "Foundry"
+            },
+            {
+                  "numero": "204123",
+                  "nombre": "Cold Plate Finishing"
+            },
+            {
+                  "numero": "204124",
+                  "nombre": "Pickle/Passivate for Machines"
+            },
+            {
+                  "numero": "204141",
+                  "nombre": "Cold Plate Foaming"
+            },
+            {
+                  "numero": "204143",
+                  "nombre": "Hopper Bonding"
+            },
+            {
+                  "numero": "204161",
+                  "nombre": "Foaming P2 Center"
+            },
+            {
+                  "numero": "204201",
+                  "nombre": "Plastics"
+            },
+            {
+                  "numero": "204221",
+                  "nombre": "Valves"
+            },
+            {
+                  "numero": "204301",
+                  "nombre": "Stand Assembly"
+            },
+            {
+                  "numero": "204302",
+                  "nombre": "Adapter Kit Assembly"
+            },
+            {
+                  "numero": "204321",
+                  "nombre": "Silver King Back Shop Assy"
+            },
+            {
+                  "numero": "204341",
+                  "nombre": "Pump & Motor"
+            },
+            {
+                  "numero": "204361",
+                  "nombre": "Hoses Fabrication"
+            },
+            {
+                  "numero": "204401",
+                  "nombre": "Tanks Fabrication"
+            },
+            {
+                  "numero": "204421",
+                  "nombre": "Agitator Fabrication"
+            },
+            {
+                  "numero": "204441",
+                  "nombre": "Sheet Metal Fabrication"
+            },
+            {
+                  "numero": "204501",
+                  "nombre": "Viper Kits/Carts/Hoses/Tray"
+            },
+            {
+                  "numero": "204502",
+                  "nombre": "Viper Face Plate"
+            },
+            {
+                  "numero": "204504",
+                  "nombre": "Viper Barrel"
+            },
+            {
+                  "numero": "205101",
+                  "nombre": "Ice Cool Assy High runners"
+            },
+            {
+                  "numero": "205121",
+                  "nombre": "Ice Drink Work Center ED1XX"
+            },
+            {
+                  "numero": "205122",
+                  "nombre": "Ice Drink Assy  ED300"
+            },
+            {
+                  "numero": "205123",
+                  "nombre": "Ice Drink Assembly FF/CF"
+            },
+            {
+                  "numero": "205124",
+                  "nombre": "Ice Drink Kits Assembly"
+            },
+            {
+                  "numero": "205126",
+                  "nombre": "Ice Drink Work Center ED2XX"
+            },
+            {
+                  "numero": "205127",
+                  "nombre": "Ice Drink Work Center IDC2XX"
+            },
+            {
+                  "numero": "205141",
+                  "nombre": "IDC PRO Assembly"
+            },
+            {
+                  "numero": "205161",
+                  "nombre": "ABS 2.0 Assembly"
+            },
+            {
+                  "numero": "205202",
+                  "nombre": "Viper Final Assembly"
+            },
+            {
+                  "numero": "205221",
+                  "nombre": "Ice Makers Assembly"
+            },
+            {
+                  "numero": "205241",
+                  "nombre": "OCE Chillers Asembly"
+            },
+            {
+                  "numero": "205301",
+                  "nombre": "Quest Elite Assembly"
+            },
+            {
+                  "numero": "205401",
+                  "nombre": "Majestic Assembly"
+            },
+            {
+                  "numero": "205421",
+                  "nombre": "Cold Wall Assembly"
+            },
+            {
+                  "numero": "205441",
+                  "nombre": "SFA / 27 / 48 Assembly Lines"
+            },
+            {
+                  "numero": "205461",
+                  "nombre": "Chef Base Assembly"
+            },
+            {
+                  "numero": "221101",
+                  "nombre": "Kitting - A"
+            },
+            {
+                  "numero": "221102",
+                  "nombre": "Kitting - B"
+            },
+            {
+                  "numero": "221103",
+                  "nombre": "KS Bulk"
+            },
+            {
+                  "numero": "406610",
+                  "nombre": "Engineering Prototype"
+            },
+            {
+                  "numero": "CONS01",
+                  "nombre": "Rath Gibson Consign WH"
+            },
+            {
+                  "numero": "CSEJNL",
+                  "nombre": "J&L GEAR COMPANY WH"
+            },
+            {
+                  "numero": "CSF001",
+                  "nombre": "Carol Stream Finish Good WH"
+            },
+            {
+                  "numero": "CSF002",
+                  "nombre": "Carol Stream FG estore WH"
+            },
+            {
+                  "numero": "CSF003",
+                  "nombre": "Amazon FBA"
+            },
+            {
+                  "numero": "CSQ001",
+                  "nombre": "Carol Stream Inspection WH"
+            },
+            {
+                  "numero": "CSR001",
+                  "nombre": "Carol Stream Raw Material WH"
+            },
+            {
+                  "numero": "CSV001",
+                  "nombre": "Carol Stream Virtual"
+            },
+            {
+                  "numero": "CSX001",
+                  "nombre": "Carol Stream Returns"
+            },
+            {
+                  "numero": "DTAE01",
+                  "nombre": "ALL AMERICAN EXTRUSION INC WH"
+            },
+            {
+                  "numero": "DTAE02",
+                  "nombre": "ALL AMERICAN RETURNS"
+            },
+            {
+                  "numero": "DTAE03",
+                  "nombre": "ALL AMERICAN VIRTUAL"
+            },
+            {
+                  "numero": "DTAG01",
+                  "nombre": "AIM GRAPHICS WH"
+            },
+            {
+                  "numero": "DTAG02",
+                  "nombre": "AIM GRAPHICS RETURNS"
+            },
+            {
+                  "numero": "DTAG03",
+                  "nombre": "AIM GRAPHICS VIRTUAL"
+            },
+            {
+                  "numero": "DTCP01",
+                  "nombre": "COMMERCIAL PLASTICS WH"
+            },
+            {
+                  "numero": "DTCP02",
+                  "nombre": "COMMERCIAL PLASTICS RETURNS"
+            },
+            {
+                  "numero": "DTCP03",
+                  "nombre": "COMMERCIAL PLASTICS VIRTUAL"
+            },
+            {
+                  "numero": "DTDS01",
+                  "nombre": "DISCOVERY PLASTICS LLC"
+            },
+            {
+                  "numero": "DTDS02",
+                  "nombre": "DISCOVERY PLAST ESTORE WH"
+            },
+            {
+                  "numero": "DTDS03",
+                  "nombre": "DISCOVERY PLAST RETURNS"
+            },
+            {
+                  "numero": "DTDS04",
+                  "nombre": "DISCOVERY PLAST VIRTUAL"
+            },
+            {
+                  "numero": "DTDS05",
+                  "nombre": "DISCOVERY PLAST LIANG CTR"
+            },
+            {
+                  "numero": "DTF001",
+                  "nombre": "DISPLAY TECH FG WAREHOUSE"
+            },
+            {
+                  "numero": "DTF002",
+                  "nombre": "DISPLAY TECH RETURNS"
+            },
+            {
+                  "numero": "DTF003",
+                  "nombre": "DISPLAY TECH VIRTUAL"
+            },
+            {
+                  "numero": "DTHM01",
+                  "nombre": "HUNTER METAL IND, INC"
+            },
+            {
+                  "numero": "DTHM02",
+                  "nombre": "HUNTER METAL RETURNS"
+            },
+            {
+                  "numero": "DTHM03",
+                  "nombre": "HUNTER METAL VIRTUAL"
+            },
+            {
+                  "numero": "DTIN01",
+                  "nombre": "INJECTRON CORPORATION"
+            },
+            {
+                  "numero": "DTIN02",
+                  "nombre": "INJECTRON ESTORE WH"
+            },
+            {
+                  "numero": "DTIN03",
+                  "nombre": "INJECTRON AMAZON FBA"
+            },
+            {
+                  "numero": "DTIN04",
+                  "nombre": "INJECTRON VIRTUAL"
+            },
+            {
+                  "numero": "DTL001",
+                  "nombre": "DT LATAM Miami"
+            },
+            {
+                  "numero": "DTL002",
+                  "nombre": "DT LATAM Laredo"
+            },
+            {
+                  "numero": "DTMM01",
+                  "nombre": "MONTROSE MOLDERS CORP. WH"
+            },
+            {
+                  "numero": "DTMM02",
+                  "nombre": "MONTROSE MOLDERS ESTORE WH"
+            },
+            {
+                  "numero": "DTMM03",
+                  "nombre": "MONTROSE AMAZON FBA"
+            },
+            {
+                  "numero": "DTMM04",
+                  "nombre": "MONTROSE MOLDERS VIRTUAL"
+            },
+            {
+                  "numero": "DTMP01",
+                  "nombre": "MERCURY PLASTICS, INC."
+            },
+            {
+                  "numero": "DTMP02",
+                  "nombre": "MERCURY PLASTICS RETURNS"
+            },
+            {
+                  "numero": "DTMP03",
+                  "nombre": "MERCURY PLASTICS VIRTUAL"
+            },
+            {
+                  "numero": "DTNE01",
+                  "nombre": "NEW ENGLAND WIRE PRODUCTS WH"
+            },
+            {
+                  "numero": "DTNE02",
+                  "nombre": "NEW ENGLAND WIRE RETURNS"
+            },
+            {
+                  "numero": "DTNE03",
+                  "nombre": "NEW ENGLAND WIRE VIRTUAL"
+            },
+            {
+                  "numero": "DTPE01",
+                  "nombre": "PLASTIEXPORTS, LLC"
+            },
+            {
+                  "numero": "DTPE02",
+                  "nombre": "PLASTIEXPORTS RETURNS"
+            },
+            {
+                  "numero": "DTPE03",
+                  "nombre": "PLASTIEXPORTS AMAZON FBA"
+            },
+            {
+                  "numero": "DTPE04",
+                  "nombre": "PLASTIEXPORTS JUAREZ"
+            },
+            {
+                  "numero": "DTUP01",
+                  "nombre": "UMIPLAST PARTNERS LLC WH"
+            },
+            {
+                  "numero": "DTUP02",
+                  "nombre": "UMIPLAST PARTNERS RETURNS"
+            },
+            {
+                  "numero": "DTUP03",
+                  "nombre": "UMIPLAST PARTNERS VIRTUAL"
+            },
+            {
+                  "numero": "LA1F01",
+                  "nombre": "LATAM CDMX Warehouse"
+            },
+            {
+                  "numero": "LA1Q01",
+                  "nombre": "LATAM MX Inspection WH"
+            },
+            {
+                  "numero": "LA1S01",
+                  "nombre": "LATAM MX Service WH"
+            },
+            {
+                  "numero": "LA1SP1",
+                  "nombre": "LATAM COSE Installments"
+            },
+            {
+                  "numero": "LA2F01",
+                  "nombre": "LATAM Miami Warehouse"
+            },
+            {
+                  "numero": "LA2F02",
+                  "nombre": "LATAM World  Warehouse"
+            },
+            {
+                  "numero": "LA2SP1",
+                  "nombre": "LATAM COSE Miami Installments"
+            },
+            {
+                  "numero": "LA3F01",
+                  "nombre": "LATAM Laredo Warehouse"
+            },
+            {
+                  "numero": "LA5F01",
+                  "nombre": "LATAM Tainjin Warehouse"
+            },
+            {
+                  "numero": "MC1C01",
+                  "nombre": "McAllen Cost Mat Warehouse"
+            },
+            {
+                  "numero": "MC1D01",
+                  "nombre": "Donna Mat Warehouse Alcoa"
+            },
+            {
+                  "numero": "MCALP1",
+                  "nombre": "ALPHA PLASTICS"
+            },
+            {
+                  "numero": "MCF001",
+                  "nombre": "McAllen FG Warehouse"
+            },
+            {
+                  "numero": "MCIDL",
+                  "nombre": "McAllen IDL Warehouse"
+            },
+            {
+                  "numero": "MCMECH",
+                  "nombre": "Mechatronic Subcontracting"
+            },
+            {
+                  "numero": "MCMER1",
+                  "nombre": "Promotora Merhen -Pharr TX"
+            },
+            {
+                  "numero": "MCMSC1",
+                  "nombre": "Micro Surfaces Corp"
+            },
+            {
+                  "numero": "MCNEP1",
+                  "nombre": "NEP Electronics"
+            },
+            {
+                  "numero": "MCNS01",
+                  "nombre": "NorthStar Metal"
+            },
+            {
+                  "numero": "MCPART",
+                  "nombre": "Partners Manufacturing"
+            },
+            {
+                  "numero": "MCPRO1",
+                  "nombre": "Proto Labs"
+            },
+            {
+                  "numero": "MCQ001",
+                  "nombre": "McAllen Disposition Area"
+            },
+            {
+                  "numero": "MCR001",
+                  "nombre": "McAllen RM Warehouse"
+            },
+            {
+                  "numero": "MLF001",
+                  "nombre": "Marmon Link FG Warehouse"
+            },
+            {
+                  "numero": "MLQ001",
+                  "nombre": "Marmon Link Quarantine WH"
+            },
+            {
+                  "numero": "RE1C01",
+                  "nombre": "Reynosa PL1 Cost Mat Warehouse"
+            },
+            {
+                  "numero": "RE1C02",
+                  "nombre": "Reynosa PL2 Cost Mat Warehouse"
+            },
+            {
+                  "numero": "RE1CP1",
+                  "nombre": "Reynosa PL1 Cold Plate"
+            },
+            {
+                  "numero": "RE1CPR",
+                  "nombre": "Reynosa PL1 Cold Plate Rack"
+            },
+            {
+                  "numero": "RE1F01",
+                  "nombre": "Reynosa US PL1 FG Warehouse"
+            },
+            {
+                  "numero": "RE1F02",
+                  "nombre": "Reynosa US PL2 FG Warehouse"
+            },
+            {
+                  "numero": "RE1INT",
+                  "nombre": "Reynosa International Ship WH"
+            },
+            {
+                  "numero": "RE1PLS",
+                  "nombre": "Back Shoop Plastic"
+            },
+            {
+                  "numero": "RE1Q01",
+                  "nombre": "Reynosa PL1 Disposition Area"
+            },
+            {
+                  "numero": "RE1Q02",
+                  "nombre": "Reynosa PL2 Disposition Area"
+            },
+            {
+                  "numero": "RE1R01",
+                  "nombre": "Reynosa PL1 Raw Material WH"
+            },
+            {
+                  "numero": "RE1R02",
+                  "nombre": "Reynosa PL2 Raw Material WH"
+            },
+            {
+                  "numero": "RE1S01",
+                  "nombre": "Reynosa US ShopFloor Warehouse"
+            },
+            {
+                  "numero": "RE1SM1",
+                  "nombre": "Reynosa PL1 Sheet Metal"
+            },
+            {
+                  "numero": "RE1VL1",
+                  "nombre": "Reynosa PL1 Valves"
+            },
+            {
+                  "numero": "RE2C01",
+                  "nombre": "Cost WH Plant 1 Tool Crib Stat"
+            },
+            {
+                  "numero": "RE2C02",
+                  "nombre": "Cost WH Plant 2 Tool Crib Stat"
+            },
+            {
+                  "numero": "RE2F01",
+                  "nombre": "**DNU RY Statutory Finished"
+            },
+            {
+                  "numero": "RE2R01",
+                  "nombre": "** DNU RY Statutory Raw"
+            },
+            {
+                  "numero": "RE2W01",
+                  "nombre": "** DNU RY Statutory Cost WH"
+            },
+            {
+                  "numero": "REIDL",
+                  "nombre": "Reynosa IDL Warehouse"
+            },
+            {
+                  "numero": "REIDLF",
+                  "nombre": "Reynosa IDL FG Warehouse"
+            },
+            {
+                  "numero": "RENXFA",
+                  "nombre": "Inventory RENXFAB"
+            },
+            {
+                  "numero": "REVCP",
+                  "nombre": "Reynosa Victory Packaging"
+            },
+            {
+                  "numero": "RYEADV",
+                  "nombre": "ADVANCED PLATING S.A. DE C.V."
+            },
+            {
+                  "numero": "RYEERM",
+                  "nombre": "ELECTRO RECUBRIMIENTOS METALIC"
+            },
+            {
+                  "numero": "RYEMER",
+                  "nombre": "PROMOTORA MERHEN SA DE CV"
+            },
+            {
+                  "numero": "RYEQIS",
+                  "nombre": "QUALITY INDUSTRIAL SOLUTNS LLC"
+            }
       ],
-      areas: [
-        { codigo: "204101", nombre: "Coils Assembly" },
-        { codigo: "204121", nombre: "Coil Pack Fabrication" },
-        { codigo: "204122", nombre: "Foundry" },
-        { codigo: "204123", nombre: "Cold Plate Finishing" },
-        { codigo: "204124", nombre: "Pickle/Passivate for Machines" },
-        { codigo: "204141", nombre: "Cold Plate Foaming" },
-        { codigo: "204143", nombre: "Hopper Bonding" },
-        { codigo: "204161", nombre: "Foaming P2 Center" },
-        { codigo: "204201", nombre: "Plastics" },
-        { codigo: "Calidad", nombre: "Inspección de Calidad" }
+      "areas": [
+            {
+                  "Nombre\t": "204101",
+                  "Descripcion": "Coils Assembly"
+            },
+            {
+                  "Nombre\t": "204121",
+                  "Descripcion": "Coil Pack  Fabrication"
+            },
+            {
+                  "Nombre\t": "204122",
+                  "Descripcion": "Foundry"
+            },
+            {
+                  "Nombre\t": "204123",
+                  "Descripcion": "Cold Plate Finishing"
+            },
+            {
+                  "Nombre\t": "204124",
+                  "Descripcion": "Pickle/Passivate for Machines"
+            },
+            {
+                  "Nombre\t": "204141",
+                  "Descripcion": "Cold Plate Foaming"
+            },
+            {
+                  "Nombre\t": "204143",
+                  "Descripcion": "Hopper Bonding"
+            },
+            {
+                  "Nombre\t": "204161",
+                  "Descripcion": "Foaming P2 Center"
+            },
+            {
+                  "Nombre\t": "204201",
+                  "Descripcion": "Plastics"
+            },
+            {
+                  "Nombre\t": "204221",
+                  "Descripcion": "Valves"
+            },
+            {
+                  "Nombre\t": "204301",
+                  "Descripcion": "Stand Assembly"
+            },
+            {
+                  "Nombre\t": "204302",
+                  "Descripcion": "Adapter Kit Assembly"
+            },
+            {
+                  "Nombre\t": "204321",
+                  "Descripcion": "Silver King Back Shop Assy"
+            },
+            {
+                  "Nombre\t": "204341",
+                  "Descripcion": "Pump & Motor"
+            },
+            {
+                  "Nombre\t": "204361",
+                  "Descripcion": "Hoses Fabrication"
+            },
+            {
+                  "Nombre\t": "204401",
+                  "Descripcion": "Tanks Fabrication"
+            },
+            {
+                  "Nombre\t": "204421",
+                  "Descripcion": "Agitator Fabrication"
+            },
+            {
+                  "Nombre\t": "204441",
+                  "Descripcion": "Sheet Metal Fabrication"
+            },
+            {
+                  "Nombre\t": "204501",
+                  "Descripcion": "Viper Kits/Carts/Hoses/Tray"
+            },
+            {
+                  "Nombre\t": "204502",
+                  "Descripcion": "Viper Face Plate"
+            },
+            {
+                  "Nombre\t": "204504",
+                  "Descripcion": "Viper Barrel"
+            },
+            {
+                  "Nombre\t": "205101",
+                  "Descripcion": "Ice Cool Assy High runners"
+            },
+            {
+                  "Nombre\t": "205121",
+                  "Descripcion": "Ice Drink Work Center ED1XX"
+            },
+            {
+                  "Nombre\t": "205122",
+                  "Descripcion": "Ice Drink Assy  ED300"
+            },
+            {
+                  "Nombre\t": "205123",
+                  "Descripcion": "Ice Drink Assembly FF/CF"
+            },
+            {
+                  "Nombre\t": "205124",
+                  "Descripcion": "Ice Drink Kits Assembly"
+            },
+            {
+                  "Nombre\t": "205126",
+                  "Descripcion": "Ice Drink Work Center ED2XX"
+            },
+            {
+                  "Nombre\t": "205127",
+                  "Descripcion": "Ice Drink Work Center IDC2XX"
+            },
+            {
+                  "Nombre\t": "205141",
+                  "Descripcion": "IDC PRO Assembly"
+            },
+            {
+                  "Nombre\t": "205161",
+                  "Descripcion": "ABS 2.0 Assembly"
+            },
+            {
+                  "Nombre\t": "205202",
+                  "Descripcion": "Viper Final Assembly"
+            },
+            {
+                  "Nombre\t": "205221",
+                  "Descripcion": "Ice Makers Assembly"
+            },
+            {
+                  "Nombre\t": "205241",
+                  "Descripcion": "OCE Chillers Asembly"
+            },
+            {
+                  "Nombre\t": "205301",
+                  "Descripcion": "Quest Elite Assembly"
+            },
+            {
+                  "Nombre\t": "205401",
+                  "Descripcion": "Majestic Assembly"
+            },
+            {
+                  "Nombre\t": "205421",
+                  "Descripcion": "Cold Wall Assembly"
+            },
+            {
+                  "Nombre\t": "205441",
+                  "Descripcion": "SFA / 27 / 48 Assembly Lines"
+            },
+            {
+                  "Nombre\t": "205461",
+                  "Descripcion": "Chef Base Assembly"
+            },
+            {
+                  "Nombre\t": "RE1C01",
+                  "Descripcion": "Reynosa PL1 Cost Mat Warehouse"
+            },
+            {
+                  "Nombre\t": "RE1C02",
+                  "Descripcion": "Reynosa PL2 Cost Mat Warehouse"
+            },
+            {
+                  "Nombre\t": "RE1CP1",
+                  "Descripcion": "Reynosa PL1 Cold Plate"
+            },
+            {
+                  "Nombre\t": "RE1CPR",
+                  "Descripcion": "Reynosa PL1 Cold Plate Rack"
+            },
+            {
+                  "Nombre\t": "RE1F01",
+                  "Descripcion": "Reynosa US PL1 FG Warehouse"
+            },
+            {
+                  "Nombre\t": "RE1F02",
+                  "Descripcion": "Reynosa US PL2 FG Warehouse"
+            },
+            {
+                  "Nombre\t": "RE1INT",
+                  "Descripcion": "Reynosa International Ship WH"
+            },
+            {
+                  "Nombre\t": "RE1PLS",
+                  "Descripcion": "Back Shoop Plastic"
+            },
+            {
+                  "Nombre\t": "RE1Q01",
+                  "Descripcion": "Reynosa PL1 Disposition Area"
+            },
+            {
+                  "Nombre\t": "RE1Q02",
+                  "Descripcion": "Reynosa PL2 Disposition Area"
+            },
+            {
+                  "Nombre\t": "RE1R01",
+                  "Descripcion": "Reynosa PL1 Raw Material WH"
+            },
+            {
+                  "Nombre\t": "RE1R02",
+                  "Descripcion": "Reynosa PL2 Raw Material WH"
+            },
+            {
+                  "Nombre\t": "RE1S01",
+                  "Descripcion": "Reynosa US ShopFloor Warehouse"
+            },
+            {
+                  "Nombre\t": "RE1SM1",
+                  "Descripcion": "Reynosa PL1 Sheet Metal"
+            },
+            {
+                  "Nombre\t": "RE1VL1",
+                  "Descripcion": "Reynosa PL1 Valves"
+            },
+            {
+                  "Nombre\t": "REIDL",
+                  "Descripcion": "Reynosa IDL Warehouse"
+            },
+            {
+                  "Nombre\t": "REIDLF",
+                  "Descripcion": "Reynosa IDL FG Warehouse"
+            },
+            {
+                  "Nombre\t": "RENXFA",
+                  "Descripcion": "Inventory RENXFAB"
+            },
+            {
+                  "Nombre\t": "REVCP",
+                  "Descripcion": "Reynosa Victory Packaging"
+            }
       ],
-      partes: [
-        { codigo: "741000135", descripcion: "C-PLT-ASY 19X21 08VL PTP" },
-        { codigo: "741000136", descripcion: "C-PLT-ASY 19X21 6VLV 3+2+1" },
-        { codigo: "741000150", descripcion: "C-PLT-ASY 13X20 6VLV 3+2+1" },
-        { codigo: "741000201", descripcion: "C-PLT 13X20 06CR PR BARB" },
-        { codigo: "741000202", descripcion: "C-PLT 19X21 1216 PS BRB" },
-        { codigo: "741000241", descripcion: "C-PLT 19X21 0912 PR" },
-        { codigo: "741000243", descripcion: "C-PLT 19X21 1216 PS BARB" },
-        { codigo: "741000244", descripcion: "C-PLT 13X20 12CR PR BARB" },
-        { codigo: "741000327", descripcion: "C-PLT 13X20 12CR PR BARB" }
+      "partes": [
+            {
+                  "codigo": "741000135",
+                  "descripcion": "C-PLT-ASY 19X21 08VL PTP"
+            },
+            {
+                  "codigo": "741000136",
+                  "descripcion": "C-PLT-ASY 19X21 6VLV 3+2+1"
+            },
+            {
+                  "codigo": "741000150",
+                  "descripcion": "C-PLT-ASY 13X20 6VLV 3+2+1"
+            },
+            {
+                  "codigo": "741000201",
+                  "descripcion": "C-PLT 13X20 06CR PR BARB"
+            },
+            {
+                  "codigo": "741000202",
+                  "descripcion": "C-PLT 19X21 1216 PS BRB"
+            },
+            {
+                  "codigo": "741000241",
+                  "descripcion": "C-PLT 19X21 0912 PR"
+            },
+            {
+                  "codigo": "741000243",
+                  "descripcion": "C-PLT 19X21 1216 PS BARB"
+            },
+            {
+                  "codigo": "741000244",
+                  "descripcion": "C-PLT 13X20 12CR PR BARB"
+            },
+            {
+                  "codigo": "741000327",
+                  "descripcion": "C-PLT 13X20 12CR PR BARB"
+            },
+            {
+                  "codigo": "741000344",
+                  "descripcion": "C-PLT 19X21 18  IN DP"
+            },
+            {
+                  "codigo": "741000345",
+                  "descripcion": "C-PLT 19X28 08FL PQ BARB LC"
+            },
+            {
+                  "codigo": "741000379",
+                  "descripcion": "C-PLT 19X21 09CR PR BDBR"
+            },
+            {
+                  "codigo": "741000380",
+                  "descripcion": "C-PLT 13X20 08CR PR BARB"
+            },
+            {
+                  "codigo": "741000381",
+                  "descripcion": "C-PLT 13X20 07CR PR BDRE"
+            },
+            {
+                  "codigo": "741000382",
+                  "descripcion": "C-PLT 19X21 07CR PR BDRE"
+            },
+            {
+                  "codigo": "741000392",
+                  "descripcion": "C-PLT 13X20 10CR"
+            },
+            {
+                  "codigo": "741000393",
+                  "descripcion": "C-PLT 19X21"
+            },
+            {
+                  "codigo": "741000394",
+                  "descripcion": "C-PLT 19X21 6VLV 3+2+1 V-LINE"
+            },
+            {
+                  "codigo": "741000396",
+                  "descripcion": "VAL UF1 LEVER 1.5-3 L/B&CV"
+            },
+            {
+                  "codigo": "741000397",
+                  "descripcion": "Valve UF1 Lever 1.5-3 Complete"
+            },
+            {
+                  "codigo": "741000398",
+                  "descripcion": "VAL UF1 PSHBTN 1.5-3 L/B&CV"
+            },
+            {
+                  "codigo": "741000399",
+                  "descripcion": "Valve UF1 Pushbutton 1.5-3Oz Complete"
+            },
+            {
+                  "codigo": "741000400",
+                  "descripcion": "Valve UF1 Portion Control 1 5-3Oz Less Block Cover"
+            },
+            {
+                  "codigo": "741000401",
+                  "descripcion": "Valve UF1 Portion Control 1.5-3 Complete"
+            },
+            {
+                  "codigo": "741000402",
+                  "descripcion": "VAL UF1 SSRLVR 1.5-3 L/B&CV"
+            },
+            {
+                  "codigo": "741000403",
+                  "descripcion": "Valve UF1 Sani Lever 1.5-3 Complete"
+            },
+            {
+                  "codigo": "741000406",
+                  "descripcion": "VAL UF1 PSHBTN 1.5-3 JUICE"
+            },
+            {
+                  "codigo": "741000407",
+                  "descripcion": "VAL UF1 SSRLVR 1.5-3 JUICE"
+            },
+            {
+                  "codigo": "741000408",
+                  "descripcion": "VAL UF1 SSRLVR 1.5-3 JUICCO"
+            },
+            {
+                  "codigo": "741000412",
+                  "descripcion": "C-PLT 19X21 P/C 2323 PREMIUM"
+            },
+            {
+                  "codigo": "741000500",
+                  "descripcion": "P- NPD- C-PLT FOR M-SERIESS"
+            },
+            {
+                  "codigo": "741000510",
+                  "descripcion": "C-PLT 13X20 08CR TW BARB"
+            },
+            {
+                  "codigo": "741000514",
+                  "descripcion": "Valve UF1 VFCB Fill"
+            },
+            {
+                  "codigo": "741000520",
+                  "descripcion": "P- NPD- C-PLT 19X21 12FL CB2323 2.0"
+            },
+            {
+                  "codigo": "741000521",
+                  "descripcion": "P- NPD- C-PLT 19X21 8FL CB23232"
+            },
+            {
+                  "codigo": "741000523",
+                  "descripcion": "P- NPD- C-PLT 19X21 8FL CB2323"
+            },
+            {
+                  "codigo": "741000544",
+                  "descripcion": "C-PLT 19 X 21 6FL FOR CB2323 PLUS"
+            },
+            {
+                  "codigo": "620407015",
+                  "descripcion": "C-PLT 19X20 08FL IT BARB 2F"
+            },
+            {
+                  "codigo": "620407016",
+                  "descripcion": "C-PLT 19X20 6FL IT BARB 2F"
+            },
+            {
+                  "codigo": "620407044",
+                  "descripcion": "C-PLT 19X28 14FL PS BARB"
+            },
+            {
+                  "codigo": "620407057",
+                  "descripcion": "C-PLT 19X28 (3) LAYER 10FL-IDC2XX"
+            },
+            {
+                  "codigo": "620407058",
+                  "descripcion": "C-PLT 19X28 (2) LAYER 08FL-IDC2XX"
+            },
+            {
+                  "codigo": "620407062",
+                  "descripcion": "C-PLT 19X28 (4) LAYER 12FL-IDC2XX /A&W"
+            },
+            {
+                  "codigo": "620407082",
+                  "descripcion": "C-PLT FOAMED ASY 19 X 28 8FL PS BARB 2LAYER"
+            },
+            {
+                  "codigo": "620407083",
+                  "descripcion": "C-PLT FOAMED ASY 19X28 12FL-IDC2XX/A& W(ECO-MATE)"
+            },
+            {
+                  "codigo": "620407084",
+                  "descripcion": "C-PLT FOAMED ASY 19X28 10FL-IDC2XX(EC O-MATE)"
+            },
+            {
+                  "codigo": "620407085",
+                  "descripcion": "C-PLT FOAMED ASY 19X28 14FL PS"
+            },
+            {
+                  "codigo": "620407098",
+                  "descripcion": "C-PLT ASY FOAMED 6V 19X20 HICARB ECOMATE"
+            },
+            {
+                  "codigo": "620407099",
+                  "descripcion": "C-PLT ASY FOAMED 8V 19X20 HICARB ECOMATE"
+            },
+            {
+                  "codigo": "77510500",
+                  "descripcion": "C-Plt 08x14 2fl Pr L Fg"
+            },
+            {
+                  "codigo": "77511001",
+                  "descripcion": "C-Plt 08x14 7fl Pr 7 16."
+            },
+            {
+                  "codigo": "77511000",
+                  "descripcion": "C-Plt 08x14 7fl Pr L Fg"
+            },
+            {
+                  "codigo": "77511601",
+                  "descripcion": "C-PLT 10X15 6FL PR 7/16"
+            },
+            {
+                  "codigo": "77511700",
+                  "descripcion": "C-Plt 10x15 6fl Ps Less Fitgs"
+            },
+            {
+                  "codigo": "77511701",
+                  "descripcion": "C-Plt 10x15 6fl Ps With Fitgs."
+            },
+            {
+                  "codigo": "771000177",
+                  "descripcion": "C-Plt 12x18 07fl Ps Less Fitgs"
+            },
+            {
+                  "codigo": "771000296",
+                  "descripcion": "C-Plt 13x20 08cr Ps Barb C"
+            },
+            {
+                  "codigo": "620063285",
+                  "descripcion": "C-PLT 18X28 8FL PS BARB"
+            },
+            {
+                  "codigo": "41323",
+                  "descripcion": "C-PLT 19X20 (4) LAYER 06FL-DF"
+            },
+            {
+                  "codigo": "620401501",
+                  "descripcion": "C-PLT 19X20 08FL  BARB"
+            },
+            {
+                  "codigo": "620401201",
+                  "descripcion": "C-PLT 19X20 11FL  BARB"
+            },
+            {
+                  "codigo": "41269",
+                  "descripcion": "C-PLT 19X20 6 FLVR. REMCOR"
+            },
+            {
+                  "codigo": "41285",
+                  "descripcion": "C-PLT 19X28 (3) LAYER 08FL-DF"
+            },
+            {
+                  "codigo": "41286",
+                  "descripcion": "C-PLT 19X28 (4) LAYER 10FL-DF"
+            },
+            {
+                  "codigo": "620064215",
+                  "descripcion": "C-PLT 19X28 10 FL ED 2XX COKE"
+            },
+            {
+                  "codigo": "620074373",
+                  "descripcion": "C-PLT 19X28 12FL PS BARB 4 WTR VLV"
+            },
+            {
+                  "codigo": "620064214",
+                  "descripcion": "C-PLT 19X28 8 FL ED 2XX COKE"
+            },
+            {
+                  "codigo": "630990006",
+                  "descripcion": "C-PLT 19X28 COKE 08FL PS BARBLC 18 CB3023"
+            },
+            {
+                  "codigo": "77510303",
+                  "descripcion": "C-Plt 8x12 6Fl Premix 1/4Bb"
+            },
+            {
+                  "codigo": "77510301",
+                  "descripcion": "C-Plt 8x12 6Fl Premix 1/4MFL"
+            },
+            {
+                  "codigo": "77510300",
+                  "descripcion": "C-Plt 8x12 6Fl Premix w/o Fitg"
+            },
+            {
+                  "codigo": "77511002",
+                  "descripcion": "C-Plt 8x14 7Fl Premix 5/16MFL"
+            },
+            {
+                  "codigo": "620074636",
+                  "descripcion": "C-PLT ABS 2.0 BASE ASSY FOAMED W/COVER - JAPAN"
+            },
+            {
+                  "codigo": "620065020X",
+                  "descripcion": "C-PLT ABS 2.0 BASE ASY FOAMEDW/ COVER (PHANTOM)"
+            },
+            {
+                  "codigo": "742000029",
+                  "descripcion": "C-PLT ABS BASE ASSY FOAMED 620401301 W/COVER"
+            },
+            {
+                  "codigo": "620066073",
+                  "descripcion": "C-PLT ASSY DT175"
+            },
+            {
+                  "codigo": "41310",
+                  "descripcion": "C-PLT ASY FOAMED 08FL"
+            },
+            {
+                  "codigo": "620401601",
+                  "descripcion": "C-PLT ASY FOAMED 08FL"
+            },
+            {
+                  "codigo": "41309",
+                  "descripcion": "C-PLT ASY FOAMED 10FL"
+            },
+            {
+                  "codigo": "41308",
+                  "descripcion": "C-PLT ASY FOAMED 3+1+1+3"
+            },
+            {
+                  "codigo": "620061985",
+                  "descripcion": "C-PLT BASE ASSY PRO RF255"
+            },
+            {
+                  "codigo": "742000003",
+                  "descripcion": "C-PLT BASE ED 150 ICE & BEVERAGE ONLY"
+            },
+            {
+                  "codigo": "742000076",
+                  "descripcion": "C-PLT BASE ED 150 ICE & BEVERAGE ONLY WO PACK"
+            },
+            {
+                  "codigo": "742000010",
+                  "descripcion": "C-PLT BASE ED2XX ICE & BEVERAGE ONLY"
+            },
+            {
+                  "codigo": "742000105",
+                  "descripcion": "C-PLT BASE ED2XX ICE & BEVERAGE ONLY W/O PACK"
+            },
+            {
+                  "codigo": "742000018",
+                  "descripcion": "C-PLT BASE ED300 SM ICE & BEVERAGE ONLY"
+            },
+            {
+                  "codigo": "742000120",
+                  "descripcion": "C-PLT BASE ED300 SM ICE & BEVERAGE ONLY W/O PACK"
+            },
+            {
+                  "codigo": "620064929",
+                  "descripcion": "C-PLT COVER ED175 - INJ MOLD"
+            },
+            {
+                  "codigo": "742000036",
+                  "descripcion": "C-Plt ED2XX Base Asy Fmd w Cvr1310 W/COVER"
+            },
+            {
+                  "codigo": "620074639",
+                  "descripcion": "C-PLT FOAMED ASM ACSD"
+            },
+            {
+                  "codigo": "742000153",
+                  "descripcion": "C-PLT VAL ASY 6UF1SL 2UFBSL HI YIELD"
+            },
+            {
+                  "codigo": "29311",
+                  "descripcion": "C-PLT VAL ASY FOAMED 06FL"
+            },
+            {
+                  "codigo": "742000161",
+                  "descripcion": "C-PLT VALVE ASY PRO FR255 WO PACK"
+            },
+            {
+                  "codigo": "620063286",
+                  "descripcion": "C-PLT-ASY FOAMED 18X28 8FL"
+            }
       ],
-      estampas: [
-        { codigo: "F", usuario: "Juan Ramos San Martin", medida: "GRANDE" },
-        { codigo: "X", usuario: "Inocente Lopez Solis", medida: "GRANDE" },
-        { codigo: "R", usuario: "Hermenegildo Rodriguez", medida: "GRANDE" },
-        { codigo: "C5", usuario: "Gabriel Jerez Del Angel", medida: "CHICA" },
-        { codigo: "8", usuario: "Samuel Cruz Cervantes", medida: "MED" },
-        { codigo: "P", usuario: "Juan Bermudez", medida: "MED" },
-        { codigo: "N", usuario: "Gustavo Codallos Cervantes", medida: "MED" },
-        { codigo: "W", usuario: "Mateo Reyes Guerra", medida: "MED" },
-        { codigo: "e2", usuario: "Inspector E2", medida: "ESTÁNDAR" }
+      "estampas": [
+            {
+                  "codigo": "F",
+                  "usuario": "Juan Ramos San Martin",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "X",
+                  "usuario": "Inocente Lopez Solis",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "R",
+                  "usuario": "Hermenegildo Rodriguez",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "X",
+                  "usuario": "Mario Alberto Jimenez",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "C5",
+                  "usuario": "Gabriel Jerez Del Angel",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "8",
+                  "usuario": "Samuel Cruz Cervantes",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "P",
+                  "usuario": "Juan Bermudez",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "N",
+                  "usuario": "Gustavo Codallos Cervantes",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "W",
+                  "usuario": "Mateo Reyes Guerra",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "6",
+                  "usuario": "Raymundo Borjas Maldonado",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "B5",
+                  "usuario": "Efraín Ochoa Espinoza",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "A",
+                  "usuario": "Leonardo Hernandez Ramirez",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "C",
+                  "usuario": "Constantino Santes Rosales",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "0",
+                  "usuario": "Joel López Florez",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "6",
+                  "usuario": "Juan Daniel Uzcanga Leyba",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "K",
+                  "usuario": "Marco Antonio Garcia",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "Y",
+                  "usuario": "Rigo Adalberto Ruiz",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "&",
+                  "usuario": "Abisai Nicolas Lopez",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "D1",
+                  "usuario": "Jose Angel Hernandez Escobar",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "J",
+                  "usuario": "Tomas hernadez Carreño",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "B",
+                  "usuario": "Cristian Daniel Ponce Medina",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "7",
+                  "usuario": "Roman Sierra",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "E2",
+                  "usuario": "Walter Merida Santiago",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "2",
+                  "usuario": "Héctor David Martinez Quintero",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "D",
+                  "usuario": "Alexander Citalan Espinoza",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "8",
+                  "usuario": "Samuel Cruz Cervantes /",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "Z",
+                  "usuario": "Miguel Angel Martinez Mtz /",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "P",
+                  "usuario": "Juan Manuel Bermudez  /",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "T",
+                  "usuario": "Miguel Rueda Arias  /",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "1",
+                  "usuario": "Gustavo Codallos Cervantes //",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "R",
+                  "usuario": "Otoniel Reyes Morato ///",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "C1",
+                  "usuario": "Jose Guadalupe Izaguirre Chavarria",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "W",
+                  "usuario": "Juan Bermudez",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "C4",
+                  "usuario": "Miguel Sarmiento Portillo",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "&",
+                  "usuario": "Alejandro Maria Lopez",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "4",
+                  "usuario": "Saul Sanchez Hernandez",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "S",
+                  "usuario": "Mario Santiago Hernandez",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "7",
+                  "usuario": "Carlos Alberto Hernandez Malpica",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "N/A",
+                  "usuario": "Juan Jose Cano Hdz",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "5",
+                  "usuario": "Francisco Santiago Hdz",
+                  "medida": "GRANDE"
+            },
+            {
+                  "codigo": "G4",
+                  "usuario": "Maurilio Inocencio Anastacio",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "&",
+                  "usuario": "Oscar Rene Dorantes",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "11",
+                  "usuario": "Luis Francisco Morales Martinez",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "1",
+                  "usuario": "Gustabo Codallos Cervantes",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "2",
+                  "usuario": "Miguel Angel Marquez Glz",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "K",
+                  "usuario": "Gildardo Cruz Rubio //",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "Q",
+                  "usuario": "Enrique Candanoza Hernandez //",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "M",
+                  "usuario": "Roman Eduardo Orozco //",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "C4",
+                  "usuario": "Miguel Sarmiento Portilla //",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "6RAYADA",
+                  "usuario": "Elias Rueda Rdz",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "A1",
+                  "usuario": "Jesus Vicente valencia",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "1RAYADA",
+                  "usuario": "Carlos García Sanchez",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "Z",
+                  "usuario": "Julio Cesar Garcia Perez",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "R",
+                  "usuario": "Raul Ramirez Muñoz",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "XSIMBOLO",
+                  "usuario": "Jose Antonio Balderas Mtz",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "E1",
+                  "usuario": "Luis Ricardo Glz Mendez",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "U",
+                  "usuario": "Mario Maldonado García",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "D1",
+                  "usuario": "Jesus Citalan Espinosa",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "G2",
+                  "usuario": "Fernando Jimenez Vidal",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "3",
+                  "usuario": "Pedro Hernandez Estrada",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "L",
+                  "usuario": "Valentin Hernandez Vicencio",
+                  "medida": "MED"
+            },
+            {
+                  "codigo": "S",
+                  "usuario": "Sotero Sebastian Hdz",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "L",
+                  "usuario": "Raul Vazquez Morales ///",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "s",
+                  "usuario": "Sotero Sebastian Hdz /",
+                  "medida": "CHICA"
+            },
+            {
+                  "codigo": "O",
+                  "usuario": "Marco Antonio Perez Vazquez ///",
+                  "medida": "CHICA"
+            }
       ],
-      defectos: [
-        { codigo: "C39", nombre: "Ajuste de proceso" },
-        { codigo: "132", nombre: "falla de maquina" },
-        { codigo: "2", nombre: "CORAZON DE ARENA ROTO" },
-        { codigo: "167", nombre: "Entrenamiento" },
-        { codigo: "F11", nombre: "Linea expuesta en cara de hielo" },
-        { codigo: "F13", nombre: "fuga en la rosca" },
-        { codigo: "F14", nombre: "Linea quebrada" },
-        { codigo: "F18", nombre: "Mal maquinado" },
-        { codigo: "F22", nombre: "WORKMANSHIP/HABIL DE OPERADOR." }
+      "defectos": [
+            {
+                  "codigo": "C39",
+                  "nombre": "Ajuste de  proceso"
+            },
+            {
+                  "codigo": "132",
+                  "nombre": "falla de maquina"
+            },
+            {
+                  "codigo": "2",
+                  "nombre": "CORAZON DE ARENA ROTO"
+            },
+            {
+                  "codigo": "167",
+                  "nombre": "Entrenamiento"
+            },
+            {
+                  "codigo": "F11",
+                  "nombre": "Linea expuesta en cara de hielo"
+            },
+            {
+                  "codigo": "F13",
+                  "nombre": "fuga en la rosca"
+            },
+            {
+                  "codigo": "F14",
+                  "nombre": "Linea quebrada"
+            },
+            {
+                  "codigo": "F18",
+                  "nombre": "Mal maquinado"
+            },
+            {
+                  "codigo": "F22",
+                  "nombre": "WORKMANHIP/HABIL DE OPERADOR."
+            },
+            {
+                  "codigo": "F7",
+                  "nombre": "Linea pinchada por inserto"
+            },
+            {
+                  "codigo": "F8",
+                  "nombre": "Linea pinchada por manejo/transporte"
+            },
+            {
+                  "codigo": "f3",
+                  "nombre": "Tiro corto/Lineas expuestas"
+            },
+            {
+                  "codigo": "25",
+                  "nombre": "FITTING DESGASTADO POR PASIVADO"
+            },
+            {
+                  "codigo": "27",
+                  "nombre": "MAL PRENSADO"
+            },
+            {
+                  "codigo": "C31",
+                  "nombre": "Linea escalonada"
+            },
+            {
+                  "codigo": "18",
+                  "nombre": "MAL MAQUINADO"
+            },
+            {
+                  "codigo": "16",
+                  "nombre": "LINEA EXPUESTA EN RISER"
+            },
+            {
+                  "codigo": "20",
+                  "nombre": "LINEAS TAPADAS POR ALUMINIO"
+            },
+            {
+                  "codigo": "26",
+                  "nombre": "MAL TALADRADO"
+            },
+            {
+                  "codigo": "28",
+                  "nombre": "mal acomodo de corazon de arena"
+            },
+            {
+                  "codigo": "32",
+                  "nombre": "LINEA PINCHADA KOMO/END"
+            },
+            {
+                  "codigo": "5",
+                  "nombre": "LINEA PINCHADA POR HERRAMIENTA POR LINEA CORTA"
+            },
+            {
+                  "codigo": "6",
+                  "nombre": "LINEA PINCHADA POR PIN"
+            },
+            {
+                  "codigo": "110",
+                  "nombre": "IB/IC-PRUEBAS SOLDADURA SPOT"
+            },
+            {
+                  "codigo": "55",
+                  "nombre": "Sobrante"
+            },
+            {
+                  "codigo": "57",
+                  "nombre": "External supplier"
+            },
+            {
+                  "codigo": "143",
+                  "nombre": "Linea pinchada en Pneuform"
+            },
+            {
+                  "codigo": "140",
+                  "nombre": "OBSOLETE // OBSOLETO"
+            },
+            {
+                  "codigo": "146",
+                  "nombre": "Linea pinchada en doblez"
+            },
+            {
+                  "codigo": "LDAÑO",
+                  "nombre": "LINEA DAÑADA"
+            },
+            {
+                  "codigo": "30",
+                  "nombre": "LINEAS ATORADA EN MAQUINA KOMO"
+            },
+            {
+                  "codigo": "152",
+                  "nombre": "PORES/ POROS"
+            },
+            {
+                  "codigo": "21",
+                  "nombre": "LINEA CON POCO FLUJO DE AIRE"
+            },
+            {
+                  "codigo": "44",
+                  "nombre": "LINEA PINCHADA HERRAMENTAL"
+            },
+            {
+                  "codigo": "58",
+                  "nombre": "Linea pinchada por herramienta"
+            },
+            {
+                  "codigo": "48",
+                  "nombre": "DESPRENDIMIENTO DE VARILLA-VARILLA"
+            },
+            {
+                  "codigo": "9",
+                  "nombre": "LINEA PINCHADA EN DOBLEZ"
+            },
+            {
+                  "codigo": "MM",
+                  "nombre": "Mal maquinado"
+            },
+            {
+                  "codigo": "FI",
+                  "nombre": "Fuga interna"
+            },
+            {
+                  "codigo": "150",
+                  "nombre": "PLTFRM-RETRABAJO OTRO DEFECTO"
+            },
+            {
+                  "codigo": "183",
+                  "nombre": "Lineas atorada en maquina komo"
+            },
+            {
+                  "codigo": "43",
+                  "nombre": "HERRAMENTAL DAÑADO"
+            },
+            {
+                  "codigo": "12",
+                  "nombre": "FUGA EN EL DRENAJE"
+            },
+            {
+                  "codigo": "C32",
+                  "nombre": "Linea pinchada"
+            },
+            {
+                  "codigo": "53",
+                  "nombre": "ENG VALIDATION/ VALIDACION ING"
+            },
+            {
+                  "codigo": "DT",
+                  "nombre": "DRENAJE TAPADO"
+            },
+            {
+                  "codigo": "LE",
+                  "nombre": "Tiro corto/Lineas expuestas"
+            },
+            {
+                  "codigo": "LT",
+                  "nombre": "LINEA TAPADA"
+            },
+            {
+                  "codigo": "95",
+                  "nombre": "FOUNDRY/LINEA PINCHADA CINCEL"
+            },
+            {
+                  "codigo": "136",
+                  "nombre": "MISSING OPER/OPERACION OMITIDA"
+            },
+            {
+                  "codigo": "86",
+                  "nombre": "Linea pinchada por manejo/transporte"
+            },
+            {
+                  "codigo": "F5",
+                  "nombre": "Linea pinchada por herramienta"
+            },
+            {
+                  "codigo": "F20",
+                  "nombre": "Fuga interna"
+            },
+            {
+                  "codigo": "F6",
+                  "nombre": "Linea pinchada por pin"
+            },
+            {
+                  "codigo": "168",
+                  "nombre": "Entrenamiento"
+            },
+            {
+                  "codigo": "F19",
+                  "nombre": "Linea expuesta en cara de hielo (Hass)"
+            },
+            {
+                  "codigo": "F10",
+                  "nombre": "Linea pinchada por hass"
+            },
+            {
+                  "codigo": "F15",
+                  "nombre": "Linea expuesta en drenaje"
+            },
+            {
+                  "codigo": "F16",
+                  "nombre": "Linea expuesta en riser"
+            },
+            {
+                  "codigo": "F9",
+                  "nombre": "Linea pinchada en doblez"
+            },
+            {
+                  "codigo": "F17",
+                  "nombre": "Mal corte en sierra"
+            },
+            {
+                  "codigo": "F12",
+                  "nombre": "Fuga en el drenaje"
+            },
+            {
+                  "codigo": "135",
+                  "nombre": "MARKED TUBE/T.MARCADO PNEUFORM"
+            },
+            {
+                  "codigo": "C38",
+                  "nombre": "falla de maquina"
+            },
+            {
+                  "codigo": "F23",
+                  "nombre": "Fuga interna por soldadura de fundición"
+            },
+            {
+                  "codigo": "C36",
+                  "nombre": "Sobrante"
+            },
+            {
+                  "codigo": "C40",
+                  "nombre": "Entrenamiento"
+            },
+            {
+                  "codigo": "C42",
+                  "nombre": "Desempeño (No cumple contra dibujo)"
+            },
+            {
+                  "codigo": "C44",
+                  "nombre": "Linea pinchada por herramienta"
+            },
+            {
+                  "codigo": "C30",
+                  "nombre": "Lineas atorada en maquina komo"
+            },
+            {
+                  "codigo": "C33",
+                  "nombre": "Linea rayada M komo"
+            },
+            {
+                  "codigo": "C43",
+                  "nombre": "Herramental dañado"
+            },
+            {
+                  "codigo": "C37",
+                  "nombre": "External supplier"
+            },
+            {
+                  "codigo": "C35",
+                  "nombre": "Enredado en enderezadora"
+            },
+            {
+                  "codigo": "C34",
+                  "nombre": "Rayado en enderezadora"
+            },
+            {
+                  "codigo": "C41",
+                  "nombre": "Linea pinchada en Pneuform"
+            },
+            {
+                  "codigo": "C49",
+                  "nombre": "Línea cruzada"
+            },
+            {
+                  "codigo": "F4",
+                  "nombre": "Falla en el robot"
+            },
+            {
+                  "codigo": "C66",
+                  "nombre": "N/D"
+            },
+            {
+                  "codigo": "F21",
+                  "nombre": "Linea con poco flujo de aire"
+            },
+            {
+                  "codigo": "C47",
+                  "nombre": "Desprendimiento de stand off"
+            },
+            {
+                  "codigo": "C50",
+                  "nombre": "Pruebas de ingenieria"
+            },
+            {
+                  "codigo": "C45",
+                  "nombre": "Linea corrugada"
+            },
+            {
+                  "codigo": "50",
+                  "nombre": "PRUEBA DE INGENIERÍA"
+            },
+            {
+                  "codigo": "7",
+                  "nombre": "LINEA PINCHADA POR INSERTO"
+            },
+            {
+                  "codigo": "8",
+                  "nombre": "LINEA PINCHADA POR MANEJO/TRANSPORTE"
+            },
+            {
+                  "codigo": "3",
+                  "nombre": "TIRO CORTO"
+            },
+            {
+                  "codigo": "13",
+                  "nombre": "FUGA INTERNA POR MAL CIERRE SOLDADURA  (SPLICER,MANIFOLD, TUBO )"
+            },
+            {
+                  "codigo": "11",
+                  "nombre": "LINEA EXPUESTA EN CARA DE HIELO"
+            },
+            {
+                  "codigo": "39",
+                  "nombre": "AJUSTE DE  PROCESO   (EQUIPO)"
+            },
+            {
+                  "codigo": "38",
+                  "nombre": "FALLA DE MAQUINA"
+            },
+            {
+                  "codigo": "34",
+                  "nombre": "RAYADO EN ENDEREZADORA"
+            },
+            {
+                  "codigo": "35",
+                  "nombre": "ENREDADO EN ENDEREZADORA"
+            },
+            {
+                  "codigo": "31",
+                  "nombre": "LINEA ESCALONADA"
+            },
+            {
+                  "codigo": "36",
+                  "nombre": "SOBRANTE"
+            },
+            {
+                  "codigo": "40",
+                  "nombre": "ENTRENAMIENTO"
+            },
+            {
+                  "codigo": "42",
+                  "nombre": "DESEMPEÑO (NO CUMPLE CONTRA DIBUJO)"
+            },
+            {
+                  "codigo": "41",
+                  "nombre": "LINEA PINCHADA EN PNEUFORM"
+            },
+            {
+                  "codigo": "14",
+                  "nombre": "LINEAS EXPUESTAS EN LA PARTE DE ABAJO."
+            },
+            {
+                  "codigo": "37",
+                  "nombre": "EXTERNAL SUPPLIER"
+            },
+            {
+                  "codigo": "22",
+                  "nombre": "DESEMPEÑO DE TRABAJO"
+            },
+            {
+                  "codigo": "10",
+                  "nombre": "LINEA PINCHADA EN PROCESO DE MAQUINADO"
+            },
+            {
+                  "codigo": "AL55",
+                  "nombre": "CHORREADURA ALUMINIO"
+            },
+            {
+                  "codigo": "17",
+                  "nombre": "MAL CORTE EN SIERRA"
+            },
+            {
+                  "codigo": "33",
+                  "nombre": "LINEA RAYADA M KOMO"
+            },
+            {
+                  "codigo": "19",
+                  "nombre": "LINEA EXPUESTA EN CARA DE HIELO (HASS)"
+            },
+            {
+                  "codigo": "1",
+                  "nombre": "PLATO QUEBRADO/AGRIETADO"
+            },
+            {
+                  "codigo": "23",
+                  "nombre": "FUGA INTERNA POR SOLDADURA DE FUNDICION"
+            },
+            {
+                  "codigo": "F2",
+                  "nombre": "Corazon de arena roto"
+            },
+            {
+                  "codigo": "15",
+                  "nombre": "LINEAS CRUZADAS"
+            }
       ],
-      defectosSecundarios: [
-        { codigo: "a", nombre: "DRENAJE CON REBABA DE SOLDADURA" },
-        { codigo: "b", nombre: "FALTA DE PASTA EN EL DRENAJE" },
-        { codigo: "c", nombre: "DRENAJE DESALINEADO" },
-        { codigo: "d", nombre: "PLATO NO ENTRA EN EL MOLDE DE FOAM" },
-        { codigo: "e", nombre: "REBABA EN EL RAISER" },
-        { codigo: "f", nombre: "FALTA DE PASTA EN RAISER" },
-        { codigo: "g", nombre: "EXCESO DE PASTA EN DRENAJE" },
-        { codigo: "h", nombre: "RAEABA DE ALUMINIO EN LINEAS DE SALIDA" },
-        { codigo: "i", nombre: "ROSCA DEL DRENAJE TAPADA CON PASTA" }
+      "defectosSecundarios": [
+            {
+                  "codigo": "a",
+                  "nombre": "DRENAJE CON REBABA DE SOLDADURA"
+            },
+            {
+                  "codigo": "b",
+                  "nombre": "FALTA DE PASTA EN EL DRENAJE"
+            },
+            {
+                  "codigo": "c",
+                  "nombre": "DRENAJE DESALINEADO"
+            },
+            {
+                  "codigo": "d",
+                  "nombre": "PLATO NO ENTRA EN EL MOLDE DE FOAM"
+            },
+            {
+                  "codigo": "e",
+                  "nombre": "REBABA EN EL RAISER"
+            },
+            {
+                  "codigo": "f",
+                  "nombre": "FALTA DE PASTA EN RAISER"
+            },
+            {
+                  "codigo": "g",
+                  "nombre": "EXCESO DE PASTA EN DRENAJE"
+            },
+            {
+                  "codigo": "h",
+                  "nombre": "RAEABA DE ALUMINIO EN LINEAS DE SALIDA"
+            },
+            {
+                  "codigo": "i",
+                  "nombre": "ROSCA DEL DRENAJE TAPADA CON PASTA"
+            },
+            {
+                  "codigo": "j",
+                  "nombre": "LINEA PINCHADA"
+            },
+            {
+                  "codigo": "l",
+                  "nombre": "LINEAS SUCIAS"
+            },
+            {
+                  "codigo": "k",
+                  "nombre": "sin texto en transfer"
+            },
+            {
+                  "codigo": "m",
+                  "nombre": "EXCESO DE PASTA"
+            },
+            {
+                  "codigo": "n",
+                  "nombre": "FITTING DANADOS POR PASIVADO"
+            },
+            {
+                  "codigo": "o",
+                  "nombre": "PANEL DESALINEADO"
+            },
+            {
+                  "codigo": "p",
+                  "nombre": "LINEAS MAL DOBLADAS"
+            },
+            {
+                  "codigo": "q",
+                  "nombre": "AGITADOR DOBLADO"
+            },
+            {
+                  "codigo": "r",
+                  "nombre": "FUGA EN FITTING"
+            },
+            {
+                  "codigo": "s",
+                  "nombre": "Falta de rebabeo en drenaje"
+            }
       ],
-      medidas: [
-        { nombre: "CHICA", valor: "Small" },
-        { nombre: "MED", valor: "Medium" },
-        { nombre: "GRANDE", valor: "Large" },
-        { nombre: "ESTÁNDAR", valor: "Standard" }
+      "medidas": [
+            {
+                  "nombre": "Chica",
+                  "valor": "1/8"
+            },
+            {
+                  "nombre": "Mediana",
+                  "valor": "1/4"
+            },
+            {
+                  "nombre": "Grande",
+                  "valor": "1/2"
+            }
       ]
-    };
+};
 
     let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS')) || DEFAULT_CATALOGOS;
 
@@ -1133,14 +3199,107 @@ function formatearItemCatalogo(x) {
       });
     }
 
+        function poblarSelect(idSelect, items, keyCod, keyNom, placeholder) {
+      const sel = document.getElementById(idSelect);
+      if (!sel) return;
+      const currentVal = sel.value;
+      sel.innerHTML = placeholder ? `<option value="">${placeholder}</option>` : '';
+      
+      if (Array.isArray(items)) {
+        const seen = new Set();
+        items.forEach(function(val) {
+          let code = '', name = '';
+          if (typeof val === 'string') {
+            code = val.trim();
+            name = val.trim();
+          } else if (typeof val === 'object' && val !== null) {
+            code = (val[keyCod] || val.numero || val.codigo || val.id || '').toString().trim();
+            name = (val[keyNom] || val.nombre || val.descripcion || val.usuario || code).toString().trim();
+          }
+          if (code && !seen.has(code.toUpperCase())) {
+            seen.add(code.toUpperCase());
+            const opt = document.createElement('option');
+            opt.value = code;
+            opt.textContent = (name && name !== code) ? `${code} - ${name}` : code;
+            sel.appendChild(opt);
+          }
+        });
+      }
+      if (currentVal) sel.value = currentVal;
+    }
+
+    function alSeleccionarEstampa() {
+      const estampaElem = document.getElementById('estampa');
+      const medidaElem = document.getElementById('medida_estampa');
+      const inspInput = document.getElementById('inspector_estampa');
+      if (!estampaElem || !inspInput) return;
+
+      const estampaVal = estampaElem.value.trim().toUpperCase();
+      const medidaVal = medidaElem ? medidaElem.value.trim().toUpperCase() : "";
+
+      if (!estampaVal) {
+        inspInput.value = "";
+        return;
+      }
+
+      const cats = catalogosLocal || DEFAULT_CATALOGOS;
+      const estampasArr = cats.estampas || DEFAULT_CATALOGOS.estampas || [];
+
+      let normMedida = "";
+      if (medidaVal.includes("CHICA") || medidaVal.includes("SMALL")) normMedida = "CHICA";
+      else if (medidaVal.includes("MED") || medidaVal.includes("MEDIUM")) normMedida = "MED";
+      else if (medidaVal.includes("GRANDE") || medidaVal.includes("LARGE")) normMedida = "GRANDE";
+
+      // Search by exact combination of codigo AND medida
+      let found = estampasArr.find(function(item) {
+        const cod = (item.codigo || item.CODIGO || '').toString().trim().toUpperCase();
+        const med = (item.medida || item.MEDIDA || '').toString().trim().toUpperCase();
+        
+        let itemMedNorm = "";
+        if (med.includes("CHICA") || med.includes("SMALL")) itemMedNorm = "CHICA";
+        else if (med.includes("MED") || med.includes("MEDIUM")) itemMedNorm = "MED";
+        else if (med.includes("GRANDE") || med.includes("LARGE")) itemMedNorm = "GRANDE";
+
+        if (normMedida) {
+          return cod === estampaVal && itemMedNorm === normMedida;
+        } else {
+          return cod === estampaVal;
+        }
+      });
+
+      // Fallback: If no match with exact medida, search by codigo alone
+      if (!found && normMedida) {
+        found = estampasArr.find(function(item) {
+          const cod = (item.codigo || item.CODIGO || '').toString().trim().toUpperCase();
+          return cod === estampaVal;
+        });
+      }
+
+      if (found) {
+        inspInput.value = found.usuario || found.nombre || '';
+      } else {
+        inspInput.value = '';
+      }
+    }
+
     function cargarCatalogosFormulario() {
       const cats = catalogosLocal || DEFAULT_CATALOGOS;
-      poblarDatalist("dl_almacenes", cats.almacenes || DEFAULT_CATALOGOS.almacenes);
+
+      // 1. Almacenes (Select)
+      poblarSelect("almacen_origen", cats.almacenes || DEFAULT_CATALOGOS.almacenes, "numero", "nombre", "-- Selecciona Almacén Origen --");
+
+      // 2. Estampas (Select)
+      poblarSelect("estampa", cats.estampas || DEFAULT_CATALOGOS.estampas, "codigo", "usuario", "-- Selecciona Estampa Inspector --");
+
+      // 3. No Conformancias / Defectos (Select)
+      poblarSelect("no_conformancia", cats.defectos || DEFAULT_CATALOGOS.defectos, "codigo", "nombre", "-- Selecciona No Conformancia / Defecto --");
+
+      // 4. Datalists para los demás campos
       poblarDatalist("dl_areas", cats.areas || DEFAULT_CATALOGOS.areas);
       poblarDatalist("dl_partes", cats.partes || DEFAULT_CATALOGOS.partes);
-      poblarDatalist("dl_estampas", cats.estampas || DEFAULT_CATALOGOS.estampas);
-      poblarDatalist("dl_defectos", cats.defectos || DEFAULT_CATALOGOS.defectos);
       poblarDatalist("dl_defectos_sec", cats.defectosSecundarios || DEFAULT_CATALOGOS.defectosSecundarios);
+
+      alSeleccionarEstampa();
     }
 
     async function sincronizarCatalogosGitHub() {
@@ -1518,28 +3677,55 @@ function formatearItemCatalogo(x) {
       }
     }
 
-    async function guardarRegistro(e) {
+        async function guardarRegistro(e) {
       if (e) e.preventDefault();
       const btn = document.getElementById('btnSubmit');
+      
+      const folioInput = document.getElementById('folio_oc');
+      const folio = folioInput ? folioInput.value.trim().toUpperCase() : "";
+
+      if (!/^OC\d{7}$/.test(folio)) {
+        alert("⚠️ El Folio / Orden de Control debe iniciar obligatoriamente con 'OC' seguido de exactamente 7 números (Ejemplo: OC1234567).");
+        if (folioInput) folioInput.focus();
+        return;
+      }
+
+      const locacionInput = document.getElementById('locacion_origen');
+      const locacionVal = locacionInput ? locacionInput.value.trim().toUpperCase() : "";
+      if (locacionVal.length !== 5) {
+        alert("⚠️ La Locación debe contener exactamente 5 caracteres (Ejemplo: F4RWK).");
+        if (locacionInput) locacionInput.focus();
+        return;
+      }
+
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando y Sincronizando...';
       }
 
-      const nowStr = new Date().toLocaleString();
-      const folioInput = document.getElementById('folio_oc');
-      const folio = folioInput ? folioInput.value.trim() : ("OC-" + Date.now());
+      const nowStr = new Date().toLocaleString("es-MX");
+      
+      const estampaCode = document.getElementById('estampa').value;
+      const inspectorName = document.getElementById('inspector_estampa').value;
+      const medidaVal = document.getElementById('medida_estampa').value;
+
+      let estampaFinal = estampaCode;
+      if (estampaCode && inspectorName) {
+        estampaFinal = `${estampaCode} - ${inspectorName} (${medidaVal})`;
+      } else if (estampaCode) {
+        estampaFinal = `${estampaCode} (${medidaVal})`;
+      }
 
       const payload = {
         folio_oc: folio,
         tipo_envio: document.getElementById('tipo_envio').value,
         fecha: nowStr,
         almacen_origen: document.getElementById('almacen_origen').value,
-        locacion_origen: document.getElementById('locacion_origen').value,
+        locacion_origen: locacionVal,
         area: document.getElementById('area').value,
         parte: document.getElementById('parte').value,
         cantidad: document.getElementById('cantidad').value,
-        estampa: document.getElementById('estampa').value,
+        estampa: estampaFinal,
         no_conformancia: document.getElementById('no_conformancia').value,
         detalle_nc: document.getElementById('detalle_nc').value,
         operador: document.getElementById('operador').value,
@@ -1591,6 +3777,8 @@ function formatearItemCatalogo(x) {
     function resetForm() {
       const f = document.getElementById('formCalidad');
       if (f) f.reset();
+      const inspInput = document.getElementById('inspector_estampa');
+      if (inspInput) inspInput.value = '';
       const img = document.getElementById('fotoPreview');
       if (img) img.style.display = 'none';
       fotoBase64 = "";
@@ -1624,9 +3812,13 @@ function formatearItemCatalogo(x) {
     function resetForm() {
       const f = document.getElementById('formCalidad');
       if (f) f.reset();
+      const inspInput = document.getElementById('inspector_estampa');
+      if (inspInput) inspInput.value = '';
       const img = document.getElementById('fotoPreview');
       if (img) img.style.display = 'none';
       fotoBase64 = "";
+      fotosBase64Array = [];
+      renderizarGridFotosPreview();
       limpiarFirma();
     }
 
