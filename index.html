@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CalidadBot PWA v68 - Android Industrial App</title>
+  <title>CalidadBot PWA v69 - Android Industrial App</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#00008a">
@@ -193,8 +193,8 @@
     <div class="d-flex align-items-center gap-2">
       <i class="fa-solid fa-microchip text-info fs-4"></i>
       <div>
-        <div class="brand-title">CALIDAD BOT PWA v68</div>
-        <div class="badge-status-pwa text-white-50"><i class="fa-solid fa-wifi text-success me-1"></i>En Línea • PWA v68</div>
+        <div class="brand-title">CALIDAD BOT PWA v69</div>
+        <div class="badge-status-pwa text-white-50"><i class="fa-solid fa-wifi text-success me-1"></i>En Línea • PWA v69</div>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
@@ -655,8 +655,8 @@
     function asegurarFormatoImagenSrc(src) {
       if (!src) return '';
       if (typeof src !== 'string') return '';
-      src = src.trim();
-      if (src.length < 10) return '';
+      src = src.trim().replace(/^["'\s]+|["'\s]+$/g, '').replace(/\\"/g, '"');
+      if (src.length < 15) return '';
       if (src.startsWith('data:image/') || src.startsWith('http://') || src.startsWith('https://') || src.startsWith('blob:')) {
         return src;
       }
@@ -925,9 +925,7 @@
       if (found) {
         const nombreOperador = found.usuario || found.nombre || '';
         if (inspInput) inspInput.value = nombreOperador;
-        if (operInput && (!operInput.value || operInput.value.trim() === '' || operInput.value === nombreOperador)) {
-          operInput.value = nombreOperador;
-        }
+        if (operInput) operInput.value = nombreOperador;
       } else {
         if (inspInput) inspInput.value = '';
       }
@@ -1111,7 +1109,7 @@
         const contentB64 = utf8ToBase64(contentNew);
 
         const bodyPut = {
-          message: `Actualización de Calidad v68: Folio ${payload.folio_oc} [${payload.estatus}]`,
+          message: `Actualización de Calidad v69: Folio ${payload.folio_oc} [${payload.estatus}]`,
           content: contentB64,
           branch: branch
         };
@@ -1274,12 +1272,62 @@
     }
 
     function guardarRegistroPersistenteLocal(reg) {
-      const idx = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio) === (reg.folio_oc || reg.folio));
+      if (!reg) return;
+      const folioKey = reg.folio_oc || reg.folio;
+      if (!folioKey || folioKey === 'N/A') return;
+
+      const idx = registrosPersistentes.findIndex(r => (r.folio_oc || r.folio) === folioKey);
       if (idx >= 0) {
-        registrosPersistentes[idx] = reg;
+        const existing = registrosPersistentes[idx];
+        
+        let mergedPhotos = [];
+        if (existing.fotos_array && Array.isArray(existing.fotos_array) && existing.fotos_array.length > 0) {
+          mergedPhotos = existing.fotos_array;
+        } else if (reg.fotos_array && Array.isArray(reg.fotos_array) && reg.fotos_array.length > 0) {
+          mergedPhotos = reg.fotos_array;
+        } else if (existing.foto_b64 && existing.foto_b64.length > 20) {
+          mergedPhotos = [existing.foto_b64];
+        } else if (reg.foto_b64 && reg.foto_b64.length > 20) {
+          mergedPhotos = [reg.foto_b64];
+        }
+
+        mergedPhotos = mergedPhotos.map(asegurarFormatoImagenSrc).filter(p => p && p.length > 20);
+
+        registrosPersistentes[idx] = {
+          ...existing,
+          ...reg,
+          folio_oc: folioKey,
+          folio: folioKey,
+          tipo_envio: reg.tipo_envio || reg.tipo || existing.tipo_envio || existing.tipo || 'Proceso',
+          fecha: reg.fecha || existing.fecha || new Date().toLocaleString("es-MX"),
+          almacen_origen: reg.almacen_origen || reg.almacen || existing.almacen_origen || existing.almacen || '',
+          locacion_origen: reg.locacion_origen || reg.locacion || existing.locacion_origen || existing.locacion || '',
+          area: reg.area || existing.area || '',
+          parte: reg.parte || existing.parte || '',
+          cantidad: reg.cantidad || existing.cantidad || '1',
+          estampa: reg.estampa || existing.estampa || '',
+          no_conformancia: reg.no_conformancia || reg.defecto || existing.no_conformancia || existing.defecto || '',
+          detalle_nc: reg.detalle_nc || existing.detalle_nc || '',
+          operador: reg.operador || existing.operador || '',
+          turno: reg.turno || existing.turno || 'LJDA',
+          estatus: reg.estatus || existing.estatus || 'Nuevo',
+          foto_b64: mergedPhotos[0] || existing.foto_b64 || reg.foto_b64 || '',
+          fotos_array: mergedPhotos,
+          photosJson: JSON.stringify(mergedPhotos)
+        };
       } else {
+        let photos = reg.fotos_array || (reg.foto_b64 ? [reg.foto_b64] : []);
+        if (!Array.isArray(photos)) photos = [photos];
+        photos = photos.map(asegurarFormatoImagenSrc).filter(p => p && p.length > 20);
+
+        reg.folio_oc = folioKey;
+        reg.folio = folioKey;
+        reg.fotos_array = photos;
+        reg.foto_b64 = photos[0] || reg.foto_b64 || '';
+        reg.photosJson = JSON.stringify(photos);
         registrosPersistentes.unshift(reg);
       }
+
       localStorage.setItem('REGISTROS_PERSISTENTES', JSON.stringify(registrosPersistentes));
     }
 
@@ -1410,14 +1458,19 @@
 
       let count = 0;
       registrosPersistentes.forEach(function(r) {
-        let photos = r.fotos_array || (r.foto_b64 ? [r.foto_b64] : []);
-        if (r.photosJson) {
+        let photos = [];
+        if (r.fotos_array && Array.isArray(r.fotos_array) && r.fotos_array.length > 0) {
+          photos = r.fotos_array;
+        } else if (r.photosJson) {
           try {
             const parsed = JSON.parse(r.photosJson);
             if (Array.isArray(parsed) && parsed.length > 0) photos = parsed;
           } catch(e) {}
         }
-        if (!Array.isArray(photos)) photos = [photos];
+        if (photos.length === 0 && r.foto_b64) {
+          photos = [r.foto_b64];
+        }
+
         const folio = r.folio_oc || r.folio || 'N/A';
 
         photos.forEach(function(rawSrc, idx) {
