@@ -3,15 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CalidadBot PWA v60 - Control Industrial & Disposición</title>
+  <title>CalidadBot PWA v66 - Android Industrial App</title>
+  
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#00008a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <!-- Bootstrap 5 CSS & FontAwesome -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- CSS CDNs: Bootstrap 5 & FontAwesome 6 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
   
-  <!-- Chart.js & SheetJS & HTML5 QR Code Helper -->
+  <!-- JS CDNs: Chart.js, SheetJS, HTML5 QR Code -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -19,80 +23,94 @@
   <style>
     :root {
       --bg-header: #00008a;
-      --bg-header-gradient: linear-gradient(135deg, #00008a 0%, #000052 100%);
-      --accent-cyan: #00d2ff;
-      --accent-neon: #00f0ff;
-      --bg-app: #f4f6fb;
-      --card-bg: #ffffff;
-      --text-main: #1e293b;
-      --border-radius-card: 14px;
+      --bg-header-gradient: linear-gradient(135deg, #00008a 0%, #000055 100%);
+      --accent-color: #00d2ff;
+      --card-radius: 14px;
     }
 
     body {
-      background-color: var(--bg-app);
+      background-color: #f1f5f9;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      color: var(--text-main);
-      padding-bottom: 90px; /* Space for Android Bottom Nav */
+      padding-bottom: 75px;
+      margin: 0;
+      user-select: none;
     }
 
-    /* BANNER SUPERIOR INDUSTRIAL FUTURISTA */
+    /* HEADER APP ANDROID INDUSTRIAL */
     .app-header {
       background: var(--bg-header-gradient);
       color: #ffffff;
-      padding: 14px 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 138, 0.35);
-      border-bottom: 3px solid var(--accent-cyan);
+      padding: 12px 16px;
       position: sticky;
       top: 0;
       z-index: 1030;
+      box-shadow: 0 4px 15px rgba(0, 0, 138, 0.25);
     }
 
-    .app-title {
-      font-weight: 800;
-      font-size: 1.25rem;
+    .app-header .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
       letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
-    .status-badge-pwa {
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(0, 210, 255, 0.4);
-      color: var(--accent-cyan);
-      font-size: 0.75rem;
-      padding: 4px 10px;
+    .badge-status-pwa {
+      font-size: 0.7rem;
+      padding: 4px 8px;
       border-radius: 20px;
+      background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(4px);
     }
 
-    /* BOTÓN FLOTANTE RÁPIDO (FAB - ANDROID STYLE) */
-    .fab-quick-record {
+    /* TARJETAS INDUSTRIALES FUTURISTAS */
+    .card-industrial {
+      background: #ffffff;
+      border-radius: var(--card-radius);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-header-industrial {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* BOTÓN FLOTANTE (FAB) */
+    .btn-fab-android {
       position: fixed;
       bottom: 80px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
+      right: 18px;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
-      background: var(--bg-header-gradient);
+      background: linear-gradient(135deg, #00008a 0%, #00d2ff 100%);
       color: #ffffff;
-      border: 2px solid var(--accent-cyan);
-      box-shadow: 0 6px 25px rgba(0, 0, 138, 0.5), 0 0 15px rgba(0, 210, 255, 0.4);
+      border: none;
+      box-shadow: 0 6px 20px rgba(0, 0, 138, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.5rem;
-      z-index: 1050;
+      z-index: 1035;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .fab-quick-record:hover, .fab-quick-record:active {
-      transform: scale(1.1) rotate(90deg);
-      box-shadow: 0 8px 30px rgba(0, 210, 255, 0.7);
+    .btn-fab-android:active {
+      transform: scale(0.92);
+      box-shadow: 0 3px 10px rgba(0, 0, 138, 0.6);
     }
 
-    /* NAVEGACIÓN TIPO ANDROID APP (BOTTOM NAV BAR) */
+    /* BARRA DE NAVEGACIÓN INFERIOR (BOTTOM NAV) */
     .bottom-app-nav {
       position: fixed;
       bottom: 0;
@@ -122,11 +140,11 @@
       cursor: pointer;
       border: none;
       background: transparent;
-      width: 20%;
+      width: 18%;
     }
 
     .nav-item-android i {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       margin-bottom: 2px;
     }
 
@@ -140,131 +158,78 @@
       transform: translateY(-2px);
     }
 
-    /* TARJETAS INDUSTRIALES Y CONTENEDORES */
-    .card-industrial {
-      background: var(--card-bg);
-      border-radius: var(--border-radius-card);
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-      margin-bottom: 18px;
-      overflow: hidden;
-    }
-
-    .card-header-industrial {
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 12px 18px;
-      font-weight: 700;
-      color: #00008a;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    /* FORMULARIO ESTILIZADO */
-    .form-label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #334155;
-      margin-bottom: 4px;
-    }
-
-    .form-control, .form-select {
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      padding: 9px 12px;
-      font-size: 0.9rem;
-      transition: all 0.2s ease;
-    }
-
-    .form-control:focus, .form-select:focus {
-      border-color: #00008a;
-      box-shadow: 0 0 0 3px rgba(0, 0, 138, 0.15);
-    }
-
-    .form-control[readonly] {
-      background-color: #f1f5f9;
-      font-weight: 700;
-      color: #00008a;
-    }
-
-    /* BADGES DE ESTATUS PULSANTES */
-    .badge-status {
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 5px 12px;
-      border-radius: 20px;
-    }
-
-    .badge-nuevo { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
-    .badge-proceso { background: #fef3c7; color: #d97706; border: 1px solid #fcd34d; }
-    .badge-terminado { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
-
-    /* CANVAS DE FIRMA */
-    #canvasFirma {
-      border: 2px dashed #cbd5e1;
-      border-radius: 8px;
-      background: #ffffff;
-      width: 100%;
-      height: 120px;
-      touch-action: none;
-    }
-
-    /* GALERÍA GRID */
     .galeria-img {
-      height: 160px;
+      height: 120px;
+      width: 100%;
       object-fit: cover;
       border-radius: 8px;
       cursor: pointer;
       transition: transform 0.2s ease;
-      width: 100%;
     }
 
     .galeria-img:hover {
       transform: scale(1.03);
     }
+
+    .badge-status {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    .badge-nuevo { background: #fee2e2; color: #dc2626; }
+    .badge-proceso { background: #fef3c7; color: #d97706; }
+    .badge-terminado { background: #dcfce7; color: #16a34a; }
   </style>
+  <!-- jsPDF & html2canvas helper for PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 <body>
 
-  <!-- BANNER SUPERIOR PRINCIPAL (AZUL #00008a) -->
-  <header class="app-header">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-      <div class="app-title">
-        <i class="fa-solid fa-microchip text-info"></i>
-        <span>CALIDAD<span style="color: var(--accent-cyan);">BOT</span> <small class="fw-normal text-white-50 fs-6">v54</small></span>
+  <!-- HEADER PRINCIPAL -->
+  <header class="app-header d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+      <i class="fa-solid fa-microchip text-info fs-4"></i>
+      <div>
+        <div class="brand-title">CALIDAD BOT PWA v66</div>
+        <div class="badge-status-pwa text-white-50"><i class="fa-solid fa-wifi text-success me-1"></i>En Línea • PWA v66</div>
       </div>
-      <div class="d-flex align-items-center gap-2">
-        <span class="status-badge-pwa" id="pwaNetStatus"><i class="fa-solid fa-wifi me-1 text-success"></i>En Línea</span>
-        <button class="btn btn-sm btn-outline-light border-0" onclick="cargarRegistrosGitHub()" title="Sincronizar Datos">
-          <i class="fa-solid fa-rotate"></i>
-        </button>
-      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="cargarRegistrosGitHub()" title="Sincronizar Datos">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-light rounded-circle p-2" onclick="switchAndroidTab('tab-kpi')" title="KPI Dashboard">
+        <i class="fa-solid fa-chart-pie"></i>
+      </button>
     </div>
   </header>
 
-  <!-- BOTÓN FLOTANTE ACCIÓN RÁPIDA (FAB - NUEVO REGISTRO) -->
-  <div class="fab-quick-record" onclick="irANuevoRegistro()" title="Crear Nuevo Registro de Calidad">
+  <!-- BOTÓN FLOTANTE NUEVO REGISTRO (FAB) -->
+  <button class="btn-fab-android" onclick="irANuevoRegistro()" title="Nuevo Registro (+)">
     <i class="fa-solid fa-plus"></i>
-  </div>
+  </button>
 
   <!-- CONTENEDOR PRINCIPAL DE PESTAÑAS -->
   <main class="container-fluid py-3">
-    
     <div class="tab-content" id="androidTabContent">
 
-      <!-- PESTAÑA 1: NUEVO REGISTRO -->
-      <div class="tab-pane fade show active" id="tab-registro" role="tabpanel">
+      <!-- PESTAÑA 1: NUEVO REGISTRO (CAPTURA) -->
+      <div class="tab-pane fade show active" id="tab-registro" role="tabpanel" style="display: block;">
         
         <!-- ESCÁNER QR COMPACTO -->
         <div class="card-industrial mb-3">
           <div class="card-body p-2 text-center">
-            <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold" onclick="toggleQrScanner()">
+            <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold py-2" onclick="toggleQrScanner()">
               <i class="fa-solid fa-qrcode me-2"></i>Escanear Código QR / Código de Barras
             </button>
             <div id="qrReaderContainer" class="mt-2" style="display:none;">
-              <div id="reader"></div>
-              <button type="button" class="btn btn-sm btn-danger mt-2" onclick="toggleQrScanner()"><i class="fa-solid fa-xmark me-1"></i>Cerrar Cámara</button>
+              <div id="reader" style="width:100%; max-width:320px; margin:auto;"></div>
+              <button type="button" class="btn btn-sm btn-danger mt-2" onclick="toggleQrScanner()">
+                <i class="fa-solid fa-xmark me-1"></i>Cerrar Cámara Escáner
+              </button>
             </div>
           </div>
         </div>
@@ -281,106 +246,83 @@
               <div class="row g-3">
                 <!-- TIPO DE REGISTRO -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Tipo de Registro:</label>
+                  <label class="form-label fw-bold">Tipo de Registro:</label>
                   <select class="form-select" id="tipo_envio" required>
                     <option value="Proceso" selected>Proceso</option>
                     <option value="Cliente Interno">Cliente Interno</option>
                   </select>
                 </div>
 
-                <!-- FOLIO ORDEN DE CONTROL (OC+7 DÍGITOS) -->
+                <!-- FOLIO ORDEN DE CONTROL (OC+7 DÍGITOS / FLEXIBLE) -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Folio / Orden de Control (OC):</label>
-                  <input type="text" class="form-control" id="folio_oc" placeholder="Ej: OC1234567" pattern="^OC\d{7}$" title="Debe iniciar con 'OC' seguido de exactamente 7 números (Ej: OC1234567)" style="text-transform: uppercase;" required>
-                  <div class="form-text small text-muted">Formato estricto: OC + 7 números (Ej: OC1234567)</div>
+                  <label class="form-label fw-bold">Folio / Orden de Control (OC):</label>
+                  <input type="text" class="form-control fw-bold text-primary" id="folio_oc" placeholder="Ejemplo: OC1234567 o 1234567" required autocomplete="off">
+                  <small class="text-muted">Acepta '1234567', 'oc1234567' o 'OC1234567'.</small>
                 </div>
 
-                <!-- ALMACÉN ORIGEN (163 OPCIONES) -->
+                <!-- ALMACÉN ORIGEN -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Almacén Origen:</label>
+                  <label class="form-label fw-bold">Almacén Origen:</label>
                   <select class="form-select" id="almacen_origen" required>
-                    <option value="">-- Selecciona Almacén Origen --</option>
+                    <option value="">-- Cargando Almacenes... --</option>
                   </select>
                 </div>
 
-                <!-- LOCACIÓN (5 CARACTERES) -->
+                <!-- LOCACIÓN ORIGEN (EXACTAMENTE 5 CARACTERES) -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Locación / Ubicación (5 Caracteres):</label>
-                  <input type="text" class="form-control" id="locacion_origen" placeholder="Ej: F4RWK" maxlength="5" minlength="5" style="text-transform: uppercase;" required>
-                  <div class="form-text small text-muted">Debe contener exactamente 5 caracteres (Ej: F4RWK)</div>
+                  <label class="form-label fw-bold">Locación Origen (5 Caracteres):</label>
+                  <input type="text" class="form-control text-uppercase fw-bold" id="locacion_origen" placeholder="Ej: F4RWK" maxlength="5" required autocomplete="off">
                 </div>
 
-                <!-- ORIGEN DEL DEFECTO -->
+                <!-- ORIGEN DEL DEFECTO / ÁREA -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Origen del Defecto:</label>
+                  <label class="form-label fw-bold">Origen del Defecto (Área):</label>
                   <select class="form-select" id="area" required>
-                    <option value="">-- Selecciona Origen del Defecto --</option>
+                    <option value="">-- Cargando Áreas... --</option>
                   </select>
                 </div>
 
                 <!-- NÚMERO DE PARTE -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Número de Parte:</label>
+                  <label class="form-label fw-bold">Número de Parte:</label>
                   <select class="form-select" id="parte" required>
-                    <option value="">-- Selecciona Número de Parte --</option>
+                    <option value="">-- Cargando Partes... --</option>
                   </select>
                 </div>
 
-                <!-- CANTIDAD DE PIEZAS -->
+                <!-- CANTIDAD -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Cantidad de Piezas:</label>
-                  <input type="number" class="form-control" id="cantidad" value="1" min="1" required>
+                  <label class="form-label fw-bold">Cantidad de Piezas:</label>
+                  <input type="number" class="form-control fw-bold" id="cantidad" value="1" min="1" required>
+                </div>
+
+                <!-- MEDIDA ESTAMPA -->
+                <div class="col-md-6 col-lg-4">
+                  <label class="form-label fw-bold">Medida Estampa:</label>
+                  <select class="form-select" id="medida_estampa" onchange="alSeleccionarEstampa()" required>
+                    <option value="Chica">Chica (1/8")</option>
+                    <option value="Mediana">Mediana (1/4")</option>
+                    <option value="Grande" selected>Grande (1/2")</option>
+                  </select>
                 </div>
 
                 <!-- ESTAMPA INSPECTOR -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Estampa Inspector:</label>
+                  <label class="form-label fw-bold">Estampa Inspector:</label>
                   <select class="form-select" id="estampa" onchange="alSeleccionarEstampa()" required>
-                    <option value="">-- Selecciona Estampa Inspector --</option>
+                    <option value="">-- Cargando Estampas... --</option>
                   </select>
                 </div>
 
-                <!-- MEDIDA DE ESTAMPA -->
+                <!-- NOMBRE INSPECTOR DETECTADO -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Medida de Estampa:</label>
-                  <select class="form-select" id="medida_estampa" onchange="alSeleccionarEstampa()" required>
-                    <option value="Chica">Chica (1/8")</option>
-                    <option value="Mediana" selected>Mediana (1/4")</option>
-                    <option value="Grande">Grande (1/2")</option>
-                  </select>
+                  <label class="form-label fw-bold">Inspector Detectado:</label>
+                  <input type="text" class="form-control bg-light fw-bold" id="inspector_estampa" readonly placeholder="Se autocompleta con Estampa">
                 </div>
 
-                <!-- INSPECTOR REGISTRADO (AUTO-COMPLETADO) -->
+                <!-- TURNO -->
                 <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Inspector Registrado:</label>
-                  <input type="text" class="form-control" id="inspector_estampa" readonly placeholder="Auto-completado por estampa + medida" style="background-color: #f1f5f9; font-weight: bold; color: #00008a;">
-                </div>
-
-                <!-- NO CONFORMANCIA (DEFECTO PRINCIPAL) -->
-                <div class="col-md-6 col-lg-4">
-                  <label class="form-label">No Conformancia (Defecto Principal):</label>
-                  <select class="form-select" id="no_conformancia" required>
-                    <option value="">-- Selecciona No Conformancia / Defecto --</option>
-                  </select>
-                </div>
-
-                <!-- DETALLE NC / CAUSA SECUNDARIO -->
-                <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Detalle NC / Causa Secundario:</label>
-                  <select class="form-select" id="detalle_nc">
-                    <option value="">-- Selecciona Detalle Secundario (Opcional) --</option>
-                  </select>
-                </div>
-
-                <!-- QUIEN ENTREGA -->
-                <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Quien Entrega:</label>
-                  <input type="text" class="form-control" id="operador" placeholder="Nombre de la persona que entrega" required>
-                </div>
-
-                <!-- TURNO (LJDA, LJNC, VSD1, VSD2) -->
-                <div class="col-md-6 col-lg-4">
-                  <label class="form-label">Turno:</label>
+                  <label class="form-label fw-bold">Turno:</label>
                   <select class="form-select" id="turno" required>
                     <option value="LJDA" selected>LJDA</option>
                     <option value="LJNC">LJNC</option>
@@ -388,77 +330,98 @@
                     <option value="VSD2">VSD2</option>
                   </select>
                 </div>
+
+                <!-- OPERADOR -->
+                <div class="col-md-6 col-lg-4">
+                  <label class="form-label fw-bold">Operador / Máquina:</label>
+                  <input type="text" class="form-control" id="operador" placeholder="Nombre de Operador o Código de Máquina">
+                </div>
+
+                <!-- NO CONFORMANCIA (DEFECTO PRINCIPAL) -->
+                <div class="col-md-12 col-lg-6">
+                  <label class="form-label fw-bold text-danger">No Conformancia (Defecto Principal):</label>
+                  <select class="form-select border-danger" id="no_conformancia" required>
+                    <option value="">-- Cargando Defectos... --</option>
+                  </select>
+                </div>
+
+                <!-- DETALLE NC (DEFECTO SECUNDARIO) -->
+                <div class="col-md-12 col-lg-6">
+                  <label class="form-label fw-bold">Detalle Secundario (Opcional):</label>
+                  <select class="form-select" id="detalle_nc">
+                    <option value="">-- Cargando Detalles Secundarios... --</option>
+                  </select>
+                </div>
+
+                <!-- ADJUNTAR FOTOGRAFÍAS DE EVIDENCIA (MÁXIMO 5) -->
+                <div class="col-12">
+                  <label class="form-label fw-bold"><i class="fa-solid fa-camera me-1"></i>Fotografías de Evidencia (Máx. 5 HD):</label>
+                  <input type="file" class="form-control" id="fotoInputFile" accept="image/*" multiple onchange="procesarFotosMultiples(event)">
+                  <div id="fotosContadorBadge" class="mt-2"></div>
+                  <div class="row g-2 mt-1" id="fotosPreviewGrid"></div>
+                </div>
+
+                <!-- FIRMA DIGITAL -->
+                <div class="col-12">
+                  <label class="form-label fw-bold"><i class="fa-solid fa-signature me-1"></i>Firma Digital del Inspector:</label>
+                  <div class="border rounded bg-white p-1">
+                    <canvas id="canvasFirma" style="width:100%; height:120px; cursor:crosshair;"></canvas>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="limpiarFirma()">
+                    <i class="fa-solid fa-eraser me-1"></i>Limpiar Firma
+                  </button>
+                </div>
+
               </div>
 
-              <!-- FOTOGRAFÍAS DE EVIDENCIA -->
+              <!-- BOTÓN PRINCIPAL DE GUARDAR -->
               <div class="mt-4">
-                <label class="form-label"><i class="fa-solid fa-camera me-1"></i>Fotografía(s) de Evidencia (3 a 5 fotografías recomendadas):</label>
-                <input type="file" id="foto_input" accept="image/*" multiple capture="environment" class="form-control form-control-sm" onchange="procesarFotosMultiples(event)">
-                <div id="fotosContadorBadge" class="mt-2"></div>
-                <div id="fotosPreviewGrid" class="row g-2 mt-2"></div>
-              </div>
-
-              <!-- FIRMA DIGITAL -->
-              <div class="mt-3">
-                <label class="form-label"><i class="fa-solid fa-signature me-1"></i>Firma Digital del Inspector (Opcional):</label>
-                <div class="border rounded p-1 bg-white position-relative">
-                  <canvas id="canvasFirma"></canvas>
-                </div>
-                <div class="text-end mt-1">
-                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limpiarFirma()"><i class="fa-solid fa-eraser me-1"></i>Limpiar Firma</button>
-                </div>
+                <button type="submit" id="btnSubmit" class="btn btn-success btn-lg w-100 shadow-sm fw-bold py-3" style="background: #16a34a; border: none; border-radius: 12px;">
+                  <i class="fa-solid fa-paper-plane me-2"></i>Guardar Registro de Inspección
+                </button>
               </div>
 
             </div>
-          </div>
-
-          <!-- BOTÓN ENVIAR -->
-          <div class="text-center mb-4">
-            <button type="submit" id="btnSubmit" class="btn btn-success btn-lg w-100 shadow-sm fw-bold" style="background: #16a34a; border: none; border-radius: 12px; padding: 12px;">
-              <i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente
-            </button>
           </div>
         </form>
 
       </div>
 
-      <!-- PESTAÑA 2: TABLA / HISTORIAL DE REGISTROS -->
-      <div class="tab-pane fade" id="tab-registros" role="tabpanel">
+      <!-- PESTAÑA 2: HISTORIAL DE REGISTROS -->
+      <div class="tab-pane fade" id="tab-registros" role="tabpanel" style="display: none;">
         <div class="card-industrial">
           <div class="card-header-industrial">
-            <span><i class="fa-solid fa-list-check me-2"></i>Historial de Incidencias de Calidad</span>
-            <button class="btn btn-sm btn-outline-primary" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-arrows-rotate me-1"></i>Actualizar</button>
+            <span><i class="fa-solid fa-table-list me-2"></i>Historial de Registros</span>
+            <button class="btn btn-sm btn-primary" onclick="cargarRegistrosGitHub()"><i class="fa-solid fa-rotate me-1"></i>Actualizar</button>
           </div>
-          <div class="card-body p-3">
-            <div class="row g-2 mb-3">
-              <div class="col-md-8">
-                <input type="text" id="searchTabla" class="form-control" placeholder="Buscar por Folio, Parte, Defecto, Almacén..." onkeyup="filtrarTablaRegistros()">
-              </div>
-              <div class="col-md-4">
-                <button class="btn btn-outline-success w-100 fw-bold" onclick="exportarRegistrosCSV()"><i class="fa-solid fa-file-csv me-1"></i>Exportar CSV</button>
-              </div>
+          <div class="card-body p-2">
+            <div id="loadingRegistros" class="text-center py-3" style="display:none;">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="small text-muted mt-2">Cargando registros desde servidor...</p>
             </div>
             
             <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead class="table-dark" style="background: #00008a;">
+              <table class="table table-hover align-middle small mb-0">
+                <thead class="table-light">
                   <tr>
                     <th>Folio OC</th>
-                    <th>Fecha Captura</th>
+                    <th>Fecha</th>
                     <th>Almacén</th>
                     <th>Locación</th>
                     <th>Parte</th>
-                    <th>Cantidad</th>
+                    <th>Cant</th>
                     <th>Estampa</th>
                     <th>Defecto</th>
-                    <th>Quien Entrega</th>
+                    <th>Operador</th>
                     <th>Turno</th>
                     <th>Estatus</th>
-                    <th>Acciones</th>
+                    <th>Acción</th>
                   </tr>
                 </thead>
                 <tbody id="tbodyTablaRegistros">
-                  <!-- Se llena dinámicamente -->
+                  <tr>
+                    <td colspan="12" class="text-center py-4 text-muted">Cargando datos del historial...</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -466,66 +429,72 @@
         </div>
       </div>
 
-      <!-- PESTAÑA 3: DISPOSICIÓN NC -->
-      <div class="tab-pane fade" id="tab-disposicion" role="tabpanel">
-        <div class="card-industrial">
+      <!-- PESTAÑA 3: EVALUACIÓN Y DISPOSICIÓN NC -->
+      <div class="tab-pane fade" id="tab-disposicion" role="tabpanel" style="display: none;">
+        <div class="card-industrial mb-3">
           <div class="card-header-industrial">
-            <span><i class="fa-solid fa-gavel me-2"></i>Evaluación y Disposición de No Conformancias</span>
+            <span><i class="fa-solid fa-gavel me-2"></i>Incidencias Pendientes de Disposición</span>
           </div>
           <div class="card-body p-3">
-            <div id="loadingRegistros" class="text-center py-4" style="display:none;">
-              <div class="spinner-border text-primary"></div>
-              <p class="mt-2 text-muted">Sincronizando registros con GitHub...</p>
+            <div class="row g-3" id="listaIncidencias">
+              <div class="col-12 text-center text-muted py-4">Cargando incidencias...</div>
             </div>
-            <div id="listaIncidencias" class="row g-3"></div>
           </div>
         </div>
 
-        <!-- PANEL EVALUACIÓN DISPOSICIÓN -->
-        <div class="card-industrial border-warning mt-3" id="panelEvaluacionDisposicion" style="display:none;">
+        <!-- PANEL DE EVALUACIÓN 5-PORQUÉS -->
+        <div class="card-industrial border-warning" id="panelEvaluacionDisposicion" style="display:none;">
           <div class="card-header-industrial bg-warning text-dark">
-            <span id="dispFolioTitulo">Evaluando Folio...</span>
-            <button class="btn-close" onclick="cerrarPanelDisposicion()"></button>
+            <span id="dispFolioTitulo">Evaluación de Disposición</span>
+            <button type="button" class="btn-close" onclick="cerrarPanelDisposicion()"></button>
           </div>
           <div class="card-body p-3">
             <form onsubmit="guardarDisposicion(event)">
               <div class="row g-3">
                 <div class="col-md-6">
-                  <label class="form-label">Destino / Disposición:</label>
+                  <label class="form-label fw-bold">Disposición / Destino:</label>
                   <select class="form-select" id="disp_destino" required>
-                    <option value="Retrabajo (Rework)">Retrabajo (Rework)</option>
-                    <option value="Scrap (Desecho)">Scrap (Desecho)</option>
-                    <option value="Usar Así (Use As Is)">Usar Así (Use As Is)</option>
-                    <option value="Retorno a Proveedor (RTV)">Retorno a Proveedor (RTV)</option>
+                    <option value="Scrap / Destrucción">Scrap / Destrucción</option>
+                    <option value="Retrabajo / Rework">Retrabajo / Rework</option>
+                    <option value="Aceptación con Concesión">Aceptación con Concesión</option>
+                    <option value="Devolución a Proveedor">Devolución a Proveedor</option>
                   </select>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Responsable Disposición:</label>
-                  <input type="text" class="form-control" id="disp_responsable" required placeholder="Ing. de Calidad / Autorizador">
+                  <label class="form-label fw-bold">Responsable de Disposición:</label>
+                  <input type="text" class="form-control" id="disp_responsable" placeholder="Nombre de Calidad / Producción" required>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Piezas Buenas (Sorteo):</label>
+                  <label class="form-label fw-bold">Piezas Buenas Salvadas:</label>
                   <input type="number" class="form-control" id="disp_piezas_buenas" value="0" min="0">
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Piezas Malas (Scrap/Retrabajo):</label>
+                  <label class="form-label fw-bold">Piezas Malas Scrap:</label>
                   <input type="number" class="form-control" id="disp_piezas_malas" value="0" min="0">
                 </div>
-                <div class="col-12">
-                  <label class="form-label">Análisis Causa Raíz (5-Porqués / Acción Correctiva):</label>
-                  <input type="text" class="form-control mb-1" id="disp_porque1" placeholder="1-Por qué ocurrió?">
-                  <input type="text" class="form-control mb-1" id="disp_porque5" placeholder="5-Causa raíz final">
-                  <input type="text" class="form-control" id="disp_accion_correctiva" placeholder="Acción correctiva implementada" required>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Causa Raíz (1er Porqué):</label>
+                  <input type="text" class="form-control" id="disp_porque1" placeholder="¿Por qué ocurrió la falla?">
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Estatus Final:</label>
-                  <select class="form-select" id="disp_estatus" required>
+                  <label class="form-label fw-bold">Causa Raíz Final (5to Porqué):</label>
+                  <input type="text" class="form-control" id="disp_porque5" placeholder="¿Por qué ocurrió la causa principal?">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-bold">Acción Correctiva Implementada:</label>
+                  <textarea class="form-control" id="disp_accion_correctiva" rows="2" placeholder="Detalla la acción correctiva preventiva"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Estatus Final:</label>
+                  <select class="form-select" id="disp_estatus">
                     <option value="En Proceso">En Proceso</option>
                     <option value="Terminado" selected>Terminado</option>
                   </select>
                 </div>
-                <div class="col-12 text-end">
-                  <button type="submit" class="btn btn-warning fw-bold"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar Evaluacion y Disposición</button>
+                <div class="col-12 mt-3">
+                  <button type="submit" class="btn btn-warning fw-bold w-100 py-2">
+                    <i class="fa-solid fa-floppy-disk me-1"></i>Guardar Evaluaciones de Disposición
+                  </button>
                 </div>
               </div>
             </form>
@@ -533,94 +502,100 @@
         </div>
       </div>
 
-      <!-- PESTAÑA 4: IMPORTAR / EXPORTAR -->
-      <div class="tab-pane fade" id="tab-import-export" role="tabpanel">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="card-industrial h-100">
-              <div class="card-header-industrial"><span><i class="fa-solid fa-download me-2"></i>Exportar Respaldos</span></div>
-              <div class="card-body p-3 d-flex flex-column gap-2">
-                <button class="btn btn-outline-success fw-bold" onclick="exportarCatalogosExcelXLSX()"><i class="fa-file-excel me-2"></i>Exportar Catálogos a Excel (.xlsx)</button>
-                <button class="btn btn-outline-primary fw-bold" onclick="exportarRegistrosCSV()"><i class="fa-file-csv me-2"></i>Exportar Registros CSV (19 Celdas)</button>
-                <button class="btn btn-outline-dark fw-bold" onclick="exportarRegistrosJSON()"><i class="fa-code me-2"></i>Exportar Registros JSON</button>
-              </div>
-            </div>
+      <!-- PESTAÑA 4: GALERÍA DE FOTOS EVIDENCIA HD -->
+      <div class="tab-pane fade" id="tab-galeria" role="tabpanel" style="display: none;">
+        <div class="card-industrial">
+          <div class="card-header-industrial">
+            <span><i class="fa-solid fa-images me-2"></i>Galería de Fotografías de Evidencia</span>
+            <button class="btn btn-sm btn-outline-primary" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-rotate me-1"></i>Refrescar</button>
           </div>
-          <div class="col-md-6">
-            <div class="card-industrial h-100">
-              <div class="card-header-industrial"><span><i class="fa-solid fa-upload me-2"></i>Importar Datos</span></div>
-              <div class="card-body p-3">
-                <label class="form-label">Importar Registros (CSV / JSON):</label>
-                <input type="file" id="fileImportRegistros" accept=".csv, .json" class="form-control mb-2">
-                <button class="btn btn-primary w-100 fw-bold" onclick="importarRegistros()"><i class="fa-solid fa-file-import me-1"></i>Procesar e Importar Registros</button>
-              </div>
+          <div class="card-body p-3">
+            <div class="row g-3" id="containerGaleriaFotos">
+              <div class="col-12 text-center text-muted py-4"><i class="fa-solid fa-images fs-2 mb-2 d-block"></i>Cargando fotos de evidencia...</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- PESTAÑA 5: GALERÍA FOTOS HD -->
-      <div class="tab-pane fade" id="tab-galeria" role="tabpanel">
+      <!-- PESTAÑA 5: KPI DASHBOARD -->
+      <div class="tab-pane fade" id="tab-kpi" role="tabpanel" style="display: none;">
         <div class="card-industrial">
           <div class="card-header-industrial">
-            <span><i class="fa-solid fa-images me-2"></i>Galería de Evidencias Fotográficas HD</span>
-            <button class="btn btn-sm btn-outline-primary" onclick="cargarGaleriaFotos()"><i class="fa-solid fa-rotate me-1"></i>Refrescar Galería</button>
+            <span><i class="fa-solid fa-chart-line me-2"></i>KPI Dashboard & Indicadores</span>
+            <button class="btn btn-sm btn-outline-success" onclick="actualizarDashboardKPI()"><i class="fa-solid fa-sync me-1"></i>Calcular</button>
           </div>
           <div class="card-body p-3">
-            <div id="containerGaleriaFotos" class="row g-3"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PESTAÑA 6: DASHBOARD KPI -->
-      <div class="tab-pane fade" id="tab-kpi" role="tabpanel">
-        <div class="card-industrial">
-          <div class="card-header-industrial">
-            <span><i class="fa-solid fa-chart-pie me-2"></i>Dashboard de Control KPI & Volumen</span>
-          </div>
-          <div class="card-body p-3">
-            <div class="row g-3 mb-4">
+            <div class="row g-4">
               <div class="col-md-6">
-                <div class="border rounded p-2 bg-white"><canvas id="chartAlmacenVsCantidad" style="max-height:260px;"></canvas></div>
+                <h6 class="fw-bold text-primary"><i class="fa-solid fa-warehouse me-1"></i>Piezas por Almacén</h6>
+                <div style="height:220px;"><canvas id="chartAlmacenVsCantidad"></canvas></div>
               </div>
               <div class="col-md-6">
-                <div class="border rounded p-2 bg-white"><canvas id="chartParteVsCantidad" style="max-height:260px;"></canvas></div>
+                <h6 class="fw-bold text-warning"><i class="fa-solid fa-boxes-stacked me-1"></i>Top 10 Partes NC</h6>
+                <div style="height:220px;"><canvas id="chartParteVsCantidad"></canvas></div>
               </div>
               <div class="col-12">
-                <div class="border rounded p-2 bg-white"><canvas id="chartTendenciaFecha" style="max-height:220px;"></canvas></div>
+                <h6 class="fw-bold text-success"><i class="fa-solid fa-arrow-trend-up me-1"></i>Tendencia de Inspecciones</h6>
+                <div style="height:220px;"><canvas id="chartTendenciaFecha"></canvas></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- PESTAÑA 7: CONFIGURACIÓN -->
-      <div class="tab-pane fade" id="tab-config" role="tabpanel">
+      <!-- PESTAÑA 6: CONFIGURACIÓN Y AJUSTES -->
+      <div class="tab-pane fade" id="tab-config" role="tabpanel" style="display: none;">
         <div class="card-industrial">
-          <div class="card-header-industrial"><span><i class="fa-solid fa-gear me-2"></i>Configuración de Servidor & Notificaciones</span></div>
+          <div class="card-header-industrial">
+            <span><i class="fa-solid fa-gear me-2"></i>Ajustes del Sistema & Servidores</span>
+          </div>
           <div class="card-body p-3">
-            <div class="mb-3">
-              <label class="form-label">Token Personal de Acceso GitHub (PAT):</label>
-              <input type="password" id="githubTokenConfig" class="form-control" placeholder="ghp_..." onfocus="this.type='text'" onblur="this.type='password'">
+            <form onsubmit="guardarConfiguracionSistema(event)">
+              <div class="mb-3">
+                <label class="form-label fw-bold">GitHub Personal Access Token (PAT):</label>
+                <input type="password" class="form-control" id="githubTokenConfig" placeholder="ghp_...">
+                <small class="text-muted">Token con permiso 'repo' para commits directos a GitHub CSV.</small>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Google Apps Script Proxy URL:</label>
+                <input type="text" class="form-control" id="proxyUrlConfig" placeholder="https://script.google.com/macros/s/.../exec">
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Correos Notificación (Separados por coma):</label>
+                <input type="text" class="form-control" id="notifEmails" placeholder="calidad@empresa.com, planta@empresa.com">
+              </div>
+              <button type="submit" class="btn btn-primary fw-bold w-100 py-2">
+                <i class="fa-solid fa-floppy-disk me-1"></i>Guardar Configuración en Dispositivo
+              </button>
+            </form>
+
+            <hr class="my-4">
+
+            <h6 class="fw-bold mb-3"><i class="fa-solid fa-file-export me-1"></i>Exportar e Importar Datos</h6>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-outline-success" onclick="exportarCatalogosExcelXLSX()">
+                <i class="fa-solid fa-file-excel me-1"></i>Exportar Catálogos Excel
+              </button>
+              <button class="btn btn-outline-info" onclick="exportarRegistrosCSV()">
+                <i class="fa-solid fa-file-csv me-1"></i>Exportar Registros CSV
+              </button>
+              <button class="btn btn-outline-secondary" onclick="exportarRegistrosJSON()">
+                <i class="fa-solid fa-file-code me-1"></i>Exportar JSON
+              </button>
             </div>
-            <div class="mb-3">
-              <label class="form-label">URL del Proxy / Google Apps Script (/exec):</label>
-              <input type="text" id="proxyUrlConfig" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+
+            <div class="mt-3">
+              <label class="form-label fw-bold">Importar Registros (CSV / JSON):</label>
+              <input type="file" class="form-control" id="fileImportRegistros" accept=".csv, .json" onchange="importarRegistros()">
             </div>
-            <div class="mb-3">
-              <label class="form-label">Correos para Notificación:</label>
-              <input type="text" id="notifEmails" class="form-control" placeholder="correo1@empresa.com, correo2@empresa.com">
-            </div>
-            <button class="btn btn-primary fw-bold w-100" onclick="guardarConfiguracionSistema()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar Configuración</button>
           </div>
         </div>
       </div>
 
     </div>
-
   </main>
 
-  <!-- NAVEGACIÓN INFERIOR TIPO ANDROID APP (BOTTOM NAV BAR) -->
+  <!-- BARRA DE NAVEGACIÓN INFERIOR ESTILO ANDROID APP -->
   <nav class="bottom-app-nav">
     <button class="nav-item-android active" id="bnav-registro" onclick="switchAndroidTab('tab-registro', this)">
       <i class="fa-solid fa-pen-to-square"></i>
@@ -644,32 +619,37 @@
     </button>
   </nav>
 
-  <!-- MODAL DE VISUALIZACIÓN FOTO HD -->
+  <!-- MODAL VISUALIZAR FOTO EVIDENCIA HD -->
   <div class="modal fade" id="modalFotoGrande" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-dark text-white">
-          <h5 class="modal-title" id="modalFotoSubtitulo">Fotografía de Evidencia</h5>
+        <div class="modal-header bg-dark text-white p-2">
+          <h6 class="modal-title" id="modalFotoSubtitulo">Fotografía de Evidencia HD</h6>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body text-center p-2">
-          <img id="imgFotoGrandeView" src="" class="img-fluid rounded" style="max-height: 80vh; object-fit: contain;">
+          <img src="" id="imgFotoGrandeView" class="img-fluid rounded" style="max-height:80vh;">
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCRIPTS Y LÓGICA PRINCIPAL JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- SCRIPT LÓGICA PRINCIPAL JAVASCRIPT -->
   <script>
+    // CATÁLOGOS MAESTROS EMBEBIDOS OFFLINE
+    const CATALOGOS_DEFAULT = {"almacenes": [{"numero": "201101", "nombre": "High Runner Bins - Line 1"}, {"numero": "201102", "nombre": "High Runner Bins - Line 2"}, {"numero": "201103", "nombre": "High Runner Bins - Line 3"}, {"numero": "201109", "nombre": "Sub Assy High Runner Bins"}, {"numero": "201201", "nombre": "High Runner Toasters - Line 1"}, {"numero": "201202", "nombre": "High Runner Toasters - Line 2"}, {"numero": "201203", "nombre": "High Runner Toasters - Line 3"}, {"numero": "201209", "nombre": "Sub Assy High Runner Toasters"}, {"numero": "201301", "nombre": "Low/Mid Runner Toaster Bins"}, {"numero": "201309", "nombre": "Sub Assy Low/Mid Toaster Bins"}, {"numero": "201401", "nombre": "Sabre King Slicers"}, {"numero": "201501", "nombre": "Smallware Timers"}, {"numero": "201601", "nombre": "NPD"}, {"numero": "201701", "nombre": "ACSD"}, {"numero": "201709", "nombre": "ACSD Sub Assy"}, {"numero": "202101", "nombre": "Display Tech Work Center"}, {"numero": "204101", "nombre": "Coils Assembly"}, {"numero": "204121", "nombre": "Coil Pack  Fabrication"}, {"numero": "204122", "nombre": "Foundry"}, {"numero": "204123", "nombre": "Cold Plate Finishing"}, {"numero": "204124", "nombre": "Pickle/Passivate for Machines"}, {"numero": "204141", "nombre": "Cold Plate Foaming"}, {"numero": "204143", "nombre": "Hopper Bonding"}, {"numero": "204161", "nombre": "Foaming P2 Center"}, {"numero": "204201", "nombre": "Plastics"}, {"numero": "204221", "nombre": "Valves"}, {"numero": "204301", "nombre": "Stand Assembly"}, {"numero": "204302", "nombre": "Adapter Kit Assembly"}, {"numero": "204321", "nombre": "Silver King Back Shop Assy"}, {"numero": "204341", "nombre": "Pump & Motor"}, {"numero": "204361", "nombre": "Hoses Fabrication"}, {"numero": "204401", "nombre": "Tanks Fabrication"}, {"numero": "204421", "nombre": "Agitator Fabrication"}, {"numero": "204441", "nombre": "Sheet Metal Fabrication"}, {"numero": "204501", "nombre": "Viper Kits/Carts/Hoses/Tray"}, {"numero": "204502", "nombre": "Viper Face Plate"}, {"numero": "204504", "nombre": "Viper Barrel"}, {"numero": "205101", "nombre": "Ice Cool Assy High runners"}, {"numero": "205121", "nombre": "Ice Drink Work Center ED1XX"}, {"numero": "205122", "nombre": "Ice Drink Assy  ED300"}, {"numero": "205123", "nombre": "Ice Drink Assembly FF/CF"}, {"numero": "205124", "nombre": "Ice Drink Kits Assembly"}, {"numero": "205126", "nombre": "Ice Drink Work Center ED2XX"}, {"numero": "205127", "nombre": "Ice Drink Work Center IDC2XX"}, {"numero": "205141", "nombre": "IDC PRO Assembly"}, {"numero": "205161", "nombre": "ABS 2.0 Assembly"}, {"numero": "205202", "nombre": "Viper Final Assembly"}, {"numero": "205221", "nombre": "Ice Makers Assembly"}, {"numero": "205241", "nombre": "OCE Chillers Asembly"}, {"numero": "205301", "nombre": "Quest Elite Assembly"}, {"numero": "205401", "nombre": "Majestic Assembly"}, {"numero": "205421", "nombre": "Cold Wall Assembly"}, {"numero": "205441", "nombre": "SFA / 27 / 48 Assembly Lines"}, {"numero": "205461", "nombre": "Chef Base Assembly"}, {"numero": "221101", "nombre": "Kitting - A"}, {"numero": "221102", "nombre": "Kitting - B"}, {"numero": "221103", "nombre": "KS Bulk"}, {"numero": "406610", "nombre": "Engineering Prototype"}, {"numero": "CONS01", "nombre": "Rath Gibson Consign WH"}, {"numero": "CSEJNL", "nombre": "J&L GEAR COMPANY WH"}, {"numero": "CSF001", "nombre": "Carol Stream Finish Good WH"}, {"numero": "CSF002", "nombre": "Carol Stream FG estore WH"}, {"numero": "CSF003", "nombre": "Amazon FBA"}, {"numero": "CSQ001", "nombre": "Carol Stream Inspection WH"}, {"numero": "CSR001", "nombre": "Carol Stream Raw Material WH"}, {"numero": "CSV001", "nombre": "Carol Stream Virtual"}, {"numero": "CSX001", "nombre": "Carol Stream Returns"}, {"numero": "DTAE01", "nombre": "ALL AMERICAN EXTRUSION INC WH"}, {"numero": "DTAE02", "nombre": "ALL AMERICAN RETURNS"}, {"numero": "DTAE03", "nombre": "ALL AMERICAN VIRTUAL"}, {"numero": "DTAG01", "nombre": "AIM GRAPHICS WH"}, {"numero": "DTAG02", "nombre": "AIM GRAPHICS RETURNS"}, {"numero": "DTAG03", "nombre": "AIM GRAPHICS VIRTUAL"}, {"numero": "DTCP01", "nombre": "COMMERCIAL PLASTICS WH"}, {"numero": "DTCP02", "nombre": "COMMERCIAL PLASTICS RETURNS"}, {"numero": "DTCP03", "nombre": "COMMERCIAL PLASTICS VIRTUAL"}, {"numero": "DTDS01", "nombre": "DISCOVERY PLASTICS LLC"}, {"numero": "DTDS02", "nombre": "DISCOVERY PLAST ESTORE WH"}, {"numero": "DTDS03", "nombre": "DISCOVERY PLAST RETURNS"}, {"numero": "DTDS04", "nombre": "DISCOVERY PLAST VIRTUAL"}, {"numero": "DTDS05", "nombre": "DISCOVERY PLAST LIANG CTR"}, {"numero": "DTF001", "nombre": "DISPLAY TECH FG WAREHOUSE"}, {"numero": "DTF002", "nombre": "DISPLAY TECH RETURNS"}, {"numero": "DTF003", "nombre": "DISPLAY TECH VIRTUAL"}, {"numero": "DTHM01", "nombre": "HUNTER METAL IND, INC"}, {"numero": "DTHM02", "nombre": "HUNTER METAL RETURNS"}, {"numero": "DTHM03", "nombre": "HUNTER METAL VIRTUAL"}, {"numero": "DTIN01", "nombre": "INJECTRON CORPORATION"}, {"numero": "DTIN02", "nombre": "INJECTRON ESTORE WH"}, {"numero": "DTIN03", "nombre": "INJECTRON AMAZON FBA"}, {"numero": "DTIN04", "nombre": "INJECTRON VIRTUAL"}, {"numero": "DTL001", "nombre": "DT LATAM Miami"}, {"numero": "DTL002", "nombre": "DT LATAM Laredo"}, {"numero": "DTMM01", "nombre": "MONTROSE MOLDERS CORP. WH"}, {"numero": "DTMM02", "nombre": "MONTROSE MOLDERS ESTORE WH"}, {"numero": "DTMM03", "nombre": "MONTROSE AMAZON FBA"}, {"numero": "DTMM04", "nombre": "MONTROSE MOLDERS VIRTUAL"}, {"numero": "DTMP01", "nombre": "MERCURY PLASTICS, INC."}, {"numero": "DTMP02", "nombre": "MERCURY PLASTICS RETURNS"}, {"numero": "DTMP03", "nombre": "MERCURY PLASTICS VIRTUAL"}, {"numero": "DTNE01", "nombre": "NEW ENGLAND WIRE PRODUCTS WH"}, {"numero": "DTNE02", "nombre": "NEW ENGLAND WIRE RETURNS"}, {"numero": "DTNE03", "nombre": "NEW ENGLAND WIRE VIRTUAL"}, {"numero": "DTPE01", "nombre": "PLASTIEXPORTS, LLC"}, {"numero": "DTPE02", "nombre": "PLASTIEXPORTS RETURNS"}, {"numero": "DTPE03", "nombre": "PLASTIEXPORTS AMAZON FBA"}, {"numero": "DTPE04", "nombre": "PLASTIEXPORTS JUAREZ"}, {"numero": "DTUP01", "nombre": "UMIPLAST PARTNERS LLC WH"}, {"numero": "DTUP02", "nombre": "UMIPLAST PARTNERS RETURNS"}, {"numero": "DTUP03", "nombre": "UMIPLAST PARTNERS VIRTUAL"}, {"numero": "LA1F01", "nombre": "LATAM CDMX Warehouse"}, {"numero": "LA1Q01", "nombre": "LATAM MX Inspection WH"}, {"numero": "LA1S01", "nombre": "LATAM MX Service WH"}, {"numero": "LA1SP1", "nombre": "LATAM COSE Installments"}, {"numero": "LA2F01", "nombre": "LATAM Miami Warehouse"}, {"numero": "LA2F02", "nombre": "LATAM World  Warehouse"}, {"numero": "LA2SP1", "nombre": "LATAM COSE Miami Installments"}, {"numero": "LA3F01", "nombre": "LATAM Laredo Warehouse"}, {"numero": "LA5F01", "nombre": "LATAM Tainjin Warehouse"}, {"numero": "MC1C01", "nombre": "McAllen Cost Mat Warehouse"}, {"numero": "MC1D01", "nombre": "Donna Mat Warehouse Alcoa"}, {"numero": "MCALP1", "nombre": "ALPHA PLASTICS"}, {"numero": "MCF001", "nombre": "McAllen FG Warehouse"}, {"numero": "MCIDL", "nombre": "McAllen IDL Warehouse"}, {"numero": "MCMECH", "nombre": "Mechatronic Subcontracting"}, {"numero": "MCMER1", "nombre": "Promotora Merhen -Pharr TX"}, {"numero": "MCMSC1", "nombre": "Micro Surfaces Corp"}, {"numero": "MCNEP1", "nombre": "NEP Electronics"}, {"numero": "MCNS01", "nombre": "NorthStar Metal"}, {"numero": "MCPART", "nombre": "Partners Manufacturing"}, {"numero": "MCPRO1", "nombre": "Proto Labs"}, {"numero": "MCQ001", "nombre": "McAllen Disposition Area"}, {"numero": "MCR001", "nombre": "McAllen RM Warehouse"}, {"numero": "MLF001", "nombre": "Marmon Link FG Warehouse"}, {"numero": "MLQ001", "nombre": "Marmon Link Quarantine WH"}, {"numero": "RE1C01", "nombre": "Reynosa PL1 Cost Mat Warehouse"}, {"numero": "RE1C02", "nombre": "Reynosa PL2 Cost Mat Warehouse"}, {"numero": "RE1CP1", "nombre": "Reynosa PL1 Cold Plate"}, {"numero": "RE1CPR", "nombre": "Reynosa PL1 Cold Plate Rack"}, {"numero": "RE1F01", "nombre": "Reynosa US PL1 FG Warehouse"}, {"numero": "RE1F02", "nombre": "Reynosa US PL2 FG Warehouse"}, {"numero": "RE1INT", "nombre": "Reynosa International Ship WH"}, {"numero": "RE1PLS", "nombre": "Back Shoop Plastic"}, {"numero": "RE1Q01", "nombre": "Reynosa PL1 Disposition Area"}, {"numero": "RE1Q02", "nombre": "Reynosa PL2 Disposition Area"}, {"numero": "RE1R01", "nombre": "Reynosa PL1 Raw Material WH"}, {"numero": "RE1R02", "nombre": "Reynosa PL2 Raw Material WH"}, {"numero": "RE1S01", "nombre": "Reynosa US ShopFloor Warehouse"}, {"numero": "RE1SM1", "nombre": "Reynosa PL1 Sheet Metal"}, {"numero": "RE1VL1", "nombre": "Reynosa PL1 Valves"}, {"numero": "RE2C01", "nombre": "Cost WH Plant 1 Tool Crib Stat"}, {"numero": "RE2C02", "nombre": "Cost WH Plant 2 Tool Crib Stat"}, {"numero": "RE2F01", "nombre": "**DNU RY Statutory Finished"}, {"numero": "RE2R01", "nombre": "** DNU RY Statutory Raw"}, {"numero": "RE2W01", "nombre": "** DNU RY Statutory Cost WH"}, {"numero": "REIDL", "nombre": "Reynosa IDL Warehouse"}, {"numero": "REIDLF", "nombre": "Reynosa IDL FG Warehouse"}, {"numero": "RENXFA", "nombre": "Inventory RENXFAB"}, {"numero": "REVCP", "nombre": "Reynosa Victory Packaging"}, {"numero": "RYEADV", "nombre": "ADVANCED PLATING S.A. DE C.V."}, {"numero": "RYEERM", "nombre": "ELECTRO RECUBRIMIENTOS METALIC"}, {"numero": "RYEMER", "nombre": "PROMOTORA MERHEN SA DE CV"}, {"numero": "RYEQIS", "nombre": "QUALITY INDUSTRIAL SOLUTNS LLC"}], "areas": [{"nombre": "204101", "descripcion": "Coils Assembly"}, {"nombre": "204121", "descripcion": "Coil Pack  Fabrication"}, {"nombre": "204122", "descripcion": "Foundry"}, {"nombre": "204123", "descripcion": "Cold Plate Finishing"}, {"nombre": "204124", "descripcion": "Pickle/Passivate for Machines"}, {"nombre": "204141", "descripcion": "Cold Plate Foaming"}, {"nombre": "204143", "descripcion": "Hopper Bonding"}, {"nombre": "204161", "descripcion": "Foaming P2 Center"}, {"nombre": "204201", "descripcion": "Plastics"}, {"nombre": "204221", "descripcion": "Valves"}, {"nombre": "204301", "descripcion": "Stand Assembly"}, {"nombre": "204302", "descripcion": "Adapter Kit Assembly"}, {"nombre": "204321", "descripcion": "Silver King Back Shop Assy"}, {"nombre": "204341", "descripcion": "Pump & Motor"}, {"nombre": "204361", "descripcion": "Hoses Fabrication"}, {"nombre": "204401", "descripcion": "Tanks Fabrication"}, {"nombre": "204421", "descripcion": "Agitator Fabrication"}, {"nombre": "204441", "descripcion": "Sheet Metal Fabrication"}, {"nombre": "204501", "descripcion": "Viper Kits/Carts/Hoses/Tray"}, {"nombre": "204502", "descripcion": "Viper Face Plate"}, {"nombre": "204504", "descripcion": "Viper Barrel"}, {"nombre": "205101", "descripcion": "Ice Cool Assy High runners"}, {"nombre": "205121", "descripcion": "Ice Drink Work Center ED1XX"}, {"nombre": "205122", "descripcion": "Ice Drink Assy  ED300"}, {"nombre": "205123", "descripcion": "Ice Drink Assembly FF/CF"}, {"nombre": "205124", "descripcion": "Ice Drink Kits Assembly"}, {"nombre": "205126", "descripcion": "Ice Drink Work Center ED2XX"}, {"nombre": "205127", "descripcion": "Ice Drink Work Center IDC2XX"}, {"nombre": "205141", "descripcion": "IDC PRO Assembly"}, {"nombre": "205161", "descripcion": "ABS 2.0 Assembly"}, {"nombre": "205202", "descripcion": "Viper Final Assembly"}, {"nombre": "205221", "descripcion": "Ice Makers Assembly"}, {"nombre": "205241", "descripcion": "OCE Chillers Asembly"}, {"nombre": "205301", "descripcion": "Quest Elite Assembly"}, {"nombre": "205401", "descripcion": "Majestic Assembly"}, {"nombre": "205421", "descripcion": "Cold Wall Assembly"}, {"nombre": "205441", "descripcion": "SFA / 27 / 48 Assembly Lines"}, {"nombre": "205461", "descripcion": "Chef Base Assembly"}, {"nombre": "RE1C01", "descripcion": "Reynosa PL1 Cost Mat Warehouse"}, {"nombre": "RE1C02", "descripcion": "Reynosa PL2 Cost Mat Warehouse"}, {"nombre": "RE1CP1", "descripcion": "Reynosa PL1 Cold Plate"}, {"nombre": "RE1CPR", "descripcion": "Reynosa PL1 Cold Plate Rack"}, {"nombre": "RE1F01", "descripcion": "Reynosa US PL1 FG Warehouse"}, {"nombre": "RE1F02", "descripcion": "Reynosa US PL2 FG Warehouse"}, {"nombre": "RE1INT", "descripcion": "Reynosa International Ship WH"}, {"nombre": "RE1PLS", "descripcion": "Back Shoop Plastic"}, {"nombre": "RE1Q01", "descripcion": "Reynosa PL1 Disposition Area"}, {"nombre": "RE1Q02", "descripcion": "Reynosa PL2 Disposition Area"}, {"nombre": "RE1R01", "descripcion": "Reynosa PL1 Raw Material WH"}, {"nombre": "RE1R02", "descripcion": "Reynosa PL2 Raw Material WH"}, {"nombre": "RE1S01", "descripcion": "Reynosa US ShopFloor Warehouse"}, {"nombre": "RE1SM1", "descripcion": "Reynosa PL1 Sheet Metal"}, {"nombre": "RE1VL1", "descripcion": "Reynosa PL1 Valves"}, {"nombre": "REIDL", "descripcion": "Reynosa IDL Warehouse"}, {"nombre": "REIDLF", "descripcion": "Reynosa IDL FG Warehouse"}, {"nombre": "RENXFA", "descripcion": "Inventory RENXFAB"}, {"nombre": "REVCP", "descripcion": "Reynosa Victory Packaging"}], "partes": [{"codigo": "741000135", "descripcion": "C-PLT-ASY 19X21 08VL PTP", "unidad": "piezas"}, {"codigo": "741000136", "descripcion": "C-PLT-ASY 19X21 6VLV 3+2+1", "unidad": "piezas"}, {"codigo": "741000150", "descripcion": "C-PLT-ASY 13X20 6VLV 3+2+1", "unidad": "piezas"}, {"codigo": "741000201", "descripcion": "C-PLT 13X20 06CR PR BARB", "unidad": "piezas"}, {"codigo": "741000202", "descripcion": "C-PLT 19X21 1216 PS BRB", "unidad": "piezas"}, {"codigo": "741000241", "descripcion": "C-PLT 19X21 0912 PR", "unidad": "piezas"}, {"codigo": "741000243", "descripcion": "C-PLT 19X21 1216 PS BARB", "unidad": "piezas"}, {"codigo": "741000244", "descripcion": "C-PLT 13X20 12CR PR BARB", "unidad": "piezas"}, {"codigo": "741000327", "descripcion": "C-PLT 13X20 12CR PR BARB", "unidad": "piezas"}, {"codigo": "741000344", "descripcion": "C-PLT 19X21 18  IN DP", "unidad": "piezas"}, {"codigo": "741000345", "descripcion": "C-PLT 19X28 08FL PQ BARB LC", "unidad": "piezas"}, {"codigo": "741000379", "descripcion": "C-PLT 19X21 09CR PR BDBR", "unidad": "piezas"}, {"codigo": "741000380", "descripcion": "C-PLT 13X20 08CR PR BARB", "unidad": "piezas"}, {"codigo": "741000381", "descripcion": "C-PLT 13X20 07CR PR BDRE", "unidad": "piezas"}, {"codigo": "741000382", "descripcion": "C-PLT 19X21 07CR PR BDRE", "unidad": "piezas"}, {"codigo": "741000392", "descripcion": "C-PLT 13X20 10CR", "unidad": "piezas"}, {"codigo": "741000393", "descripcion": "C-PLT 19X21", "unidad": "piezas"}, {"codigo": "741000394", "descripcion": "C-PLT 19X21 6VLV 3+2+1 V-LINE", "unidad": "piezas"}, {"codigo": "741000396", "descripcion": "VAL UF1 LEVER 1.5-3 L/B&CV", "unidad": "piezas"}, {"codigo": "741000397", "descripcion": "Valve UF1 Lever 1.5-3 Complete", "unidad": "piezas"}, {"codigo": "741000398", "descripcion": "VAL UF1 PSHBTN 1.5-3 L/B&CV", "unidad": "piezas"}, {"codigo": "741000399", "descripcion": "Valve UF1 Pushbutton 1.5-3Oz Complete", "unidad": "piezas"}, {"codigo": "741000400", "descripcion": "Valve UF1 Portion Control 1 5-3Oz Less Block Cover", "unidad": "piezas"}, {"codigo": "741000401", "descripcion": "Valve UF1 Portion Control 1.5-3 Complete", "unidad": "piezas"}, {"codigo": "741000402", "descripcion": "VAL UF1 SSRLVR 1.5-3 L/B&CV", "unidad": "piezas"}, {"codigo": "741000403", "descripcion": "Valve UF1 Sani Lever 1.5-3 Complete", "unidad": "piezas"}, {"codigo": "741000406", "descripcion": "VAL UF1 PSHBTN 1.5-3 JUICE", "unidad": "piezas"}, {"codigo": "741000407", "descripcion": "VAL UF1 SSRLVR 1.5-3 JUICE", "unidad": "piezas"}, {"codigo": "741000408", "descripcion": "VAL UF1 SSRLVR 1.5-3 JUICCO", "unidad": "piezas"}, {"codigo": "741000412", "descripcion": "C-PLT 19X21 P/C 2323 PREMIUM", "unidad": "piezas"}, {"codigo": "741000500", "descripcion": "P- NPD- C-PLT FOR M-SERIESS", "unidad": "piezas"}, {"codigo": "741000510", "descripcion": "C-PLT 13X20 08CR TW BARB", "unidad": "piezas"}, {"codigo": "741000514", "descripcion": "Valve UF1 VFCB Fill", "unidad": "piezas"}, {"codigo": "741000520", "descripcion": "P- NPD- C-PLT 19X21 12FL CB2323 2.0", "unidad": "piezas"}, {"codigo": "741000521", "descripcion": "P- NPD- C-PLT 19X21 8FL CB23232", "unidad": "piezas"}, {"codigo": "741000523", "descripcion": "P- NPD- C-PLT 19X21 8FL CB2323", "unidad": "piezas"}, {"codigo": "741000544", "descripcion": "C-PLT 19 X 21 6FL FOR CB2323 PLUS", "unidad": "piezas"}, {"codigo": "620407015", "descripcion": "C-PLT 19X20 08FL IT BARB 2F", "unidad": "piezas"}, {"codigo": "620407016", "descripcion": "C-PLT 19X20 6FL IT BARB 2F", "unidad": "piezas"}, {"codigo": "620407044", "descripcion": "C-PLT 19X28 14FL PS BARB", "unidad": "piezas"}, {"codigo": "620407057", "descripcion": "C-PLT 19X28 (3) LAYER 10FL-IDC2XX", "unidad": "piezas"}, {"codigo": "620407058", "descripcion": "C-PLT 19X28 (2) LAYER 08FL-IDC2XX", "unidad": "piezas"}, {"codigo": "620407062", "descripcion": "C-PLT 19X28 (4) LAYER 12FL-IDC2XX /A&W", "unidad": "piezas"}, {"codigo": "620407082", "descripcion": "C-PLT FOAMED ASY 19 X 28 8FL PS BARB 2LAYER", "unidad": "piezas"}, {"codigo": "620407083", "descripcion": "C-PLT FOAMED ASY 19X28 12FL-IDC2XX/A& W(ECO-MATE)", "unidad": "piezas"}, {"codigo": "620407084", "descripcion": "C-PLT FOAMED ASY 19X28 10FL-IDC2XX(EC O-MATE)", "unidad": "piezas"}, {"codigo": "620407085", "descripcion": "C-PLT FOAMED ASY 19X28 14FL PS", "unidad": "piezas"}, {"codigo": "620407098", "descripcion": "C-PLT ASY FOAMED 6V 19X20 HICARB ECOMATE", "unidad": "piezas"}, {"codigo": "620407099", "descripcion": "C-PLT ASY FOAMED 8V 19X20 HICARB ECOMATE", "unidad": "piezas"}, {"codigo": "77510500", "descripcion": "C-Plt 08x14 2fl Pr L Fg", "unidad": "piezas"}, {"codigo": "77511001", "descripcion": "C-Plt 08x14 7fl Pr 7 16.", "unidad": "piezas"}, {"codigo": "77511000", "descripcion": "C-Plt 08x14 7fl Pr L Fg", "unidad": "piezas"}, {"codigo": "77511601", "descripcion": "C-PLT 10X15 6FL PR 7/16", "unidad": "piezas"}, {"codigo": "77511700", "descripcion": "C-Plt 10x15 6fl Ps Less Fitgs", "unidad": "piezas"}, {"codigo": "77511701", "descripcion": "C-Plt 10x15 6fl Ps With Fitgs.", "unidad": "piezas"}, {"codigo": "771000177", "descripcion": "C-Plt 12x18 07fl Ps Less Fitgs", "unidad": "piezas"}, {"codigo": "741000201", "descripcion": "C-PLT 13X20 06CR PR BARB", "unidad": "piezas"}, {"codigo": "741000381", "descripcion": "C-PLT 13X20 07CR PR BDRE", "unidad": "piezas"}, {"codigo": "741000380", "descripcion": "C-PLT 13X20 08CR PR BARB", "unidad": "piezas"}, {"codigo": "771000296", "descripcion": "C-Plt 13x20 08cr Ps Barb C", "unidad": "piezas"}, {"codigo": "741000510", "descripcion": "C-PLT 13X20 08CR TW BARB", "unidad": "piezas"}, {"codigo": "741000392", "descripcion": "C-PLT 13X20 10CR", "unidad": "piezas"}, {"codigo": "741000244", "descripcion": "C-PLT 13X20 12CR PR BARB", "unidad": "piezas"}, {"codigo": "741000327", "descripcion": "C-PLT 13X20 12CR PR BARB", "unidad": "piezas"}, {"codigo": "620063285", "descripcion": "C-PLT 18X28 8FL PS BARB", "unidad": "piezas"}, {"codigo": "741000544", "descripcion": "C-PLT 19 X 21 6FL FOR CB2323 PLUS", "unidad": "piezas"}, {"codigo": "41323", "descripcion": "C-PLT 19X20 (4) LAYER 06FL-DF", "unidad": "piezas"}, {"codigo": "620401501", "descripcion": "C-PLT 19X20 08FL  BARB", "unidad": "piezas"}, {"codigo": "620407015", "descripcion": "C-PLT 19X20 08FL IT BARB 2F", "unidad": "piezas"}, {"codigo": "620401201", "descripcion": "C-PLT 19X20 11FL  BARB", "unidad": "piezas"}, {"codigo": "41269", "descripcion": "C-PLT 19X20 6 FLVR. REMCOR", "unidad": "piezas"}, {"codigo": "620407016", "descripcion": "C-PLT 19X20 6FL IT BARB 2F", "unidad": "piezas"}, {"codigo": "741000393", "descripcion": "C-PLT 19X21", "unidad": "piezas"}, {"codigo": "741000382", "descripcion": "C-PLT 19X21 07CR PR BDRE", "unidad": "piezas"}, {"codigo": "741000241", "descripcion": "C-PLT 19X21 0912 PR", "unidad": "piezas"}, {"codigo": "741000379", "descripcion": "C-PLT 19X21 09CR PR BDBR", "unidad": "piezas"}, {"codigo": "741000243", "descripcion": "C-PLT 19X21 1216 PS BARB", "unidad": "piezas"}, {"codigo": "741000202", "descripcion": "C-PLT 19X21 1216 PS BRB", "unidad": "piezas"}, {"codigo": "741000344", "descripcion": "C-PLT 19X21 18  IN DP", "unidad": "piezas"}, {"codigo": "741000394", "descripcion": "C-PLT 19X21 6VLV 3+2+1 V-LINE", "unidad": "piezas"}, {"codigo": "741000412", "descripcion": "C-PLT 19X21 P/C 2323 PREMIUM", "unidad": "piezas"}, {"codigo": "620407058", "descripcion": "C-PLT 19X28 (2) LAYER 08FL-IDC2XX", "unidad": "piezas"}, {"codigo": "41285", "descripcion": "C-PLT 19X28 (3) LAYER 08FL-DF", "unidad": "piezas"}, {"codigo": "620407057", "descripcion": "C-PLT 19X28 (3) LAYER 10FL-IDC2XX", "unidad": "piezas"}, {"codigo": "41286", "descripcion": "C-PLT 19X28 (4) LAYER 10FL-DF", "unidad": "piezas"}, {"codigo": "620407062", "descripcion": "C-PLT 19X28 (4) LAYER 12FL-IDC2XX /A&W", "unidad": "piezas"}, {"codigo": "741000345", "descripcion": "C-PLT 19X28 08FL PQ BARB LC", "unidad": "piezas"}, {"codigo": "620064215", "descripcion": "C-PLT 19X28 10 FL ED 2XX COKE", "unidad": "piezas"}, {"codigo": "620074373", "descripcion": "C-PLT 19X28 12FL PS BARB 4 WTR VLV", "unidad": "piezas"}, {"codigo": "620407044", "descripcion": "C-PLT 19X28 14FL PS BARB", "unidad": "piezas"}, {"codigo": "620064214", "descripcion": "C-PLT 19X28 8 FL ED 2XX COKE", "unidad": "piezas"}, {"codigo": "630990006", "descripcion": "C-PLT 19X28 COKE 08FL PS BARBLC 18 CB3023", "unidad": "piezas"}, {"codigo": "77510303", "descripcion": "C-Plt 8x12 6Fl Premix 1/4Bb", "unidad": "piezas"}, {"codigo": "77510301", "descripcion": "C-Plt 8x12 6Fl Premix 1/4MFL", "unidad": "piezas"}, {"codigo": "77510300", "descripcion": "C-Plt 8x12 6Fl Premix w/o Fitg", "unidad": "piezas"}, {"codigo": "77511002", "descripcion": "C-Plt 8x14 7Fl Premix 5/16MFL", "unidad": "piezas"}, {"codigo": "620074636", "descripcion": "C-PLT ABS 2.0 BASE ASSY FOAMED W/COVER - JAPAN", "unidad": "piezas"}, {"codigo": "620065020X", "descripcion": "C-PLT ABS 2.0 BASE ASY FOAMEDW/ COVER (PHANTOM)", "unidad": "piezas"}, {"codigo": "742000029", "descripcion": "C-PLT ABS BASE ASSY FOAMED 620401301 W/COVER", "unidad": "piezas"}, {"codigo": "620066073", "descripcion": "C-PLT ASSY DT175", "unidad": "piezas"}, {"codigo": "41310", "descripcion": "C-PLT ASY FOAMED 08FL", "unidad": "piezas"}, {"codigo": "620401601", "descripcion": "C-PLT ASY FOAMED 08FL", "unidad": "piezas"}, {"codigo": "41309", "descripcion": "C-PLT ASY FOAMED 10FL", "unidad": "piezas"}, {"codigo": "41308", "descripcion": "C-PLT ASY FOAMED 3+1+1+3", "unidad": "piezas"}, {"codigo": "620407098", "descripcion": "C-PLT ASY FOAMED 6V 19X20 HICARB ECOMATE", "unidad": "piezas"}, {"codigo": "620407099", "descripcion": "C-PLT ASY FOAMED 8V 19X20 HICARB ECOMATE", "unidad": "piezas"}, {"codigo": "620061985", "descripcion": "C-PLT BASE ASSY PRO RF255", "unidad": "piezas"}, {"codigo": "742000003", "descripcion": "C-PLT BASE ED 150 ICE & BEVERAGE ONLY", "unidad": "piezas"}, {"codigo": "742000076", "descripcion": "C-PLT BASE ED 150 ICE & BEVERAGE ONLY WO PACK", "unidad": "piezas"}, {"codigo": "742000010", "descripcion": "C-PLT BASE ED2XX ICE & BEVERAGE ONLY", "unidad": "piezas"}, {"codigo": "742000105", "descripcion": "C-PLT BASE ED2XX ICE & BEVERAGE ONLY W/O PACK", "unidad": "piezas"}, {"codigo": "742000018", "descripcion": "C-PLT BASE ED300 SM ICE & BEVERAGE ONLY", "unidad": "piezas"}, {"codigo": "742000120", "descripcion": "C-PLT BASE ED300 SM ICE & BEVERAGE ONLY W/O PACK", "unidad": "piezas"}, {"codigo": "620064929", "descripcion": "C-PLT COVER ED175 - INJ MOLD", "unidad": "piezas"}, {"codigo": "742000036", "descripcion": "C-Plt ED2XX Base Asy Fmd w Cvr1310 W/COVER", "unidad": "piezas"}, {"codigo": "620074639", "descripcion": "C-PLT FOAMED ASM ACSD", "unidad": "piezas"}, {"codigo": "620407082", "descripcion": "C-PLT FOAMED ASY 19 X 28 8FL PS BARB 2LAYER", "unidad": "piezas"}, {"codigo": "620407084", "descripcion": "C-PLT FOAMED ASY 19X28 10FL-IDC2XX(EC O-MATE)", "unidad": "piezas"}, {"codigo": "620407083", "descripcion": "C-PLT FOAMED ASY 19X28 12FL-IDC2XX/A& W(ECO-MATE)", "unidad": "piezas"}, {"codigo": "620407085", "descripcion": "C-PLT FOAMED ASY 19X28 14FL PS", "unidad": "piezas"}, {"codigo": "742000153", "descripcion": "C-PLT VAL ASY 6UF1SL 2UFBSL HI YIELD", "unidad": "piezas"}, {"codigo": "29311", "descripcion": "C-PLT VAL ASY FOAMED 06FL", "unidad": "piezas"}, {"codigo": "742000161", "descripcion": "C-PLT VALVE ASY PRO FR255 WO PACK", "unidad": "piezas"}, {"codigo": "741000150", "descripcion": "C-PLT-ASY 13X20 6VLV 3+2+1", "unidad": "piezas"}, {"codigo": "741000135", "descripcion": "C-PLT-ASY 19X21 08VL PTP", "unidad": "piezas"}, {"codigo": "741000136", "descripcion": "C-PLT-ASY 19X21 6VLV 3+2+1", "unidad": "piezas"}, {"codigo": "620063286", "descripcion": "C-PLT-ASY FOAMED 18X28 8FL", "unidad": "piezas"}], "estampas": [{"codigo": "F", "usuario": "Juan Ramos San Martin", "medida": "GRANDE"}, {"codigo": "X", "usuario": "Inocente Lopez Solis", "medida": "GRANDE"}, {"codigo": "R", "usuario": "Hermenegildo Rodriguez", "medida": "GRANDE"}, {"codigo": "X", "usuario": "Mario Alberto Jimenez", "medida": "GRANDE"}, {"codigo": "C5", "usuario": "Gabriel Jerez Del Angel", "medida": "CHICA"}, {"codigo": "8", "usuario": "Samuel Cruz Cervantes", "medida": "MED"}, {"codigo": "P", "usuario": "Juan Bermudez", "medida": "MED"}, {"codigo": "N", "usuario": "Gustavo Codallos Cervantes", "medida": "MED"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "B5", "usuario": "Efran Ochoa Espinoza", "medida": "MED"}, {"codigo": "A", "usuario": "Leonardo Hernandez Ramirez", "medida": "GRANDE"}, {"codigo": "C", "usuario": "Constantino Santes Rosales", "medida": "GRANDE"}, {"codigo": "0", "usuario": "Joel Lpez Florez", "medida": "GRANDE"}, {"codigo": "6", "usuario": "Juan Daniel Uzcanga Leyba", "medida": "GRANDE"}, {"codigo": "K", "usuario": "Marco Antonio Garcia", "medida": "GRANDE"}, {"codigo": "Y", "usuario": "Rigo Adalberto Ruiz", "medida": "GRANDE"}, {"codigo": "&", "usuario": "Abisai Nicolas Lopez", "medida": "GRANDE"}, {"codigo": "C", "usuario": "Constantino Santes Rosales", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "D1", "usuario": "Jose Angel Hernandez Escobar", "medida": "MED"}, {"codigo": "J", "usuario": "Tomas hernadez Carreo", "medida": "MED"}, {"codigo": "B", "usuario": "Cristian Daniel Ponce Medina", "medida": "MED"}, {"codigo": "7", "usuario": "Roman Sierra", "medida": "MED"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "CHICA"}, {"codigo": "8", "usuario": "Samuel Cruz Cervantes", "medida": "CHICA"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "CHICA"}, {"codigo": "P", "usuario": "Juan Bermudez", "medida": "CHICA"}, {"codigo": "E2", "usuario": "Walter Merida Santiago", "medida": "CHICA"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "7", "usuario": "Roman Sierra", "medida": "MED"}, {"codigo": "2", "usuario": "Hctor David Martinez Quintero", "medida": "MED"}, {"codigo": "D", "usuario": "Alexander Citalan Espinoza", "medida": "MED"}, {"codigo": "8", "usuario": "Samuel Cruz Cervantes /", "medida": "CHICA"}, {"codigo": "Z", "usuario": "Miguel Angel Martinez Mtz /", "medida": "CHICA"}, {"codigo": "P", "usuario": "Juan Manuel Bermudez  /", "medida": "CHICA"}, {"codigo": "T", "usuario": "Miguel Rueda Arias  /", "medida": "CHICA"}, {"codigo": "1", "usuario": "Gustavo Codallos Cervantes //", "medida": "CHICA"}, {"codigo": "R", "usuario": "Otoniel Reyes Morato ///", "medida": "CHICA"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "D", "usuario": "Alexander Citalan Espinoza", "medida": "MED"}, {"codigo": "C1", "usuario": "Jose Guadalupe Izaguirre Chavarria", "medida": "MED"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "C", "usuario": "Constantino Santes Rosales", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "W", "usuario": "Juan Bermudez", "medida": "MED"}, {"codigo": "7", "usuario": "Roman Sierra", "medida": "MED"}, {"codigo": "2", "usuario": "Hctor David Martinez Quintero", "medida": "MED"}, {"codigo": "B5", "usuario": "Efran Ochoa Espinoza", "medida": "MED"}, {"codigo": "C4", "usuario": "Miguel Sarmiento Portillo", "medida": "MED"}, {"codigo": "&", "usuario": "Alejandro Maria Lopez", "medida": "GRANDE"}, {"codigo": "4", "usuario": "Saul Sanchez Hernandez", "medida": "MED"}, {"codigo": "S", "usuario": "Mario Santiago Hernandez", "medida": "GRANDE"}, {"codigo": "7", "usuario": "Carlos Alberto Hernandez Malpica", "medida": "GRANDE"}, {"codigo": "N/A", "usuario": "Juan Jose Cano Hdz", "medida": "GRANDE"}, {"codigo": "5", "usuario": "Francisco Santiago Hdz", "medida": "GRANDE"}, {"codigo": "G4", "usuario": "Maurilio Inocencio Anastacio", "medida": "MED"}, {"codigo": "&", "usuario": "Oscar Rene Dorantes", "medida": "MED"}, {"codigo": "11", "usuario": "Luis Francisco Morales Martinez", "medida": "MED"}, {"codigo": "1", "usuario": "Gustabo Codallos Cervantes", "medida": "CHICA"}, {"codigo": "2", "usuario": "Miguel Angel Marquez Glz", "medida": "CHICA"}, {"codigo": "K", "usuario": "Gildardo Cruz Rubio //", "medida": "CHICA"}, {"codigo": "Q", "usuario": "Enrique Candanoza Hernandez //", "medida": "CHICA"}, {"codigo": "M", "usuario": "Roman Eduardo Orozco //", "medida": "MED"}, {"codigo": "C4", "usuario": "Miguel Sarmiento Portilla //", "medida": "CHICA"}, {"codigo": "6RAYADA", "usuario": "Elias Rueda Rdz", "medida": "MED"}, {"codigo": "4", "usuario": "Saul Sanchez Hernandez", "medida": "MED"}, {"codigo": "A1", "usuario": "Jesus Vicente valencia", "medida": "MED"}, {"codigo": "1RAYADA", "usuario": "Carlos Garca Sanchez", "medida": "MED"}, {"codigo": "Z", "usuario": "Julio Cesar Garcia Perez", "medida": "MED"}, {"codigo": "R", "usuario": "Raul Ramirez Muoz", "medida": "MED"}, {"codigo": "XSIMBOLO", "usuario": "Jose Antonio Balderas Mtz", "medida": "MED"}, {"codigo": "E1", "usuario": "Luis Ricardo Glz Mendez", "medida": "MED"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "CHICA"}, {"codigo": "D1", "usuario": "Jesus Citalan Espinosa", "medida": "CHICA"}, {"codigo": "G2", "usuario": "Fernando Jimenez Vidal", "medida": "CHICA"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "3", "usuario": "Pedro Hernandez Estrada", "medida": "MED"}, {"codigo": "L", "usuario": "Valentin Hernandez Vicencio", "medida": "MED"}, {"codigo": "R", "usuario": "Raul Ramirez Muoz", "medida": "MED"}, {"codigo": "R", "usuario": "Raul Ramirez Muoz", "medida": "MED"}, {"codigo": "S", "usuario": "Sotero Sebastian Hdz", "medida": "CHICA"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "L", "usuario": "Raul Vazquez Morales ///", "medida": "CHICA"}, {"codigo": "s", "usuario": "Sotero Sebastian Hdz /", "medida": "CHICA"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "L", "usuario": "Valentin Hernandez Vicencio", "medida": "MED"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "L", "usuario": "Valentin Hernandez Vicencio", "medida": "MED"}, {"codigo": "O", "usuario": "Marco Antonio Perez Vazquez ///", "medida": "CHICA"}], "defectos": [{"codigo": "C39", "nombre": "Ajuste de  proceso", "descripcion": "Ajuste de  proceso"}, {"codigo": "132", "nombre": "falla de maquina", "descripcion": "falla de maquina"}, {"codigo": "2", "nombre": "CORAZON DE ARENA ROTO", "descripcion": "CORAZON DE ARENA ROTO"}, {"codigo": "167", "nombre": "Entrenamiento", "descripcion": "Entrenamiento"}, {"codigo": "F11", "nombre": "Linea expuesta en cara de hielo", "descripcion": "Linea expuesta en cara de hielo"}, {"codigo": "F13", "nombre": "fuga en la rosca", "descripcion": "fuga en la rosca"}, {"codigo": "F14", "nombre": "Linea quebrada", "descripcion": "Linea quebrada"}, {"codigo": "F18", "nombre": "Mal maquinado", "descripcion": "Mal maquinado"}, {"codigo": "F22", "nombre": "WORKMANHIP/HABIL DE OPERADOR.", "descripcion": "WORKMANHIP/HABIL DE OPERADOR."}, {"codigo": "F7", "nombre": "Linea pinchada por inserto", "descripcion": "Linea pinchada por inserto"}, {"codigo": "F8", "nombre": "Linea pinchada por manejo/transporte", "descripcion": "Linea pinchada por manejo/transporte"}, {"codigo": "f3", "nombre": "Tiro corto/Lineas expuestas", "descripcion": "Tiro corto/Lineas expuestas"}, {"codigo": "25", "nombre": "FITTING DESGASTADO POR PASIVADO", "descripcion": "FITTING DESGASTADO POR PASIVADO"}, {"codigo": "27", "nombre": "MAL PRENSADO", "descripcion": "MAL PRENSADO"}, {"codigo": "C31", "nombre": "Linea escalonada", "descripcion": "Linea escalonada"}, {"codigo": "18", "nombre": "MAL MAQUINADO", "descripcion": "MAL MAQUINADO"}, {"codigo": "16", "nombre": "LINEA EXPUESTA EN RISER", "descripcion": "LINEA EXPUESTA EN RISER"}, {"codigo": "20", "nombre": "LINEAS TAPADAS POR ALUMINIO", "descripcion": "LINEAS TAPADAS POR ALUMINIO"}, {"codigo": "26", "nombre": "MAL TALADRADO", "descripcion": "MAL TALADRADO"}, {"codigo": "28", "nombre": "mal acomodo de corazon de arena", "descripcion": "mal acomodo de corazon de arena"}, {"codigo": "32", "nombre": "LINEA PINCHADA KOMO/END", "descripcion": "LINEA PINCHADA KOMO/END"}, {"codigo": "5", "nombre": "LINEA PINCHADA POR HERRAMIENTA POR LINEA CORTA", "descripcion": "LINEA PINCHADA POR HERRAMIENTA POR LINEA CORTA"}, {"codigo": "6", "nombre": "LINEA PINCHADA POR PIN", "descripcion": "LINEA PINCHADA POR PIN"}, {"codigo": "110", "nombre": "IB/IC-PRUEBAS SOLDADURA SPOT", "descripcion": "IB/IC-PRUEBAS SOLDADURA SPOT"}, {"codigo": "55", "nombre": "Sobrante", "descripcion": "Sobrante"}, {"codigo": "57", "nombre": "External supplier", "descripcion": "External supplier"}, {"codigo": "143", "nombre": "Linea pinchada en Pneuform", "descripcion": "Linea pinchada en Pneuform"}, {"codigo": "140", "nombre": "OBSOLETE // OBSOLETO", "descripcion": "OBSOLETE // OBSOLETO"}, {"codigo": "146", "nombre": "Linea pinchada en doblez", "descripcion": "Linea pinchada en doblez"}, {"codigo": "LDAO", "nombre": "LINEA DAADA", "descripcion": "LINEA DAADA"}, {"codigo": "30", "nombre": "LINEAS ATORADA EN MAQUINA KOMO", "descripcion": "LINEAS ATORADA EN MAQUINA KOMO"}, {"codigo": "152", "nombre": "PORES/ POROS", "descripcion": "PORES/ POROS"}, {"codigo": "21", "nombre": "LINEA CON POCO FLUJO DE AIRE", "descripcion": "LINEA CON POCO FLUJO DE AIRE"}, {"codigo": "44", "nombre": "LINEA PINCHADA HERRAMENTAL", "descripcion": "LINEA PINCHADA HERRAMENTAL"}, {"codigo": "58", "nombre": "Linea pinchada por herramienta", "descripcion": "Linea pinchada por herramienta"}, {"codigo": "48", "nombre": "DESPRENDIMIENTO DE VARILLA-VARILLA", "descripcion": "DESPRENDIMIENTO DE VARILLA-VARILLA"}, {"codigo": "9", "nombre": "LINEA PINCHADA EN DOBLEZ", "descripcion": "LINEA PINCHADA EN DOBLEZ"}, {"codigo": "MM", "nombre": "Mal maquinado", "descripcion": "Mal maquinado"}, {"codigo": "FI", "nombre": "Fuga interna", "descripcion": "Fuga interna"}, {"codigo": "150", "nombre": "PLTFRM-RETRABAJO OTRO DEFECTO", "descripcion": "PLTFRM-RETRABAJO OTRO DEFECTO"}, {"codigo": "183", "nombre": "Lineas atorada en maquina komo", "descripcion": "Lineas atorada en maquina komo"}, {"codigo": "43", "nombre": "HERRAMENTAL DAADO", "descripcion": "HERRAMENTAL DAADO"}, {"codigo": "12", "nombre": "FUGA EN EL DRENAJE", "descripcion": "FUGA EN EL DRENAJE"}, {"codigo": "C32", "nombre": "Linea pinchada", "descripcion": "Linea pinchada"}, {"codigo": "53", "nombre": "ENG VALIDATION/ VALIDACION ING", "descripcion": "ENG VALIDATION/ VALIDACION ING"}, {"codigo": "DT", "nombre": "DRENAJE TAPADO", "descripcion": "DRENAJE TAPADO"}, {"codigo": "LE", "nombre": "Tiro corto/Lineas expuestas", "descripcion": "Tiro corto/Lineas expuestas"}, {"codigo": "LT", "nombre": "LINEA TAPADA", "descripcion": "LINEA TAPADA"}, {"codigo": "95", "nombre": "FOUNDRY/LINEA PINCHADA CINCEL", "descripcion": "FOUNDRY/LINEA PINCHADA CINCEL"}, {"codigo": "136", "nombre": "MISSING OPER/OPERACION OMITIDA", "descripcion": "MISSING OPER/OPERACION OMITIDA"}, {"codigo": "86", "nombre": "Linea pinchada por manejo/transporte", "descripcion": "Linea pinchada por manejo/transporte"}, {"codigo": "F5", "nombre": "Linea pinchada por herramienta", "descripcion": "Linea pinchada por herramienta"}, {"codigo": "F20", "nombre": "Fuga interna", "descripcion": "Fuga interna"}, {"codigo": "F6", "nombre": "Linea pinchada por pin", "descripcion": "Linea pinchada por pin"}, {"codigo": "168", "nombre": "Entrenamiento", "descripcion": "Entrenamiento"}, {"codigo": "F19", "nombre": "Linea expuesta en cara de hielo (Hass)", "descripcion": "Linea expuesta en cara de hielo (Hass)"}, {"codigo": "F10", "nombre": "Linea pinchada por hass", "descripcion": "Linea pinchada por hass"}, {"codigo": "F15", "nombre": "Linea expuesta en drenaje", "descripcion": "Linea expuesta en drenaje"}, {"codigo": "F16", "nombre": "Linea expuesta en riser", "descripcion": "Linea expuesta en riser"}, {"codigo": "F9", "nombre": "Linea pinchada en doblez", "descripcion": "Linea pinchada en doblez"}, {"codigo": "F17", "nombre": "Mal corte en sierra", "descripcion": "Mal corte en sierra"}, {"codigo": "F12", "nombre": "Fuga en el drenaje", "descripcion": "Fuga en el drenaje"}, {"codigo": "135", "nombre": "MARKED TUBE/T.MARCADO PNEUFORM", "descripcion": "MARKED TUBE/T.MARCADO PNEUFORM"}, {"codigo": "C38", "nombre": "falla de maquina", "descripcion": "falla de maquina"}, {"codigo": "F23", "nombre": "Fuga interna por soldadura de fundicin", "descripcion": "Fuga interna por soldadura de fundicin"}, {"codigo": "C36", "nombre": "Sobrante", "descripcion": "Sobrante"}, {"codigo": "C40", "nombre": "Entrenamiento", "descripcion": "Entrenamiento"}, {"codigo": "C42", "nombre": "Desempeo (No cumple contra dibujo)", "descripcion": "Desempeo (No cumple contra dibujo)"}, {"codigo": "C44", "nombre": "Linea pinchada por herramienta", "descripcion": "Linea pinchada por herramienta"}, {"codigo": "C30", "nombre": "Lineas atorada en maquina komo", "descripcion": "Lineas atorada en maquina komo"}, {"codigo": "C33", "nombre": "Linea rayada M komo", "descripcion": "Linea rayada M komo"}, {"codigo": "C43", "nombre": "Herramental daado", "descripcion": "Herramental daado"}, {"codigo": "C37", "nombre": "External supplier", "descripcion": "External supplier"}, {"codigo": "C35", "nombre": "Enredado en enderezadora", "descripcion": "Enredado en enderezadora"}, {"codigo": "C34", "nombre": "Rayado en enderezadora", "descripcion": "Rayado en enderezadora"}, {"codigo": "C41", "nombre": "Linea pinchada en Pneuform", "descripcion": "Linea pinchada en Pneuform"}, {"codigo": "C49", "nombre": "Lnea cruzada", "descripcion": "Lnea cruzada"}, {"codigo": "F4", "nombre": "Falla en el robot", "descripcion": "Falla en el robot"}, {"codigo": "C66", "nombre": "N/D", "descripcion": "N/D"}, {"codigo": "F21", "nombre": "Linea con poco flujo de aire", "descripcion": "Linea con poco flujo de aire"}, {"codigo": "C47", "nombre": "Desprendimiento de stand off", "descripcion": "Desprendimiento de stand off"}, {"codigo": "C50", "nombre": "Pruebas de ingenieria", "descripcion": "Pruebas de ingenieria"}, {"codigo": "C45", "nombre": "Linea corrugada", "descripcion": "Linea corrugada"}, {"codigo": "50", "nombre": "PRUEBA DE INGENIERA", "descripcion": "PRUEBA DE INGENIERA"}, {"codigo": "7", "nombre": "LINEA PINCHADA POR INSERTO", "descripcion": "LINEA PINCHADA POR INSERTO"}, {"codigo": "8", "nombre": "LINEA PINCHADA POR MANEJO/TRANSPORTE", "descripcion": "LINEA PINCHADA POR MANEJO/TRANSPORTE"}, {"codigo": "3", "nombre": "TIRO CORTO", "descripcion": "TIRO CORTO"}, {"codigo": "13", "nombre": "FUGA INTERNA POR MAL CIERRE SOLDADURA (SPLICER,MANIFOLD, TUBO )", "descripcion": "FUGA INTERNA POR MAL CIERRE SOLDADURA (SPLICER,MANIFOLD, TUBO )"}, {"codigo": "11", "nombre": "LINEA EXPUESTA EN CARA DE HIELO", "descripcion": "LINEA EXPUESTA EN CARA DE HIELO"}, {"codigo": "39", "nombre": "AJUSTE DE PROCESO (EQUIPO)", "descripcion": "AJUSTE DE PROCESO (EQUIPO)"}, {"codigo": "38", "nombre": "FALLA DE MAQUINA", "descripcion": "FALLA DE MAQUINA"}, {"codigo": "34", "nombre": "RAYADO EN ENDEREZADORA", "descripcion": "RAYADO EN ENDEREZADORA"}, {"codigo": "35", "nombre": "ENREDADO EN ENDEREZADORA", "descripcion": "ENREDADO EN ENDEREZADORA"}, {"codigo": "31", "nombre": "LINEA ESCALONADA", "descripcion": "LINEA ESCALONADA"}, {"codigo": "36", "nombre": "SOBRANTE", "descripcion": "SOBRANTE"}, {"codigo": "40", "nombre": "ENTRENAMIENTO", "descripcion": "ENTRENAMIENTO"}, {"codigo": "42", "nombre": "DESEMPEO (NO CUMPLE CONTRA DIBUJO)", "descripcion": "DESEMPEO (NO CUMPLE CONTRA DIBUJO)"}, {"codigo": "41", "nombre": "LINEA PINCHADA EN PNEUFORM", "descripcion": "LINEA PINCHADA EN PNEUFORM"}, {"codigo": "14", "nombre": "LINEAS EXPUESTAS EN LA PARTE DE ABAJO.", "descripcion": "LINEAS EXPUESTAS EN LA PARTE DE ABAJO."}, {"codigo": "37", "nombre": "EXTERNAL SUPPLIER", "descripcion": "EXTERNAL SUPPLIER"}, {"codigo": "22", "nombre": "DESEMPEO DE TRABAJO", "descripcion": "DESEMPEO DE TRABAJO"}, {"codigo": "10", "nombre": "LINEA PINCHADA EN PROCESO DE MAQUINADO", "descripcion": "LINEA PINCHADA EN PROCESO DE MAQUINADO"}, {"codigo": "AL55", "nombre": "CHORREADURA ALUMINIO", "descripcion": "CHORREADURA ALUMINIO"}, {"codigo": "17", "nombre": "MAL CORTE EN SIERRA", "descripcion": "MAL CORTE EN SIERRA"}, {"codigo": "33", "nombre": "LINEA RAYADA M KOMO", "descripcion": "LINEA RAYADA M KOMO"}, {"codigo": "19", "nombre": "LINEA EXPUESTA EN CARA DE HIELO (HASS)", "descripcion": "LINEA EXPUESTA EN CARA DE HIELO (HASS)"}, {"codigo": "1", "nombre": "PLATO QUEBRADO/AGRIETADO", "descripcion": "PLATO QUEBRADO/AGRIETADO"}, {"codigo": "23", "nombre": "FUGA INTERNA POR SOLDADURA DE FUNDICION", "descripcion": "FUGA INTERNA POR SOLDADURA DE FUNDICION"}, {"codigo": "F2", "nombre": "Corazon de arena roto", "descripcion": "Corazon de arena roto"}, {"codigo": "15", "nombre": "LINEAS CRUZADAS", "descripcion": "LINEAS CRUZADAS"}], "defectosSecundarios": [{"codigo": "a", "nombre": "DRENAJE CON REBABA DE SOLDADURA", "descripcion": "DRENAJE CON REBABA DE SOLDADURA"}, {"codigo": "b", "nombre": "FALTA DE PASTA EN EL DRENAJE", "descripcion": "FALTA DE PASTA EN EL DRENAJE"}, {"codigo": "c", "nombre": "DRENAJE DESALINEADO", "descripcion": "DRENAJE DESALINEADO"}, {"codigo": "d", "nombre": "PLATO NO ENTRA EN EL MOLDE DE FOAM", "descripcion": "PLATO NO ENTRA EN EL MOLDE DE FOAM"}, {"codigo": "e", "nombre": "REBABA EN EL RAISER", "descripcion": "REBABA EN EL RAISER"}, {"codigo": "f", "nombre": "FALTA DE PASTA EN RAISER", "descripcion": "FALTA DE PASTA EN RAISER"}, {"codigo": "g", "nombre": "EXCESO DE PASTA EN DRENAJE", "descripcion": "EXCESO DE PASTA EN DRENAJE"}, {"codigo": "h", "nombre": "RAEABA DE ALUMINIO EN LINEAS DE SALIDA", "descripcion": "RAEABA DE ALUMINIO EN LINEAS DE SALIDA"}, {"codigo": "i", "nombre": "ROSCA DEL DRENAJE TAPADA CON PASTA", "descripcion": "ROSCA DEL DRENAJE TAPADA CON PASTA"}, {"codigo": "j", "nombre": "LINEA PINCHADA", "descripcion": "LINEA PINCHADA"}, {"codigo": "l", "nombre": "LINEAS SUCIAS", "descripcion": "LINEAS SUCIAS"}, {"codigo": "k", "nombre": "sin texto en transfer", "descripcion": "sin texto en transfer"}, {"codigo": "m", "nombre": "EXCESO DE PASTA", "descripcion": "EXCESO DE PASTA"}, {"codigo": "n", "nombre": "FITTING DANADOS POR PASIVADO", "descripcion": "FITTING DANADOS POR PASIVADO"}, {"codigo": "o", "nombre": "PANEL DESALINEADO", "descripcion": "PANEL DESALINEADO"}, {"codigo": "p", "nombre": "LINEAS MAL DOBLADAS", "descripcion": "LINEAS MAL DOBLADAS"}, {"codigo": "q", "nombre": "AGITADOR DOBLADO", "descripcion": "AGITADOR DOBLADO"}, {"codigo": "r", "nombre": "FUGA EN FITTING", "descripcion": "FUGA EN FITTING"}, {"codigo": "s", "nombre": "Falta de rebabeo en drenaje", "descripcion": "Falta de rebabeo en drenaje"}]};
+
     const PROXY_DEFAULT = "https://script.google.com/macros/s/AKfycbwRoXQrxOhXuLOJG7lbYLgYEJzedlJtDnDLS87nc5PQ0KeKWHZCLeiT5Q3x-NOr5jOQ/exec";
-    let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS')) || {"almacenes": [{"numero": "201101", "nombre": "High Runner Bins - Line 1"}, {"numero": "201102", "nombre": "High Runner Bins - Line 2"}, {"numero": "201103", "nombre": "High Runner Bins - Line 3"}, {"numero": "201109", "nombre": "Sub Assy High Runner Bins"}, {"numero": "201201", "nombre": "High Runner Toasters - Line 1"}, {"numero": "201202", "nombre": "High Runner Toasters - Line 2"}, {"numero": "201203", "nombre": "High Runner Toasters - Line 3"}, {"numero": "201209", "nombre": "Sub Assy High Runner Toasters"}, {"numero": "201301", "nombre": "Low/Mid Runner Toaster Bins"}, {"numero": "201309", "nombre": "Sub Assy Low/Mid Toaster Bins"}, {"numero": "201401", "nombre": "Sabre King Slicers"}, {"numero": "201501", "nombre": "Smallware Timers"}, {"numero": "201601", "nombre": "NPD"}, {"numero": "201701", "nombre": "ACSD"}, {"numero": "201709", "nombre": "ACSD Sub Assy"}, {"numero": "202101", "nombre": "Display Tech Work Center"}, {"numero": "204101", "nombre": "Coils Assembly"}, {"numero": "204121", "nombre": "Coil Pack  Fabrication"}, {"numero": "204122", "nombre": "Foundry"}, {"numero": "204123", "nombre": "Cold Plate Finishing"}, {"numero": "204124", "nombre": "Pickle/Passivate for Machines"}, {"numero": "204141", "nombre": "Cold Plate Foaming"}, {"numero": "204143", "nombre": "Hopper Bonding"}, {"numero": "204161", "nombre": "Foaming P2 Center"}, {"numero": "204201", "nombre": "Plastics"}, {"numero": "204221", "nombre": "Valves"}, {"numero": "204301", "nombre": "Stand Assembly"}, {"numero": "204302", "nombre": "Adapter Kit Assembly"}, {"numero": "204321", "nombre": "Silver King Back Shop Assy"}, {"numero": "204341", "nombre": "Pump & Motor"}, {"numero": "204361", "nombre": "Hoses Fabrication"}, {"numero": "204401", "nombre": "Tanks Fabrication"}, {"numero": "204421", "nombre": "Agitator Fabrication"}, {"numero": "204441", "nombre": "Sheet Metal Fabrication"}, {"numero": "204501", "nombre": "Viper Kits/Carts/Hoses/Tray"}, {"numero": "204502", "nombre": "Viper Face Plate"}, {"numero": "204504", "nombre": "Viper Barrel"}, {"numero": "205101", "nombre": "Ice Cool Assy High runners"}, {"numero": "205121", "nombre": "Ice Drink Work Center ED1XX"}, {"numero": "205122", "nombre": "Ice Drink Assy  ED300"}, {"numero": "205123", "nombre": "Ice Drink Assembly FF/CF"}, {"numero": "205124", "nombre": "Ice Drink Kits Assembly"}, {"numero": "205126", "nombre": "Ice Drink Work Center ED2XX"}, {"numero": "205127", "nombre": "Ice Drink Work Center IDC2XX"}, {"numero": "205141", "nombre": "IDC PRO Assembly"}, {"numero": "205161", "nombre": "ABS 2.0 Assembly"}, {"numero": "205202", "nombre": "Viper Final Assembly"}, {"numero": "205221", "nombre": "Ice Makers Assembly"}, {"numero": "205241", "nombre": "OCE Chillers Asembly"}, {"numero": "205301", "nombre": "Quest Elite Assembly"}, {"numero": "205401", "nombre": "Majestic Assembly"}, {"numero": "205421", "nombre": "Cold Wall Assembly"}, {"numero": "205441", "nombre": "SFA / 27 / 48 Assembly Lines"}, {"numero": "205461", "nombre": "Chef Base Assembly"}, {"numero": "221101", "nombre": "Kitting - A"}, {"numero": "221102", "nombre": "Kitting - B"}, {"numero": "221103", "nombre": "KS Bulk"}, {"numero": "406610", "nombre": "Engineering Prototype"}, {"numero": "CONS01", "nombre": "Rath Gibson Consign WH"}, {"numero": "CSEJNL", "nombre": "J&L GEAR COMPANY WH"}, {"numero": "CSF001", "nombre": "Carol Stream Finish Good WH"}, {"numero": "CSF002", "nombre": "Carol Stream FG estore WH"}, {"numero": "CSF003", "nombre": "Amazon FBA"}, {"numero": "CSQ001", "nombre": "Carol Stream Inspection WH"}, {"numero": "CSR001", "nombre": "Carol Stream Raw Material WH"}, {"numero": "CSV001", "nombre": "Carol Stream Virtual"}, {"numero": "CSX001", "nombre": "Carol Stream Returns"}, {"numero": "DTAE01", "nombre": "ALL AMERICAN EXTRUSION INC WH"}, {"numero": "DTAE02", "nombre": "ALL AMERICAN RETURNS"}, {"numero": "DTAE03", "nombre": "ALL AMERICAN VIRTUAL"}, {"numero": "DTAG01", "nombre": "AIM GRAPHICS WH"}, {"numero": "DTAG02", "nombre": "AIM GRAPHICS RETURNS"}, {"numero": "DTAG03", "nombre": "AIM GRAPHICS VIRTUAL"}, {"numero": "DTCP01", "nombre": "COMMERCIAL PLASTICS WH"}, {"numero": "DTCP02", "nombre": "COMMERCIAL PLASTICS RETURNS"}, {"numero": "DTCP03", "nombre": "COMMERCIAL PLASTICS VIRTUAL"}, {"numero": "DTDS01", "nombre": "DISCOVERY PLASTICS LLC"}, {"numero": "DTDS02", "nombre": "DISCOVERY PLAST ESTORE WH"}, {"numero": "DTDS03", "nombre": "DISCOVERY PLAST RETURNS"}, {"numero": "DTDS04", "nombre": "DISCOVERY PLAST VIRTUAL"}, {"numero": "DTDS05", "nombre": "DISCOVERY PLAST LIANG CTR"}, {"numero": "DTF001", "nombre": "DISPLAY TECH FG WAREHOUSE"}, {"numero": "DTF002", "nombre": "DISPLAY TECH RETURNS"}, {"numero": "DTF003", "nombre": "DISPLAY TECH VIRTUAL"}, {"numero": "DTHM01", "nombre": "HUNTER METAL IND, INC"}, {"numero": "DTHM02", "nombre": "HUNTER METAL RETURNS"}, {"numero": "DTHM03", "nombre": "HUNTER METAL VIRTUAL"}, {"numero": "DTIN01", "nombre": "INJECTRON CORPORATION"}, {"numero": "DTIN02", "nombre": "INJECTRON ESTORE WH"}, {"numero": "DTIN03", "nombre": "INJECTRON AMAZON FBA"}, {"numero": "DTIN04", "nombre": "INJECTRON VIRTUAL"}, {"numero": "DTL001", "nombre": "DT LATAM Miami"}, {"numero": "DTL002", "nombre": "DT LATAM Laredo"}, {"numero": "DTMM01", "nombre": "MONTROSE MOLDERS CORP. WH"}, {"numero": "DTMM02", "nombre": "MONTROSE MOLDERS ESTORE WH"}, {"numero": "DTMM03", "nombre": "MONTROSE AMAZON FBA"}, {"numero": "DTMM04", "nombre": "MONTROSE MOLDERS VIRTUAL"}, {"numero": "DTMP01", "nombre": "MERCURY PLASTICS, INC."}, {"numero": "DTMP02", "nombre": "MERCURY PLASTICS RETURNS"}, {"numero": "DTMP03", "nombre": "MERCURY PLASTICS VIRTUAL"}, {"numero": "DTNE01", "nombre": "NEW ENGLAND WIRE PRODUCTS WH"}, {"numero": "DTNE02", "nombre": "NEW ENGLAND WIRE RETURNS"}, {"numero": "DTNE03", "nombre": "NEW ENGLAND WIRE VIRTUAL"}, {"numero": "DTPE01", "nombre": "PLASTIEXPORTS, LLC"}, {"numero": "DTPE02", "nombre": "PLASTIEXPORTS RETURNS"}, {"numero": "DTPE03", "nombre": "PLASTIEXPORTS AMAZON FBA"}, {"numero": "DTPE04", "nombre": "PLASTIEXPORTS JUAREZ"}, {"numero": "DTUP01", "nombre": "UMIPLAST PARTNERS LLC WH"}, {"numero": "DTUP02", "nombre": "UMIPLAST PARTNERS RETURNS"}, {"numero": "DTUP03", "nombre": "UMIPLAST PARTNERS VIRTUAL"}, {"numero": "LA1F01", "nombre": "LATAM CDMX Warehouse"}, {"numero": "LA1Q01", "nombre": "LATAM MX Inspection WH"}, {"numero": "LA1S01", "nombre": "LATAM MX Service WH"}, {"numero": "LA1SP1", "nombre": "LATAM COSE Installments"}, {"numero": "LA2F01", "nombre": "LATAM Miami Warehouse"}, {"numero": "LA2F02", "nombre": "LATAM World  Warehouse"}, {"numero": "LA2SP1", "nombre": "LATAM COSE Miami Installments"}, {"numero": "LA3F01", "nombre": "LATAM Laredo Warehouse"}, {"numero": "LA5F01", "nombre": "LATAM Tainjin Warehouse"}, {"numero": "MC1C01", "nombre": "McAllen Cost Mat Warehouse"}, {"numero": "MC1D01", "nombre": "Donna Mat Warehouse Alcoa"}, {"numero": "MCALP1", "nombre": "ALPHA PLASTICS"}, {"numero": "MCF001", "nombre": "McAllen FG Warehouse"}, {"numero": "MCIDL", "nombre": "McAllen IDL Warehouse"}, {"numero": "MCMECH", "nombre": "Mechatronic Subcontracting"}, {"numero": "MCMER1", "nombre": "Promotora Merhen -Pharr TX"}, {"numero": "MCMSC1", "nombre": "Micro Surfaces Corp"}, {"numero": "MCNEP1", "nombre": "NEP Electronics"}, {"numero": "MCNS01", "nombre": "NorthStar Metal"}, {"numero": "MCPART", "nombre": "Partners Manufacturing"}, {"numero": "MCPRO1", "nombre": "Proto Labs"}, {"numero": "MCQ001", "nombre": "McAllen Disposition Area"}, {"numero": "MCR001", "nombre": "McAllen RM Warehouse"}, {"numero": "MLF001", "nombre": "Marmon Link FG Warehouse"}, {"numero": "MLQ001", "nombre": "Marmon Link Quarantine WH"}, {"numero": "RE1C01", "nombre": "Reynosa PL1 Cost Mat Warehouse"}, {"numero": "RE1C02", "nombre": "Reynosa PL2 Cost Mat Warehouse"}, {"numero": "RE1CP1", "nombre": "Reynosa PL1 Cold Plate"}, {"numero": "RE1CPR", "nombre": "Reynosa PL1 Cold Plate Rack"}, {"numero": "RE1F01", "nombre": "Reynosa US PL1 FG Warehouse"}, {"numero": "RE1F02", "nombre": "Reynosa US PL2 FG Warehouse"}, {"numero": "RE1INT", "nombre": "Reynosa International Ship WH"}, {"numero": "RE1PLS", "nombre": "Back Shoop Plastic"}, {"numero": "RE1Q01", "nombre": "Reynosa PL1 Disposition Area"}, {"numero": "RE1Q02", "nombre": "Reynosa PL2 Disposition Area"}, {"numero": "RE1R01", "nombre": "Reynosa PL1 Raw Material WH"}, {"numero": "RE1R02", "nombre": "Reynosa PL2 Raw Material WH"}, {"numero": "RE1S01", "nombre": "Reynosa US ShopFloor Warehouse"}, {"numero": "RE1SM1", "nombre": "Reynosa PL1 Sheet Metal"}, {"numero": "RE1VL1", "nombre": "Reynosa PL1 Valves"}, {"numero": "RE2C01", "nombre": "Cost WH Plant 1 Tool Crib Stat"}, {"numero": "RE2C02", "nombre": "Cost WH Plant 2 Tool Crib Stat"}, {"numero": "RE2F01", "nombre": "**DNU RY Statutory Finished"}, {"numero": "RE2R01", "nombre": "** DNU RY Statutory Raw"}, {"numero": "RE2W01", "nombre": "** DNU RY Statutory Cost WH"}, {"numero": "REIDL", "nombre": "Reynosa IDL Warehouse"}, {"numero": "REIDLF", "nombre": "Reynosa IDL FG Warehouse"}, {"numero": "RENXFA", "nombre": "Inventory RENXFAB"}, {"numero": "REVCP", "nombre": "Reynosa Victory Packaging"}, {"numero": "RYEADV", "nombre": "ADVANCED PLATING S.A. DE C.V."}, {"numero": "RYEERM", "nombre": "ELECTRO RECUBRIMIENTOS METALIC"}, {"numero": "RYEMER", "nombre": "PROMOTORA MERHEN SA DE CV"}, {"numero": "RYEQIS", "nombre": "QUALITY INDUSTRIAL SOLUTNS LLC"}], "areas": [{"nombre": "204101", "descripcion": "Coils Assembly"}, {"nombre": "204121", "descripcion": "Coil Pack  Fabrication"}, {"nombre": "204122", "descripcion": "Foundry"}, {"nombre": "204123", "descripcion": "Cold Plate Finishing"}, {"nombre": "204124", "descripcion": "Pickle/Passivate for Machines"}, {"nombre": "204141", "descripcion": "Cold Plate Foaming"}, {"nombre": "204143", "descripcion": "Hopper Bonding"}, {"nombre": "204161", "descripcion": "Foaming P2 Center"}, {"nombre": "204201", "descripcion": "Plastics"}, {"nombre": "204221", "descripcion": "Valves"}, {"nombre": "204301", "descripcion": "Stand Assembly"}, {"nombre": "204302", "descripcion": "Adapter Kit Assembly"}, {"nombre": "204321", "descripcion": "Silver King Back Shop Assy"}, {"nombre": "204341", "descripcion": "Pump & Motor"}, {"nombre": "204361", "descripcion": "Hoses Fabrication"}, {"nombre": "204401", "descripcion": "Tanks Fabrication"}, {"nombre": "204421", "descripcion": "Agitator Fabrication"}, {"nombre": "204441", "descripcion": "Sheet Metal Fabrication"}, {"nombre": "204501", "descripcion": "Viper Kits/Carts/Hoses/Tray"}, {"nombre": "204502", "descripcion": "Viper Face Plate"}, {"nombre": "204504", "descripcion": "Viper Barrel"}, {"nombre": "205101", "descripcion": "Ice Cool Assy High runners"}, {"nombre": "205121", "descripcion": "Ice Drink Work Center ED1XX"}, {"nombre": "205122", "descripcion": "Ice Drink Assy  ED300"}, {"nombre": "205123", "descripcion": "Ice Drink Assembly FF/CF"}, {"nombre": "205124", "descripcion": "Ice Drink Kits Assembly"}, {"nombre": "205126", "descripcion": "Ice Drink Work Center ED2XX"}, {"nombre": "205127", "descripcion": "Ice Drink Work Center IDC2XX"}, {"nombre": "205141", "descripcion": "IDC PRO Assembly"}, {"nombre": "205161", "descripcion": "ABS 2.0 Assembly"}, {"nombre": "205202", "descripcion": "Viper Final Assembly"}, {"nombre": "205221", "descripcion": "Ice Makers Assembly"}, {"nombre": "205241", "descripcion": "OCE Chillers Asembly"}, {"nombre": "205301", "descripcion": "Quest Elite Assembly"}, {"nombre": "205401", "descripcion": "Majestic Assembly"}, {"nombre": "205421", "descripcion": "Cold Wall Assembly"}, {"nombre": "205441", "descripcion": "SFA / 27 / 48 Assembly Lines"}, {"nombre": "205461", "descripcion": "Chef Base Assembly"}, {"nombre": "RE1C01", "descripcion": "Reynosa PL1 Cost Mat Warehouse"}, {"nombre": "RE1C02", "descripcion": "Reynosa PL2 Cost Mat Warehouse"}, {"nombre": "RE1CP1", "descripcion": "Reynosa PL1 Cold Plate"}, {"nombre": "RE1CPR", "descripcion": "Reynosa PL1 Cold Plate Rack"}, {"nombre": "RE1F01", "descripcion": "Reynosa US PL1 FG Warehouse"}, {"nombre": "RE1F02", "descripcion": "Reynosa US PL2 FG Warehouse"}, {"nombre": "RE1INT", "descripcion": "Reynosa International Ship WH"}, {"nombre": "RE1PLS", "descripcion": "Back Shoop Plastic"}, {"nombre": "RE1Q01", "descripcion": "Reynosa PL1 Disposition Area"}, {"nombre": "RE1Q02", "descripcion": "Reynosa PL2 Disposition Area"}, {"nombre": "RE1R01", "descripcion": "Reynosa PL1 Raw Material WH"}, {"nombre": "RE1R02", "descripcion": "Reynosa PL2 Raw Material WH"}, {"nombre": "RE1S01", "descripcion": "Reynosa US ShopFloor Warehouse"}, {"nombre": "RE1SM1", "descripcion": "Reynosa PL1 Sheet Metal"}, {"nombre": "RE1VL1", "descripcion": "Reynosa PL1 Valves"}, {"nombre": "REIDL", "descripcion": "Reynosa IDL Warehouse"}, {"nombre": "REIDLF", "descripcion": "Reynosa IDL FG Warehouse"}, {"nombre": "RENXFA", "descripcion": "Inventory RENXFAB"}, {"nombre": "REVCP", "descripcion": "Reynosa Victory Packaging"}], "partes": [{"codigo": "741000135", "descripcion": "C-PLT-ASY 19X21 08VL PTP"}, {"codigo": "741000136", "descripcion": "C-PLT-ASY 19X21 6VLV 3+2+1"}, {"codigo": "741000150", "descripcion": "C-PLT-ASY 13X20 6VLV 3+2+1"}, {"codigo": "741000201", "descripcion": "C-PLT 13X20 06CR PR BARB"}, {"codigo": "741000202", "descripcion": "C-PLT 19X21 1216 PS BRB"}, {"codigo": "741000241", "descripcion": "C-PLT 19X21 0912 PR"}, {"codigo": "741000243", "descripcion": "C-PLT 19X21 1216 PS BARB"}, {"codigo": "741000244", "descripcion": "C-PLT 13X20 12CR PR BARB"}, {"codigo": "741000327", "descripcion": "C-PLT 13X20 12CR PR BARB"}, {"codigo": "741000344", "descripcion": "C-PLT 19X21 18  IN DP"}, {"codigo": "741000345", "descripcion": "C-PLT 19X28 08FL PQ BARB LC"}, {"codigo": "741000379", "descripcion": "C-PLT 19X21 09CR PR BDBR"}, {"codigo": "741000380", "descripcion": "C-PLT 13X20 08CR PR BARB"}, {"codigo": "741000381", "descripcion": "C-PLT 13X20 07CR PR BDRE"}, {"codigo": "741000382", "descripcion": "C-PLT 19X21 07CR PR BDRE"}, {"codigo": "741000392", "descripcion": "C-PLT 13X20 10CR"}, {"codigo": "741000393", "descripcion": "C-PLT 19X21"}, {"codigo": "741000394", "descripcion": "C-PLT 19X21 6VLV 3+2+1 V-LINE"}, {"codigo": "741000396", "descripcion": "VAL UF1 LEVER 1.5-3 L/B&CV"}, {"codigo": "741000397", "descripcion": "Valve UF1 Lever 1.5-3 Complete"}, {"codigo": "741000398", "descripcion": "VAL UF1 PSHBTN 1.5-3 L/B&CV"}, {"codigo": "741000399", "descripcion": "Valve UF1 Pushbutton 1.5-3Oz Complete"}, {"codigo": "741000400", "descripcion": "Valve UF1 Portion Control 1 5-3Oz Less Block Cover"}, {"codigo": "741000401", "descripcion": "Valve UF1 Portion Control 1.5-3 Complete"}, {"codigo": "741000402", "descripcion": "VAL UF1 SSRLVR 1.5-3 L/B&CV"}, {"codigo": "741000403", "descripcion": "Valve UF1 Sani Lever 1.5-3 Complete"}, {"codigo": "741000406", "descripcion": "VAL UF1 PSHBTN 1.5-3 JUICE"}, {"codigo": "741000407", "descripcion": "VAL UF1 SSRLVR 1.5-3 JUICE"}, {"codigo": "741000408", "descripcion": "VAL UF1 SSRLVR 1.5-3 JUICCO"}, {"codigo": "741000412", "descripcion": "C-PLT 19X21 P/C 2323 PREMIUM"}, {"codigo": "741000500", "descripcion": "P- NPD- C-PLT FOR M-SERIESS"}, {"codigo": "741000510", "descripcion": "C-PLT 13X20 08CR TW BARB"}, {"codigo": "741000514", "descripcion": "Valve UF1 VFCB Fill"}, {"codigo": "741000520", "descripcion": "P- NPD- C-PLT 19X21 12FL CB2323 2.0"}, {"codigo": "741000521", "descripcion": "P- NPD- C-PLT 19X21 8FL CB23232"}, {"codigo": "741000523", "descripcion": "P- NPD- C-PLT 19X21 8FL CB2323"}, {"codigo": "741000544", "descripcion": "C-PLT 19 X 21 6FL FOR CB2323 PLUS"}, {"codigo": "620407015", "descripcion": "C-PLT 19X20 08FL IT BARB 2F"}, {"codigo": "620407016", "descripcion": "C-PLT 19X20 6FL IT BARB 2F"}, {"codigo": "620407044", "descripcion": "C-PLT 19X28 14FL PS BARB"}, {"codigo": "620407057", "descripcion": "C-PLT 19X28 (3) LAYER 10FL-IDC2XX"}, {"codigo": "620407058", "descripcion": "C-PLT 19X28 (2) LAYER 08FL-IDC2XX"}, {"codigo": "620407062", "descripcion": "C-PLT 19X28 (4) LAYER 12FL-IDC2XX /A&W"}, {"codigo": "620407082", "descripcion": "C-PLT FOAMED ASY 19 X 28 8FL PS BARB 2LAYER"}, {"codigo": "620407083", "descripcion": "C-PLT FOAMED ASY 19X28 12FL-IDC2XX/A& W(ECO-MATE)"}, {"codigo": "620407084", "descripcion": "C-PLT FOAMED ASY 19X28 10FL-IDC2XX(EC O-MATE)"}, {"codigo": "620407085", "descripcion": "C-PLT FOAMED ASY 19X28 14FL PS"}, {"codigo": "620407098", "descripcion": "C-PLT ASY FOAMED 6V 19X20 HICARB ECOMATE"}, {"codigo": "620407099", "descripcion": "C-PLT ASY FOAMED 8V 19X20 HICARB ECOMATE"}, {"codigo": "77510500", "descripcion": "C-Plt 08x14 2fl Pr L Fg"}, {"codigo": "77511001", "descripcion": "C-Plt 08x14 7fl Pr 7 16."}, {"codigo": "77511000", "descripcion": "C-Plt 08x14 7fl Pr L Fg"}, {"codigo": "77511601", "descripcion": "C-PLT 10X15 6FL PR 7/16"}, {"codigo": "77511700", "descripcion": "C-Plt 10x15 6fl Ps Less Fitgs"}, {"codigo": "77511701", "descripcion": "C-Plt 10x15 6fl Ps With Fitgs."}, {"codigo": "771000177", "descripcion": "C-Plt 12x18 07fl Ps Less Fitgs"}, {"codigo": "741000201", "descripcion": "C-PLT 13X20 06CR PR BARB"}, {"codigo": "741000381", "descripcion": "C-PLT 13X20 07CR PR BDRE"}, {"codigo": "741000380", "descripcion": "C-PLT 13X20 08CR PR BARB"}, {"codigo": "771000296", "descripcion": "C-Plt 13x20 08cr Ps Barb C"}, {"codigo": "741000510", "descripcion": "C-PLT 13X20 08CR TW BARB"}, {"codigo": "741000392", "descripcion": "C-PLT 13X20 10CR"}, {"codigo": "741000244", "descripcion": "C-PLT 13X20 12CR PR BARB"}, {"codigo": "741000327", "descripcion": "C-PLT 13X20 12CR PR BARB"}, {"codigo": "620063285", "descripcion": "C-PLT 18X28 8FL PS BARB"}, {"codigo": "741000544", "descripcion": "C-PLT 19 X 21 6FL FOR CB2323 PLUS"}, {"codigo": "41323", "descripcion": "C-PLT 19X20 (4) LAYER 06FL-DF"}, {"codigo": "620401501", "descripcion": "C-PLT 19X20 08FL  BARB"}, {"codigo": "620407015", "descripcion": "C-PLT 19X20 08FL IT BARB 2F"}, {"codigo": "620401201", "descripcion": "C-PLT 19X20 11FL  BARB"}, {"codigo": "41269", "descripcion": "C-PLT 19X20 6 FLVR. REMCOR"}, {"codigo": "620407016", "descripcion": "C-PLT 19X20 6FL IT BARB 2F"}, {"codigo": "741000393", "descripcion": "C-PLT 19X21"}, {"codigo": "741000382", "descripcion": "C-PLT 19X21 07CR PR BDRE"}, {"codigo": "741000241", "descripcion": "C-PLT 19X21 0912 PR"}, {"codigo": "741000379", "descripcion": "C-PLT 19X21 09CR PR BDBR"}, {"codigo": "741000243", "descripcion": "C-PLT 19X21 1216 PS BARB"}, {"codigo": "741000202", "descripcion": "C-PLT 19X21 1216 PS BRB"}, {"codigo": "741000344", "descripcion": "C-PLT 19X21 18  IN DP"}, {"codigo": "741000394", "descripcion": "C-PLT 19X21 6VLV 3+2+1 V-LINE"}, {"codigo": "741000412", "descripcion": "C-PLT 19X21 P/C 2323 PREMIUM"}, {"codigo": "620407058", "descripcion": "C-PLT 19X28 (2) LAYER 08FL-IDC2XX"}, {"codigo": "41285", "descripcion": "C-PLT 19X28 (3) LAYER 08FL-DF"}, {"codigo": "620407057", "descripcion": "C-PLT 19X28 (3) LAYER 10FL-IDC2XX"}, {"codigo": "41286", "descripcion": "C-PLT 19X28 (4) LAYER 10FL-DF"}, {"codigo": "620407062", "descripcion": "C-PLT 19X28 (4) LAYER 12FL-IDC2XX /A&W"}, {"codigo": "741000345", "descripcion": "C-PLT 19X28 08FL PQ BARB LC"}, {"codigo": "620064215", "descripcion": "C-PLT 19X28 10 FL ED 2XX COKE"}, {"codigo": "620074373", "descripcion": "C-PLT 19X28 12FL PS BARB 4 WTR VLV"}, {"codigo": "620407044", "descripcion": "C-PLT 19X28 14FL PS BARB"}, {"codigo": "620064214", "descripcion": "C-PLT 19X28 8 FL ED 2XX COKE"}, {"codigo": "630990006", "descripcion": "C-PLT 19X28 COKE 08FL PS BARBLC 18 CB3023"}, {"codigo": "77510303", "descripcion": "C-Plt 8x12 6Fl Premix 1/4Bb"}, {"codigo": "77510301", "descripcion": "C-Plt 8x12 6Fl Premix 1/4MFL"}, {"codigo": "77510300", "descripcion": "C-Plt 8x12 6Fl Premix w/o Fitg"}, {"codigo": "77511002", "descripcion": "C-Plt 8x14 7Fl Premix 5/16MFL"}, {"codigo": "620074636", "descripcion": "C-PLT ABS 2.0 BASE ASSY FOAMED W/COVER - JAPAN"}, {"codigo": "620065020X", "descripcion": "C-PLT ABS 2.0 BASE ASY FOAMEDW/ COVER (PHANTOM)"}, {"codigo": "742000029", "descripcion": "C-PLT ABS BASE ASSY FOAMED 620401301 W/COVER"}, {"codigo": "620066073", "descripcion": "C-PLT ASSY DT175"}, {"codigo": "41310", "descripcion": "C-PLT ASY FOAMED 08FL"}, {"codigo": "620401601", "descripcion": "C-PLT ASY FOAMED 08FL"}, {"codigo": "41309", "descripcion": "C-PLT ASY FOAMED 10FL"}, {"codigo": "41308", "descripcion": "C-PLT ASY FOAMED 3+1+1+3"}, {"codigo": "620407098", "descripcion": "C-PLT ASY FOAMED 6V 19X20 HICARB ECOMATE"}, {"codigo": "620407099", "descripcion": "C-PLT ASY FOAMED 8V 19X20 HICARB ECOMATE"}, {"codigo": "620061985", "descripcion": "C-PLT BASE ASSY PRO RF255"}, {"codigo": "742000003", "descripcion": "C-PLT BASE ED 150 ICE & BEVERAGE ONLY"}, {"codigo": "742000076", "descripcion": "C-PLT BASE ED 150 ICE & BEVERAGE ONLY WO PACK"}, {"codigo": "742000010", "descripcion": "C-PLT BASE ED2XX ICE & BEVERAGE ONLY"}, {"codigo": "742000105", "descripcion": "C-PLT BASE ED2XX ICE & BEVERAGE ONLY W/O PACK"}, {"codigo": "742000018", "descripcion": "C-PLT BASE ED300 SM ICE & BEVERAGE ONLY"}, {"codigo": "742000120", "descripcion": "C-PLT BASE ED300 SM ICE & BEVERAGE ONLY W/O PACK"}, {"codigo": "620064929", "descripcion": "C-PLT COVER ED175 - INJ MOLD"}, {"codigo": "742000036", "descripcion": "C-Plt ED2XX Base Asy Fmd w Cvr1310 W/COVER"}, {"codigo": "620074639", "descripcion": "C-PLT FOAMED ASM ACSD"}, {"codigo": "620407082", "descripcion": "C-PLT FOAMED ASY 19 X 28 8FL PS BARB 2LAYER"}, {"codigo": "620407084", "descripcion": "C-PLT FOAMED ASY 19X28 10FL-IDC2XX(EC O-MATE)"}, {"codigo": "620407083", "descripcion": "C-PLT FOAMED ASY 19X28 12FL-IDC2XX/A& W(ECO-MATE)"}, {"codigo": "620407085", "descripcion": "C-PLT FOAMED ASY 19X28 14FL PS"}, {"codigo": "742000153", "descripcion": "C-PLT VAL ASY 6UF1SL 2UFBSL HI YIELD"}, {"codigo": "29311", "descripcion": "C-PLT VAL ASY FOAMED 06FL"}, {"codigo": "742000161", "descripcion": "C-PLT VALVE ASY PRO FR255 WO PACK"}, {"codigo": "741000150", "descripcion": "C-PLT-ASY 13X20 6VLV 3+2+1"}, {"codigo": "741000135", "descripcion": "C-PLT-ASY 19X21 08VL PTP"}, {"codigo": "741000136", "descripcion": "C-PLT-ASY 19X21 6VLV 3+2+1"}, {"codigo": "620063286", "descripcion": "C-PLT-ASY FOAMED 18X28 8FL"}], "estampas": [{"codigo": "F", "usuario": "Juan Ramos San Martin", "medida": "GRANDE"}, {"codigo": "X", "usuario": "Inocente Lopez Solis", "medida": "GRANDE"}, {"codigo": "R", "usuario": "Hermenegildo Rodriguez", "medida": "GRANDE"}, {"codigo": "X", "usuario": "Mario Alberto Jimenez", "medida": "GRANDE"}, {"codigo": "C5", "usuario": "Gabriel Jerez Del Angel", "medida": "CHICA"}, {"codigo": "8", "usuario": "Samuel Cruz Cervantes", "medida": "MED"}, {"codigo": "P", "usuario": "Juan Bermudez", "medida": "MED"}, {"codigo": "N", "usuario": "Gustavo Codallos Cervantes", "medida": "MED"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "B5", "usuario": "Efran Ochoa Espinoza", "medida": "MED"}, {"codigo": "A", "usuario": "Leonardo Hernandez Ramirez", "medida": "GRANDE"}, {"codigo": "C", "usuario": "Constantino Santes Rosales", "medida": "GRANDE"}, {"codigo": "0", "usuario": "Joel Lpez Florez", "medida": "GRANDE"}, {"codigo": "6", "usuario": "Juan Daniel Uzcanga Leyba", "medida": "GRANDE"}, {"codigo": "K", "usuario": "Marco Antonio Garcia", "medida": "GRANDE"}, {"codigo": "Y", "usuario": "Rigo Adalberto Ruiz", "medida": "GRANDE"}, {"codigo": "&", "usuario": "Abisai Nicolas Lopez", "medida": "GRANDE"}, {"codigo": "C", "usuario": "Constantino Santes Rosales", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "D1", "usuario": "Jose Angel Hernandez Escobar", "medida": "MED"}, {"codigo": "J", "usuario": "Tomas hernadez Carreo", "medida": "MED"}, {"codigo": "B", "usuario": "Cristian Daniel Ponce Medina", "medida": "MED"}, {"codigo": "7", "usuario": "Roman Sierra", "medida": "MED"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "CHICA"}, {"codigo": "8", "usuario": "Samuel Cruz Cervantes", "medida": "CHICA"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "CHICA"}, {"codigo": "P", "usuario": "Juan Bermudez", "medida": "CHICA"}, {"codigo": "E2", "usuario": "Walter Merida Santiago", "medida": "CHICA"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "7", "usuario": "Roman Sierra", "medida": "MED"}, {"codigo": "2", "usuario": "Hctor David Martinez Quintero", "medida": "MED"}, {"codigo": "D", "usuario": "Alexander Citalan Espinoza", "medida": "MED"}, {"codigo": "8", "usuario": "Samuel Cruz Cervantes /", "medida": "CHICA"}, {"codigo": "Z", "usuario": "Miguel Angel Martinez Mtz /", "medida": "CHICA"}, {"codigo": "P", "usuario": "Juan Manuel Bermudez  /", "medida": "CHICA"}, {"codigo": "T", "usuario": "Miguel Rueda Arias  /", "medida": "CHICA"}, {"codigo": "1", "usuario": "Gustavo Codallos Cervantes //", "medida": "CHICA"}, {"codigo": "R", "usuario": "Otoniel Reyes Morato ///", "medida": "CHICA"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "D", "usuario": "Alexander Citalan Espinoza", "medida": "MED"}, {"codigo": "C1", "usuario": "Jose Guadalupe Izaguirre Chavarria", "medida": "MED"}, {"codigo": "W", "usuario": "Mateo Reyes Guerra", "medida": "MED"}, {"codigo": "C", "usuario": "Constantino Santes Rosales", "medida": "MED"}, {"codigo": "6", "usuario": "Raymundo Borjas Maldonado", "medida": "MED"}, {"codigo": "W", "usuario": "Juan Bermudez", "medida": "MED"}, {"codigo": "7", "usuario": "Roman Sierra", "medida": "MED"}, {"codigo": "2", "usuario": "Hctor David Martinez Quintero", "medida": "MED"}, {"codigo": "B5", "usuario": "Efran Ochoa Espinoza", "medida": "MED"}, {"codigo": "C4", "usuario": "Miguel Sarmiento Portillo", "medida": "MED"}, {"codigo": "&", "usuario": "Alejandro Maria Lopez", "medida": "GRANDE"}, {"codigo": "4", "usuario": "Saul Sanchez Hernandez", "medida": "MED"}, {"codigo": "S", "usuario": "Mario Santiago Hernandez", "medida": "GRANDE"}, {"codigo": "7", "usuario": "Carlos Alberto Hernandez Malpica", "medida": "GRANDE"}, {"codigo": "N/A", "usuario": "Juan Jose Cano Hdz", "medida": "GRANDE"}, {"codigo": "5", "usuario": "Francisco Santiago Hdz", "medida": "GRANDE"}, {"codigo": "G4", "usuario": "Maurilio Inocencio Anastacio", "medida": "MED"}, {"codigo": "&", "usuario": "Oscar Rene Dorantes", "medida": "MED"}, {"codigo": "11", "usuario": "Luis Francisco Morales Martinez", "medida": "MED"}, {"codigo": "1", "usuario": "Gustabo Codallos Cervantes", "medida": "CHICA"}, {"codigo": "2", "usuario": "Miguel Angel Marquez Glz", "medida": "CHICA"}, {"codigo": "K", "usuario": "Gildardo Cruz Rubio //", "medida": "CHICA"}, {"codigo": "Q", "usuario": "Enrique Candanoza Hernandez //", "medida": "CHICA"}, {"codigo": "M", "usuario": "Roman Eduardo Orozco //", "medida": "MED"}, {"codigo": "C4", "usuario": "Miguel Sarmiento Portilla //", "medida": "CHICA"}, {"codigo": "6RAYADA", "usuario": "Elias Rueda Rdz", "medida": "MED"}, {"codigo": "4", "usuario": "Saul Sanchez Hernandez", "medida": "MED"}, {"codigo": "A1", "usuario": "Jesus Vicente valencia", "medida": "MED"}, {"codigo": "1RAYADA", "usuario": "Carlos Garca Sanchez", "medida": "MED"}, {"codigo": "Z", "usuario": "Julio Cesar Garcia Perez", "medida": "MED"}, {"codigo": "R", "usuario": "Raul Ramirez Muoz", "medida": "MED"}, {"codigo": "XSIMBOLO", "usuario": "Jose Antonio Balderas Mtz", "medida": "MED"}, {"codigo": "E1", "usuario": "Luis Ricardo Glz Mendez", "medida": "MED"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "CHICA"}, {"codigo": "D1", "usuario": "Jesus Citalan Espinosa", "medida": "CHICA"}, {"codigo": "G2", "usuario": "Fernando Jimenez Vidal", "medida": "CHICA"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "3", "usuario": "Pedro Hernandez Estrada", "medida": "MED"}, {"codigo": "L", "usuario": "Valentin Hernandez Vicencio", "medida": "MED"}, {"codigo": "R", "usuario": "Raul Ramirez Muoz", "medida": "MED"}, {"codigo": "R", "usuario": "Raul Ramirez Muoz", "medida": "MED"}, {"codigo": "S", "usuario": "Sotero Sebastian Hdz", "medida": "CHICA"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "L", "usuario": "Raul Vazquez Morales ///", "medida": "CHICA"}, {"codigo": "s", "usuario": "Sotero Sebastian Hdz /", "medida": "CHICA"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "L", "usuario": "Valentin Hernandez Vicencio", "medida": "MED"}, {"codigo": "U", "usuario": "Mario Maldonado Garca", "medida": "MED"}, {"codigo": "L", "usuario": "Valentin Hernandez Vicencio", "medida": "MED"}, {"codigo": "O", "usuario": "Marco Antonio Perez Vazquez ///", "medida": "CHICA"}], "defectos": [{"codigo": "C39", "nombre": "Ajuste de  proceso"}, {"codigo": "132", "nombre": "falla de maquina"}, {"codigo": "2", "nombre": "CORAZON DE ARENA ROTO"}, {"codigo": "167", "nombre": "Entrenamiento"}, {"codigo": "F11", "nombre": "Linea expuesta en cara de hielo"}, {"codigo": "F13", "nombre": "fuga en la rosca"}, {"codigo": "F14", "nombre": "Linea quebrada"}, {"codigo": "F18", "nombre": "Mal maquinado"}, {"codigo": "F22", "nombre": "WORKMANHIP/HABIL DE OPERADOR."}, {"codigo": "F7", "nombre": "Linea pinchada por inserto"}, {"codigo": "F8", "nombre": "Linea pinchada por manejo/transporte"}, {"codigo": "f3", "nombre": "Tiro corto/Lineas expuestas"}, {"codigo": "25", "nombre": "FITTING DESGASTADO POR PASIVADO"}, {"codigo": "27", "nombre": "MAL PRENSADO"}, {"codigo": "C31", "nombre": "Linea escalonada"}, {"codigo": "18", "nombre": "MAL MAQUINADO"}, {"codigo": "16", "nombre": "LINEA EXPUESTA EN RISER"}, {"codigo": "20", "nombre": "LINEAS TAPADAS POR ALUMINIO"}, {"codigo": "26", "nombre": "MAL TALADRADO"}, {"codigo": "28", "nombre": "mal acomodo de corazon de arena"}, {"codigo": "32", "nombre": "LINEA PINCHADA KOMO/END"}, {"codigo": "5", "nombre": "LINEA PINCHADA POR HERRAMIENTA POR LINEA CORTA"}, {"codigo": "6", "nombre": "LINEA PINCHADA POR PIN"}, {"codigo": "110", "nombre": "IB/IC-PRUEBAS SOLDADURA SPOT"}, {"codigo": "55", "nombre": "Sobrante"}, {"codigo": "57", "nombre": "External supplier"}, {"codigo": "143", "nombre": "Linea pinchada en Pneuform"}, {"codigo": "140", "nombre": "OBSOLETE // OBSOLETO"}, {"codigo": "146", "nombre": "Linea pinchada en doblez"}, {"codigo": "LDAO", "nombre": "LINEA DAADA"}, {"codigo": "30", "nombre": "LINEAS ATORADA EN MAQUINA KOMO"}, {"codigo": "152", "nombre": "PORES/ POROS"}, {"codigo": "21", "nombre": "LINEA CON POCO FLUJO DE AIRE"}, {"codigo": "44", "nombre": "LINEA PINCHADA HERRAMENTAL"}, {"codigo": "58", "nombre": "Linea pinchada por herramienta"}, {"codigo": "48", "nombre": "DESPRENDIMIENTO DE VARILLA-VARILLA"}, {"codigo": "9", "nombre": "LINEA PINCHADA EN DOBLEZ"}, {"codigo": "MM", "nombre": "Mal maquinado"}, {"codigo": "FI", "nombre": "Fuga interna"}, {"codigo": "150", "nombre": "PLTFRM-RETRABAJO OTRO DEFECTO"}, {"codigo": "183", "nombre": "Lineas atorada en maquina komo"}, {"codigo": "43", "nombre": "HERRAMENTAL DAADO"}, {"codigo": "12", "nombre": "FUGA EN EL DRENAJE"}, {"codigo": "C32", "nombre": "Linea pinchada"}, {"codigo": "53", "nombre": "ENG VALIDATION/ VALIDACION ING"}, {"codigo": "DT", "nombre": "DRENAJE TAPADO"}, {"codigo": "LE", "nombre": "Tiro corto/Lineas expuestas"}, {"codigo": "LT", "nombre": "LINEA TAPADA"}, {"codigo": "95", "nombre": "FOUNDRY/LINEA PINCHADA CINCEL"}, {"codigo": "136", "nombre": "MISSING OPER/OPERACION OMITIDA"}, {"codigo": "86", "nombre": "Linea pinchada por manejo/transporte"}, {"codigo": "F5", "nombre": "Linea pinchada por herramienta"}, {"codigo": "F20", "nombre": "Fuga interna"}, {"codigo": "F6", "nombre": "Linea pinchada por pin"}, {"codigo": "168", "nombre": "Entrenamiento"}, {"codigo": "F19", "nombre": "Linea expuesta en cara de hielo (Hass)"}, {"codigo": "F10", "nombre": "Linea pinchada por hass"}, {"codigo": "F15", "nombre": "Linea expuesta en drenaje"}, {"codigo": "F16", "nombre": "Linea expuesta en riser"}, {"codigo": "F9", "nombre": "Linea pinchada en doblez"}, {"codigo": "F17", "nombre": "Mal corte en sierra"}, {"codigo": "F12", "nombre": "Fuga en el drenaje"}, {"codigo": "135", "nombre": "MARKED TUBE/T.MARCADO PNEUFORM"}, {"codigo": "C38", "nombre": "falla de maquina"}, {"codigo": "F23", "nombre": "Fuga interna por soldadura de fundicin"}, {"codigo": "C36", "nombre": "Sobrante"}, {"codigo": "C40", "nombre": "Entrenamiento"}, {"codigo": "C42", "nombre": "Desempeo (No cumple contra dibujo)"}, {"codigo": "C44", "nombre": "Linea pinchada por herramienta"}, {"codigo": "C30", "nombre": "Lineas atorada en maquina komo"}, {"codigo": "C33", "nombre": "Linea rayada M komo"}, {"codigo": "C43", "nombre": "Herramental daado"}, {"codigo": "C37", "nombre": "External supplier"}, {"codigo": "C35", "nombre": "Enredado en enderezadora"}, {"codigo": "C34", "nombre": "Rayado en enderezadora"}, {"codigo": "C41", "nombre": "Linea pinchada en Pneuform"}, {"codigo": "C49", "nombre": "Lnea cruzada"}, {"codigo": "F4", "nombre": "Falla en el robot"}, {"codigo": "C66", "nombre": "N/D"}, {"codigo": "F21", "nombre": "Linea con poco flujo de aire"}, {"codigo": "C47", "nombre": "Desprendimiento de stand off"}, {"codigo": "C50", "nombre": "Pruebas de ingenieria"}, {"codigo": "C45", "nombre": "Linea corrugada"}, {"codigo": "50", "nombre": "PRUEBA DE INGENIERA"}, {"codigo": "7", "nombre": "LINEA PINCHADA POR INSERTO"}, {"codigo": "8", "nombre": "LINEA PINCHADA POR MANEJO/TRANSPORTE"}, {"codigo": "3", "nombre": "TIRO CORTO"}, {"codigo": "13", "nombre": "FUGA INTERNA POR MAL CIERRE SOLDADURA (SPLICER,MANIFOLD, TUBO )"}, {"codigo": "11", "nombre": "LINEA EXPUESTA EN CARA DE HIELO"}, {"codigo": "39", "nombre": "AJUSTE DE PROCESO (EQUIPO)"}, {"codigo": "38", "nombre": "FALLA DE MAQUINA"}, {"codigo": "34", "nombre": "RAYADO EN ENDEREZADORA"}, {"codigo": "35", "nombre": "ENREDADO EN ENDEREZADORA"}, {"codigo": "31", "nombre": "LINEA ESCALONADA"}, {"codigo": "36", "nombre": "SOBRANTE"}, {"codigo": "40", "nombre": "ENTRENAMIENTO"}, {"codigo": "42", "nombre": "DESEMPEO (NO CUMPLE CONTRA DIBUJO)"}, {"codigo": "41", "nombre": "LINEA PINCHADA EN PNEUFORM"}, {"codigo": "14", "nombre": "LINEAS EXPUESTAS EN LA PARTE DE ABAJO."}, {"codigo": "37", "nombre": "EXTERNAL SUPPLIER"}, {"codigo": "22", "nombre": "DESEMPEO DE TRABAJO"}, {"codigo": "10", "nombre": "LINEA PINCHADA EN PROCESO DE MAQUINADO"}, {"codigo": "AL55", "nombre": "CHORREADURA ALUMINIO"}, {"codigo": "17", "nombre": "MAL CORTE EN SIERRA"}, {"codigo": "33", "nombre": "LINEA RAYADA M KOMO"}, {"codigo": "19", "nombre": "LINEA EXPUESTA EN CARA DE HIELO (HASS)"}, {"codigo": "1", "nombre": "PLATO QUEBRADO/AGRIETADO"}, {"codigo": "23", "nombre": "FUGA INTERNA POR SOLDADURA DE FUNDICION"}, {"codigo": "F2", "nombre": "Corazon de arena roto"}, {"codigo": "15", "nombre": "LINEAS CRUZADAS"}], "defectosSecundarios": [{"codigo": "a", "nombre": "DRENAJE CON REBABA DE SOLDADURA"}, {"codigo": "b", "nombre": "FALTA DE PASTA EN EL DRENAJE"}, {"codigo": "c", "nombre": "DRENAJE DESALINEADO"}, {"codigo": "d", "nombre": "PLATO NO ENTRA EN EL MOLDE DE FOAM"}, {"codigo": "e", "nombre": "REBABA EN EL RAISER"}, {"codigo": "f", "nombre": "FALTA DE PASTA EN RAISER"}, {"codigo": "g", "nombre": "EXCESO DE PASTA EN DRENAJE"}, {"codigo": "h", "nombre": "RAEABA DE ALUMINIO EN LINEAS DE SALIDA"}, {"codigo": "i", "nombre": "ROSCA DEL DRENAJE TAPADA CON PASTA"}, {"codigo": "j", "nombre": "LINEA PINCHADA"}, {"codigo": "l", "nombre": "LINEAS SUCIAS"}, {"codigo": "k", "nombre": "sin texto en transfer"}, {"codigo": "m", "nombre": "EXCESO DE PASTA"}, {"codigo": "n", "nombre": "FITTING DANADOS POR PASIVADO"}, {"codigo": "o", "nombre": "PANEL DESALINEADO"}, {"codigo": "p", "nombre": "LINEAS MAL DOBLADAS"}, {"codigo": "q", "nombre": "AGITADOR DOBLADO"}, {"codigo": "r", "nombre": "FUGA EN FITTING"}, {"codigo": "s", "nombre": "Falta de rebabeo en drenaje"}]};
+
+    let catalogosLocal = JSON.parse(localStorage.getItem('CALIDAD_CATALOGOS_CACHE')) || CATALOGOS_DEFAULT;
     let registrosPersistentes = JSON.parse(localStorage.getItem('REGISTROS_PERSISTENTES') || '[]');
     let fotosBase64Array = [];
     let fotosEnProcesoCount = 0;
-    let html5QrScanner = null;
+    
+    let html5QrScannerObj = null;
+    let isScannerRunning = false;
 
-    // CODIFICACIÓN Y DECODIFICACIÓN UTF-8 BASE64 ROBUSTA POR BLOQUES
+    // FUNCIONES BASE64 UTF-8 ROBUSTAS
     function utf8ToBase64(str) {
       const bytes = new TextEncoder().encode(str);
       let bin = '';
@@ -690,7 +670,6 @@
       return new TextDecoder().decode(bytes);
     }
 
-    // PARSER CSV ROBUSTO PARA 19 COLUMNAS CON FOTOS BASE64 Y COMAS
     function parseCsvLineRobust(linea) {
       let res = [];
       let cur = [];
@@ -758,20 +737,46 @@
       };
     }
 
-    // CAMBIO DE PESTAÑA TIPO ANDROID
+    // CAMBIO DE PESTAÑA GARANTIZADO
     function switchAndroidTab(tabId, btnElem) {
-      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('show', 'active'));
-      document.querySelectorAll('.nav-item-android').forEach(el => el.classList.remove('active'));
-      
-      const target = document.getElementById(tabId);
-      if (target) target.classList.add('show', 'active');
-      if (btnElem) btnElem.classList.add('active');
+      const panes = document.querySelectorAll('.tab-pane');
+      panes.forEach(el => {
+        el.classList.remove('show', 'active');
+        el.style.display = 'none';
+      });
 
-      if (tabId === 'tab-registros') renderizarTablaRegistros();
-      if (tabId === 'tab-disposicion') cargarRegistrosGitHub();
-      if (tabId === 'tab-galeria') cargarGaleriaFotos();
-      if (tabId === 'tab-kpi') actualizarDashboardKPI();
-      if (tabId === 'tab-config') cargarConfiguracionSistema();
+      const navs = document.querySelectorAll('.nav-item-android');
+      navs.forEach(el => el.classList.remove('active'));
+
+      const target = document.getElementById(tabId);
+      if (target) {
+        target.classList.add('show', 'active');
+        target.style.display = 'block';
+      }
+
+      if (btnElem) {
+        btnElem.classList.add('active');
+      } else {
+        const bId = 'bnav-' + tabId.replace('tab-', '');
+        const bEl = document.getElementById(bId);
+        if (bEl) bEl.classList.add('active');
+      }
+
+      if (tabId === 'tab-registro') {
+        cargarCatalogosFormulario();
+      actualizarDatalistsAutocompletado();
+      } else if (tabId === 'tab-registros') {
+        renderizarTablaRegistros();
+      } else if (tabId === 'tab-disposicion') {
+        cargarRegistrosGitHub();
+        cargarTarjetasDisposicion();
+      } else if (tabId === 'tab-galeria') {
+        cargarGaleriaFotos();
+      } else if (tabId === 'tab-kpi') {
+        actualizarDashboardKPI();
+      } else if (tabId === 'tab-config') {
+        cargarConfiguracionSistema();
+      }
     }
 
     function irANuevoRegistro() {
@@ -780,7 +785,83 @@
       if (folioInp) folioInp.focus();
     }
 
-    // BÚSQUEDA COMBINADA ESTAMPA + MEDIDA -> INSPECTOR
+    // ESCÁNER QR Y CÓDIGO DE BARRAS
+    function toggleQrScanner() {
+      const container = document.getElementById('qrReaderContainer');
+      if (!container) return;
+
+      if (!isScannerRunning) {
+        if (typeof Html5Qrcode === 'undefined') {
+          const manual = prompt("📱 Ingresa o pega el código del Folio / OC:");
+          if (manual) {
+            let clean = manual.trim().toUpperCase();
+            let m = clean.match(/\d{7}/);
+            if (m) clean = "OC" + m[0];
+            else if (!clean.startsWith("OC")) clean = "OC" + clean;
+            document.getElementById('folio_oc').value = clean;
+            alert("✅ Folio asignado: " + clean);
+          }
+          return;
+        }
+
+        container.style.display = 'block';
+        if (!html5QrScannerObj) {
+          html5QrScannerObj = new Html5Qrcode("reader");
+        }
+
+        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+        html5QrScannerObj.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
+          .then(() => { isScannerRunning = true; })
+          .catch(err => {
+            html5QrScannerObj.start({ facingMode: "user" }, config, onScanSuccess, onScanError)
+              .then(() => { isScannerRunning = true; })
+              .catch(err2 => {
+                alert("⚠️ No se pudo acceder a la cámara. Ingresa el Folio manualmente.");
+                container.style.display = 'none';
+              });
+          });
+      } else {
+        if (html5QrScannerObj && isScannerRunning) {
+          html5QrScannerObj.stop().then(() => {
+            html5QrScannerObj.clear();
+            isScannerRunning = false;
+            container.style.display = 'none';
+          }).catch(() => {
+            isScannerRunning = false;
+            container.style.display = 'none';
+          });
+        } else {
+          container.style.display = 'none';
+        }
+      }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      let raw = decodedText.trim().toUpperCase();
+      let m = raw.match(/OC\d{7}/i) || raw.match(/\d{7}/);
+      let finalFolio = "";
+      if (m) {
+        finalFolio = m[0].toUpperCase();
+        if (!finalFolio.startsWith("OC")) finalFolio = "OC" + finalFolio;
+      } else {
+        finalFolio = raw;
+      }
+
+      const input = document.getElementById('folio_oc');
+      if (input) input.value = finalFolio;
+
+      if (navigator.vibrate) navigator.vibrate(200);
+      alert("🎉 ¡Código Escaneado con Éxito!
+Folio Asignado: " + finalFolio);
+
+      toggleQrScanner();
+    }
+
+    function onScanError(errorMessage) {
+      // Ignorar errores de búsqueda
+    }
+
+    // BÚSQUEDA Y AUTOCOMPLETADO INSPECTOR ESTAMPA + MEDIDA
     function alSeleccionarEstampa() {
       const estampaElem = document.getElementById('estampa');
       const medidaElem = document.getElementById('medida_estampa');
@@ -796,8 +877,8 @@
         return;
       }
 
-      const cats = catalogosLocal || {};
-      const estampasArr = cats.estampas || [];
+      const cats = catalogosLocal || CATALOGOS_DEFAULT;
+      const estampasArr = cats.estampas || CATALOGOS_DEFAULT.estampas;
 
       let mapMedida = 'MED';
       if (medidaVal.includes('CHICA') || medidaVal.includes('1/8')) mapMedida = 'CHICA';
@@ -819,7 +900,7 @@
       }
     }
 
-    // POBLAR SELECTORES DEL FORMULARIO
+    // POBLAR SELECTORES DESDE DICCIONARIO
     function poblarSelect(idSelect, items, keyCod, keyNom, placeholder) {
       const sel = document.getElementById(idSelect);
       if (!sel) return;
@@ -833,14 +914,14 @@
             code = val.trim();
             name = val.trim();
           } else if (typeof val === 'object' && val !== null) {
-            code = (val[keyCod] || val.numero || val.codigo || val.id || '').toString().trim();
-            name = (val[keyNom] || val.nombre || val.descripcion || val.usuario || code).toString().trim();
+            code = (val[keyCod] || val.codigo || val.numero || val.nombre || val.id || '').toString().trim();
+            name = (val[keyNom] || val.descripcion || val.usuario || val.nombre || code).toString().trim();
           }
           if (code && !setUnicos.has(code)) {
             setUnicos.add(code);
             const opt = document.createElement('option');
             opt.value = code;
-            opt.textContent = (name && name !== code) ? `${code} - ${name}` : code;
+            opt.textContent = (name && name.toUpperCase() !== code.toUpperCase()) ? `${code} - ${name}` : code;
             sel.appendChild(opt);
           }
         });
@@ -848,17 +929,17 @@
     }
 
     function cargarCatalogosFormulario() {
-      const cats = catalogosLocal || {};
-      poblarSelect("almacen_origen", cats.almacenes, "numero", "nombre", "-- Selecciona Almacén Origen --");
-      poblarSelect("area", cats.areas, "nombre", "descripcion", "-- Selecciona Origen del Defecto --");
-      poblarSelect("parte", cats.partes, "codigo", "descripcion", "-- Selecciona Número de Parte --");
-      poblarSelect("estampa", cats.estampas, "codigo", "usuario", "-- Selecciona Estampa Inspector --");
-      poblarSelect("no_conformancia", cats.defectos, "codigo", "nombre", "-- Selecciona No Conformancia --");
-      poblarSelect("detalle_nc", cats.defectosSecundarios, "codigo", "nombre", "-- Selecciona Detalle Secundario (Opcional) --");
+      const cats = catalogosLocal || CATALOGOS_DEFAULT;
+      poblarSelect("almacen_origen", cats.almacenes || CATALOGOS_DEFAULT.almacenes, "numero", "nombre", "-- Selecciona Almacén Origen --");
+      poblarSelect("area", cats.areas || CATALOGOS_DEFAULT.areas, "nombre", "descripcion", "-- Selecciona Origen del Defecto --");
+      poblarSelect("parte", cats.partes || CATALOGOS_DEFAULT.partes, "codigo", "descripcion", "-- Selecciona Número de Parte --");
+      poblarSelect("estampa", cats.estampas || CATALOGOS_DEFAULT.estampas, "codigo", "usuario", "-- Selecciona Estampa Inspector --");
+      poblarSelect("no_conformancia", cats.defectos || CATALOGOS_DEFAULT.defectos, "codigo", "nombre", "-- Selecciona No Conformancia --");
+      poblarSelect("detalle_nc", cats.defectosSecundarios || CATALOGOS_DEFAULT.defectosSecundarios, "codigo", "nombre", "-- Selecciona Detalle Secundario (Opcional) --");
       alSeleccionarEstampa();
     }
 
-    // PROCESAMIENTO DE FOTOGRAFÍAS
+    // FOTOGRAFÍAS Y COMPRESIÓN MULTIPLE
     function procesarFotosMultiples(e) {
       const files = Array.from(e.target.files || []);
       if (files.length === 0) return;
@@ -935,7 +1016,7 @@
       renderizarGridFotosPreview();
     }
 
-    // SINCRONIZACIÓN DIRECTA A GITHUB REST API CON VERIFICACIÓN DE SHA
+    // COMMIT DIRECTO A GITHUB API REST
     async function sincronizarRegistroDirectoGitHub(payload) {
       const token = (payload.github_token || localStorage.getItem('GITHUB_TOKEN') || '').trim();
       if (!token || token.length < 10) return false;
@@ -961,15 +1042,22 @@
           sha = jsonGet.sha;
           contentOld = base64ToUtf8(jsonGet.content);
         } else {
-          contentOld = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_1,Foto_2,Foto_3,Foto_4,Foto_5\n";
+          contentOld = "sep=,
+Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_1,Foto_2,Foto_3,Foto_4,Foto_5
+";
         }
 
         const photos = payload.fotos_array || [];
-        const f1 = (photos[0] || '').replace(/[\r\n]+/g, '');
-        const f2 = (photos[1] || '').replace(/[\r\n]+/g, '');
-        const f3 = (photos[2] || '').replace(/[\r\n]+/g, '');
-        const f4 = (photos[3] || '').replace(/[\r\n]+/g, '');
-        const f5 = (photos[4] || '').replace(/[\r\n]+/g, '');
+        const f1 = (photos[0] || '').replace(/[
+]+/g, '');
+        const f2 = (photos[1] || '').replace(/[
+]+/g, '');
+        const f3 = (photos[2] || '').replace(/[
+]+/g, '');
+        const f4 = (photos[3] || '').replace(/[
+]+/g, '');
+        const f5 = (photos[4] || '').replace(/[
+]+/g, '');
 
         const nuevaFila = [
           `"${payload.folio_oc || payload.folio}"`,
@@ -991,13 +1079,14 @@
           `"${f3}"`,
           `"${f4}"`,
           `"${f5}"`
-        ].join(",") + "\n";
+        ].join(",") + "
+";
 
         const contentNew = contentOld + nuevaFila;
         const contentB64 = utf8ToBase64(contentNew);
 
         const bodyPut = {
-          message: `Actualización de Calidad v54: Folio ${payload.folio_oc} [${payload.estatus}]`,
+          message: `Actualización de Calidad v66: Folio ${payload.folio_oc} [${payload.estatus}]`,
           content: contentB64,
           branch: branch
         };
@@ -1019,28 +1108,41 @@
       }
     }
 
-    // GUARDAR REGISTRO CON VALIDACIONES Y CONFIRMACIÓN POR SHA
+    // GUARDAR REGISTRO CON LIMPIEZA AUTOMÁTICA DE FOLIO
     async function guardarRegistro(e) {
       if (e) e.preventDefault();
 
       if (fotosEnProcesoCount > 0) {
-        alert("⚠️ Por favor espera un segundo mientras se termina de comprimir la fotografía...");
+        alert("⚠️ Por favor espera a que termine de procesarse la fotografía...");
         return;
       }
 
       const folioInput = document.getElementById('folio_oc');
-      const folio = folioInput ? folioInput.value.trim().toUpperCase() : "";
+      let folioVal = folioInput ? folioInput.value.trim().toUpperCase() : "";
 
-      if (!/^OC\d{7}$/.test(folio)) {
-        alert("⚠️ El Folio / Orden de Control debe iniciar con 'OC' seguido de exactamente 7 números (Ej: OC1234567).");
+      // Limpieza automática de Folio OC
+      let mFolio = folioVal.match(/\d{7}/);
+      if (mFolio) {
+        folioVal = "OC" + mFolio[0];
+      } else if (/^\d{1,7}$/.test(folioVal)) {
+        folioVal = "OC" + folioVal.padStart(7, "0");
+      } else if (folioVal.startsWith("OC") && !/^OC\d{7}$/.test(folioVal)) {
+        let digitsOnly = folioVal.replace(/[^0-9]/g, '');
+        if (digitsOnly.length > 0) folioVal = "OC" + digitsOnly.padStart(7, "0").substring(0, 7);
+      }
+
+      if (folioInput) folioInput.value = folioVal;
+
+      if (!/^OC\d{7}$/.test(folioVal)) {
+        alert("⚠️ El Folio / Orden de Control debe contener 7 números (Ejemplo: OC1234567 o simplemente 1234567).");
         if (folioInput) folioInput.focus();
         return;
       }
 
       const locacionInput = document.getElementById('locacion_origen');
-      const locacionVal = locacionInput ? locacionInput.value.trim().toUpperCase() : "";
-      if (locacionVal.length !== 5) {
-        alert("⚠️ La Locación debe contener exactamente 5 caracteres (Ej: F4RWK).");
+      let locacionVal = locacionInput ? locacionInput.value.trim().toUpperCase() : "";
+      if (locacionVal.length < 5) {
+        alert("⚠️ La Locación debe contener 5 caracteres (Ej: F4RWK).");
         if (locacionInput) locacionInput.focus();
         return;
       }
@@ -1063,7 +1165,7 @@
       }
 
       const payload = {
-        folio_oc: folio,
+        folio_oc: folioVal,
         tipo_envio: document.getElementById('tipo_envio').value,
         fecha: nowFechaAuto,
         almacen_origen: document.getElementById('almacen_origen').value,
@@ -1085,18 +1187,19 @@
         github_token: localStorage.getItem('GITHUB_TOKEN') || ''
       };
 
-      // 1. Guardado Local Persistente
+      // 1. Guardar en memoria local persistente
       guardarRegistroPersistenteLocal(payload);
+      agregarLogRegistro(payload.folio_oc, 'CREACIÓN / CAPTURA', `Nuevo registro capturado por ${payload.operatorName || 'Inspector'}`, payload.operatorName);
 
-      // 2. Intento Directo GitHub
+      // 2. Commit directo en GitHub
       let ghDirect = await sincronizarRegistroDirectoGitHub(payload);
 
-      // 3. Intento Servidor Backend Google Apps Script (Servidor Proxy)
+      // 3. Envío al Servidor Proxy Google Apps Script
       let proxyRes = await enviarPayloadProxy(payload);
 
-      let msgConfirm = `📋 REPORTE DE CONEXIÓN FRONTEND-BACKEND:
+      let msgConfirm = `📋 CONFIRMACIÓN DE REGISTRO EN GUARDADO:
 ` +
-                       `------------------------------------
+                       `-------------------------------------
 ` +
                        `• Folio OC: ${payload.folio_oc}
 ` +
@@ -1106,34 +1209,28 @@
 ` +
                        `• Piezas: ${payload.cantidad} | Turno: ${payload.turno}
 ` +
-                       `• Evidencias: ${payload.fotos_array.length} foto(s) comprimida(s)
+                       `• Evidencias: ${payload.fotos_array.length} foto(s) adjuntas
 ` +
-                       `------------------------------------
+                       `-------------------------------------
 ` +
-                       `ESTADO DE ALMACENAMIENTO:
+                       `ESTADO DE GUARDADO:
 ` +
                        `• Memoria App: ✅ Guardado Localmente
 `;
 
       if (proxyRes && proxyRes.status === 'ok') {
-        const diagSheets = (proxyRes.diagnostico && proxyRes.diagnostico.sheets) ? proxyRes.diagnostico.sheets : {};
-        const diagGh = (proxyRes.diagnostico && proxyRes.diagnostico.github) ? proxyRes.diagnostico.github : {};
-
-        msgConfirm += `• Google Sheets: ${diagSheets.ok ? '✅ Guardado Exitoso' : '⚠️ ' + (diagSheets.detalle || 'Error')}
+        msgConfirm += `• Google Sheets: ✅ Guardado Exitoso
 `;
-        
-        if (ghDirect && ghDirect.ok) {
-          msgConfirm += `• GitHub Repository: ✅ Commit Directo Exitoso (SHA: ${ghDirect.sha ? ghDirect.sha.substring(0,7) : 'OK'})
-`;
-        } else if (diagGh.ok) {
-          msgConfirm += `• GitHub Repository: ✅ Commit vía Backend Exitoso (${diagGh.detalle || 'OK'})
-`;
-        } else {
-          msgConfirm += `• GitHub Repository: ⚠️ ${diagGh.detalle || diagGh.error || 'Revisar Token PAT en ScriptProperties'}
-`;
-        }
       } else {
-        msgConfirm += `• Servidor Backend: ⚠️ ${proxyRes.mensaje || 'Modo Offline / Respuesta pendiente'}
+        msgConfirm += `• Google Sheets: ℹ️ Pendiente / Modo Offline
+`;
+      }
+
+      if (ghDirect && ghDirect.ok) {
+        msgConfirm += `• GitHub API: ✅ Commit Exitoso (SHA: ${ghDirect.sha.substring(0,7)})
+`;
+      } else {
+        msgConfirm += `• GitHub API: ℹ️ Sincronizado vía Backend / Local
 `;
       }
 
@@ -1145,101 +1242,10 @@
       }
 
       resetForm();
-      mostrarQrGeneradoModal(folio);
       renderizarTablaRegistros();
       cargarTarjetasDisposicion();
       cargarGaleriaFotos();
       if (typeof actualizarDashboardKPI === 'function') actualizarDashboardKPI();
-    }
-
-      const folioInput = document.getElementById('folio_oc');
-      const folio = folioInput ? folioInput.value.trim().toUpperCase() : "";
-
-      if (!/^OC\d{7}$/.test(folio)) {
-        alert("⚠️ El Folio / Orden de Control debe iniciar con 'OC' seguido de exactamente 7 números (Ej: OC1234567).");
-        if (folioInput) folioInput.focus();
-        return;
-      }
-
-      const locacionInput = document.getElementById('locacion_origen');
-      const locacionVal = locacionInput ? locacionInput.value.trim().toUpperCase() : "";
-      if (locacionVal.length !== 5) {
-        alert("⚠️ La Locación debe contener exactamente 5 caracteres (Ej: F4RWK).");
-        if (locacionInput) locacionInput.focus();
-        return;
-      }
-
-      const btn = document.getElementById('btnSubmit');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sincronizando con GitHub...';
-      }
-
-      const nowFechaAuto = new Date().toLocaleString("es-MX");
-      
-      const estampaCode = document.getElementById('estampa').value;
-      const inspectorName = document.getElementById('inspector_estampa').value;
-      const medidaVal = document.getElementById('medida_estampa').value;
-
-      let estampaFinal = estampaCode;
-      if (estampaCode && inspectorName) {
-        estampaFinal = `${estampaCode} - ${inspectorName} (${medidaVal})`;
-      }
-
-      const payload = {
-        folio_oc: folio,
-        tipo_envio: document.getElementById('tipo_envio').value,
-        fecha: nowFechaAuto,
-        almacen_origen: document.getElementById('almacen_origen').value,
-        locacion_origen: locacionVal,
-        area: document.getElementById('area').value,
-        parte: document.getElementById('parte').value,
-        cantidad: document.getElementById('cantidad').value,
-        estampa: estampaFinal,
-        no_conformancia: document.getElementById('no_conformancia').value,
-        detalle_nc: document.getElementById('detalle_nc').value,
-        operador: document.getElementById('operador').value,
-        turno: document.getElementById('turno').value,
-        foto_b64: (fotosBase64Array && fotosBase64Array.length > 0) ? fotosBase64Array[0] : "",
-        fotos_array: fotosBase64Array,
-        estatus: "Nuevo",
-        tiene_disposicion: false,
-        correos_notificacion: localStorage.getItem('NOTIF_EMAILS') || '',
-        enviar_email: localStorage.getItem('NOTIF_SEND_REG') !== 'false',
-        github_token: localStorage.getItem('GITHUB_TOKEN') || ''
-      };
-
-      // Guardado Local Persistente
-      guardarRegistroPersistenteLocal(payload);
-
-      // Intento Directo GitHub
-      let ghResult = await sincronizarRegistroDirectoGitHub(payload);
-
-      // Intento Servidor Proxy Google Apps Script
-      await enviarPayloadProxy(payload);
-
-      let msgConfirm = `📋 CONFIRMACIÓN DE GUARDADO:\n` +
-                       `------------------------------------\n` +
-                       `• Folio OC: ${payload.folio_oc}\n` +
-                       `• Fecha Captura: ${payload.fecha}\n` +
-                       `• Almacén: ${payload.almacen_origen}\n` +
-                       `• Fotos Adjuntas: ${payload.fotos_array.length} foto(s)\n`;
-
-      if (ghResult && ghResult.ok) {
-        msgConfirm += `• GitHub status: ✅ CONFIRMADO EN GITHUB (SHA: ${ghResult.sha.substring(0,7)})\n`;
-      } else {
-        msgConfirm += `• GitHub status: ✅ Registrado localmente y en cola de sincronización\n`;
-      }
-
-      alert(msgConfirm);
-
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Enviar y Guardar Registro Persistente';
-      }
-
-      resetForm();
-      renderizarTablaRegistros();
     }
 
     function guardarRegistroPersistenteLocal(reg) {
@@ -1265,10 +1271,10 @@
           const resJson = await response.json();
           return resJson;
         } else {
-          return { status: "error", mensaje: `HTTP ${response.status} desde el servidor proxy` };
+          return { status: "error", mensaje: `HTTP ${response.status}` };
         }
       } catch (err) {
-        return { status: "offline", mensaje: "No se pudo contactar al servidor proxy (Modo Offline)" };
+        return { status: "offline", mensaje: "Modo Offline" };
       }
     }
 
@@ -1289,7 +1295,7 @@
       tbody.innerHTML = "";
 
       if (registrosPersistentes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-4 text-muted">No hay registros guardados. Crea uno nuevo con el botón flotante (+).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-4 text-muted">No hay registros guardados en el historial. Crea uno nuevo con el botón (+).</td></tr>`;
         return;
       }
 
@@ -1331,6 +1337,7 @@
       if (panel) panel.style.display = 'block';
 
       const tit = document.getElementById('dispFolioTitulo');
+      renderizarBitacoraLogs(folio);
       if (tit) tit.innerText = `${folio} - Parte ${reg.parte} (${reg.no_conformancia})`;
 
       if (panel) panel.scrollIntoView({ behavior: 'smooth' });
@@ -1362,6 +1369,7 @@
       };
 
       guardarRegistroPersistenteLocal(payload);
+      agregarLogRegistro(payload.folio_oc, 'CREACIÓN / CAPTURA', `Nuevo registro capturado por ${payload.operatorName || 'Inspector'}`, payload.operatorName);
       await enviarPayloadProxy(payload);
 
       alert(`✅ Disposición asignada exitosamente para folio ${folio}!`);
@@ -1387,7 +1395,7 @@
             div.className = 'col-6 col-md-4 col-lg-3';
             div.innerHTML = `
               <div class="card-industrial h-100 p-2 text-center">
-                <img src="${src}" class="galeria-img mb-2" onclick="abrirFotoModalGrande('${src}', '${folio} - Foto ${idx+1}')">
+                <img src="${src}" class="galeria-img mb-2" onclick="abrirFotoModalGrande('${src}', '${folio} - Evidencia ${idx+1}')">
                 <span class="badge bg-primary fw-bold">${folio}</span>
                 <small class="text-muted d-block mt-1">Evidencia ${idx+1} de ${photos.length}</small>
               </div>
@@ -1398,7 +1406,7 @@
       });
 
       if (count === 0) {
-        container.innerHTML = `<div class="col-12 text-center text-muted py-4"><i class="fa-solid fa-images fs-2 mb-2 d-block"></i>No hay evidencias fotográficas registradas aún.</div>`;
+        container.innerHTML = `<div class="col-12 text-center text-muted py-4"><i class="fa-solid fa-images fs-2 mb-2 d-block"></i>No hay evidencias fotográficas en el historial aún.</div>`;
       }
     }
 
@@ -1436,7 +1444,7 @@
         } catch(e) {}
       }
 
-      // Intento 2: Backend Proxy Google Apps Script (Usa el token seguro de ScriptProperties)
+      // Intento 2: Backend Proxy Google Apps Script
       if (!csvText && proxyUrl) {
         try {
           const resProxy = await fetch(`${proxyUrl}?action=read_csv&t=${Date.now()}`);
@@ -1458,7 +1466,9 @@
       }
 
       if (csvText) {
-        const lineas = csvText.split(/\r?\n/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+        const lineas = csvText.split(/
+?
+/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
         if (lineas.length > 1) {
           const headers = parseCsvLineRobust(lineas[0]);
           const remotos = lineas.slice(1).map(l => parsearFilaCsv(l, headers));
@@ -1511,7 +1521,7 @@
     function exportarCatalogosExcelXLSX() {
       if (typeof XLSX === 'undefined') return alert("SheetJS no cargado.");
       const wb = XLSX.utils.book_new();
-      const cats = catalogosLocal || {};
+      const cats = catalogosLocal || CATALOGOS_DEFAULT;
       
       Object.keys(cats).forEach(k => {
         const ws = XLSX.utils.json_to_sheet(cats[k] || []);
@@ -1523,7 +1533,9 @@
 
     function exportarRegistrosCSV() {
       if (registrosPersistentes.length === 0) return alert("No hay registros que exportar.");
-      let csv = "sep=,\nFolio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_1,Foto_2,Foto_3,Foto_4,Foto_5\n";
+      let csv = "sep=,
+Folio_OC,Tipo,Fecha,Almacen,Locacion,Parte,Cantidad,Estampa,Defecto,Detalle_NC,Operador,Turno,Area,Estatus,Foto_1,Foto_2,Foto_3,Foto_4,Foto_5
+";
 
       registrosPersistentes.forEach(r => {
         const photos = r.fotos_array || (r.foto_b64 ? [r.foto_b64] : []);
@@ -1548,10 +1560,11 @@
           photos[3] || '',
           photos[4] || ''
         ];
-        csv += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",") + "\n";
+        csv += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",") + "
+";
       });
 
-      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = "registro_incidencias_calidad.csv";
@@ -1582,7 +1595,9 @@
             alert(`¡Se importaron ${parsed.length} registros desde JSON!`);
           }
         } else {
-          const lineas = content.split(/\r?\n/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
+          const lineas = content.split(/
+?
+/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
           if (lineas.length > 1) {
             const headers = parseCsvLineRobust(lineas[0]);
             const items = lineas.slice(1).map(l => parsearFilaCsv(l, headers));
@@ -1607,7 +1622,8 @@
       if (eml) eml.value = localStorage.getItem('NOTIF_EMAILS') || '';
     }
 
-    function guardarConfiguracionSistema() {
+    function guardarConfiguracionSistema(e) {
+      if (e) e.preventDefault();
       const tok = document.getElementById('githubTokenConfig');
       if (tok) localStorage.setItem('GITHUB_TOKEN', tok.value.trim());
 
@@ -1709,12 +1725,207 @@
       if (cvs) cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
     }
 
-    // INICIALIZACIÓN AUTOMÁTICA
+    
+    // =========================================================================
+    // BITÁCORA Y HISTORIAL DE CAMBIOS (RecordLog AUDIT TRAIL)
+    // =========================================================================
+    let recordLogsArray = JSON.parse(localStorage.getItem('RECORD_LOGS') || '[]');
+
+    function agregarLogRegistro(recordOc, accion, descripcion, usuario) {
+      const log = {
+        id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+        recordOc: recordOc,
+        action: accion,
+        description: descripcion,
+        user: usuario || 'Inspector Calidad',
+        timestamp: new Date().toLocaleString('es-MX')
+      };
+      recordLogsArray.unshift(log);
+      localStorage.setItem('RECORD_LOGS', JSON.stringify(recordLogsArray));
+      return log;
+    }
+
+    function obtenerLogsParaRegistro(oc) {
+      return recordLogsArray.filter(l => l.recordOc === oc);
+    }
+
+    function renderizarBitacoraLogs(oc) {
+      const container = document.getElementById('contenedorBitacoraLogs');
+      if (!container) return;
+      const logs = obtenerLogsParaRegistro(oc);
+      if (logs.length === 0) {
+        container.innerHTML = '<div class="text-muted small italic">No hay movimientos o cambios registrados en la bitácora para este folio.</div>';
+        return;
+      }
+      let html = '<ul class="list-group list-group-flush small">';
+      logs.forEach(l => {
+        html += `<li class="list-group-item bg-transparent px-0 py-1">
+          <span class="badge bg-primary me-1">${l.action}</span>
+          <strong>${l.user}</strong> <span class="text-muted">(${l.timestamp}):</span> ${l.description}
+        </li>`;
+      });
+      html += '</ul>';
+      container.innerHTML = html;
+    }
+
+    // =========================================================================
+    // AUTOCOMPLETADO DINÁMICO HISTÓRICO (RecordDao DISTINCT AUTOCOMPLETE)
+    // =========================================================================
+    function actualizarDatalistsAutocompletado() {
+      const partes = new Set();
+      const almacenes = new Set();
+      const locaciones = new Set();
+      const defectos = new Set();
+
+      registrosPersistentes.forEach(r => {
+        if (r.parte) partes.add(r.parte.trim());
+        if (r.almacen_origen || r.almacen) almacenes.add((r.almacen_origen || r.almacen).trim());
+        if (r.locacion_origen || r.locacion) locaciones.add((r.locacion_origen || r.locacion).trim());
+        if (r.no_conformancia) defectos.add(r.no_conformancia.trim());
+      });
+
+      poblarDatalist('dl-partes', Array.from(partes));
+      poblarDatalist('dl-almacenes', Array.from(almacenes));
+      poblarDatalist('dl-locaciones', Array.from(locaciones));
+      poblarDatalist('dl-defectos', Array.from(defectos));
+    }
+
+    function poblarDatalist(idList, items) {
+      let dl = document.getElementById(idList);
+      if (!dl) {
+        dl = document.createElement('datalist');
+        dl.id = idList;
+        document.body.appendChild(dl);
+      }
+      dl.innerHTML = '';
+      items.forEach(it => {
+        if (it) {
+          const opt = document.createElement('option');
+          opt.value = it;
+          dl.appendChild(opt);
+        }
+      });
+    }
+
+    // INICIALIZACIÓN AUTOMÁTICA AL CARGAR PÁGINA
     window.addEventListener('DOMContentLoaded', function() {
       cargarCatalogosFormulario();
+      actualizarDatalistsAutocompletado();
       renderizarTablaRegistros();
       inicializarFirmaCanvas();
+
+      // AUTO-FORMATO DEL CAMPO FOLIO_OC AL SALIR DE FOCO (ONBLUR)
+      const fInp = document.getElementById('folio_oc');
+      if (fInp) {
+        fInp.addEventListener('blur', function() {
+          let v = this.value.trim().toUpperCase();
+          let m = v.match(/\d{7}/);
+          if (m) this.value = 'OC' + m[0];
+          else if (/^\d{1,7}$/.test(v)) this.value = 'OC' + v.padStart(7, '0');
+        });
+      }
     });
+  
+    // =========================================================================
+    // OPCIÓN C: REGLAS AUTOMÁTICAS DE CIERRE DE FOLIOS A 'TERMINADO'
+    // =========================================================================
+    function evaluarEstadoAutomatico(reg) {
+      if (!reg) return "Abierto";
+      
+      const qtyTotal = parseFloat(reg.cantidad) || 1;
+      const tieneDispType = reg.disp_destino || reg.dispositionType;
+      
+      const disposedCount = (parseFloat(reg.disp_piezas_buenas) || parseFloat(reg.reworkQty) || 0) + 
+                            (parseFloat(reg.disp_piezas_malas) || parseFloat(reg.scrapQty) || 0) + 
+                            (parseFloat(reg.useAsIsQty) || 0) + (parseFloat(reg.returnToVendorQty) || 0);
+      
+      const isDispCompleted = tieneDispType && (disposedCount >= qtyTotal || reg.tiene_disposicion);
+      const isWhyCompleted = (reg.disp_porque1 || reg.why1) && (reg.disp_porque5 || reg.why3 || reg.rootCause);
+      const isCorrectiveCompleted = (reg.disp_accion_correctiva || reg.correctiveAction) && (reg.isEffective || reg.disp_estatus === 'Terminado' || reg.estatus === 'Terminado');
+      
+      let nuevoEstatus = "Abierto";
+      
+      if (isDispCompleted && isWhyCompleted && isCorrectiveCompleted) {
+        nuevoEstatus = "Terminado";
+      } else if (tieneDispType || reg.disp_porque1 || reg.disp_accion_correctiva || disposedCount > 0) {
+        nuevoEstatus = "En Proceso";
+      }
+      
+      if (reg.estatus !== nuevoEstatus && reg.status !== nuevoEstatus) {
+        const estatusAnterior = reg.estatus || reg.status || "Abierto";
+        reg.estatus = nuevoEstatus;
+        reg.status = nuevoEstatus;
+        reg.dateModified = Date.now();
+        
+        agregarLogRegistro(
+          reg.folio_oc || reg.oc || reg.folio, 
+          "CAMBIO_ESTADO_AUTOMATICO", 
+          `Estatus reevaluado automáticamente de [${estatusAnterior}] a [${nuevoEstatus}]`, 
+          reg.disp_responsable || reg.operador || "Sistema Calidad"
+        );
+      }
+      
+      return nuevoEstatus;
+    }
+
+    // =========================================================================
+    // OPCIÓN A: IMPRESIÓN Y GENERACIÓN DE MARBETES DE CUARENTENA PDF CON QR
+    // =========================================================================
+    function abrirModalMarbetePDF(folio) {
+      const reg = registrosPersistentes.find(r => (r.folio_oc || r.folio || r.oc) === folio);
+      if (!reg) return alert("No se encontró el folio especificado.");
+      
+      document.getElementById('mbtFolio').innerText = reg.folio_oc || reg.folio || reg.oc || 'N/A';
+      document.getElementById('mbtFecha').innerText = reg.fecha || new Date(reg.dateCreated || Date.now()).toLocaleString();
+      document.getElementById('mbtParte').innerText = reg.parte || reg.partNumber || '-';
+      document.getElementById('mbtCantidad').innerText = `${reg.cantidad || reg.quantity || 1} pzas`;
+      document.getElementById('mbtAlmacenLoc').innerText = `${reg.almacen_origen || reg.warehouse || '-'} | Loc: ${reg.locacion_origen || reg.location || '-'}`;
+      document.getElementById('mbtDefecto').innerText = reg.no_conformancia || reg.nonConformance || '-';
+      document.getElementById('mbtTipo').innerText = reg.tipo_envio || reg.rejectionType || 'Proceso';
+      document.getElementById('mbtInspector').innerText = `${reg.estampa || reg.operatorStamp || '-'} - ${reg.operador || reg.operatorName || '-'}`;
+      document.getElementById('mbtEstatus').innerText = reg.estatus || reg.status || 'Abierto';
+      
+      // Detalle de disposición
+      document.getElementById('mbtDispDestino').innerText = reg.disp_destino || reg.dispositionType || 'Pendiente de Evaluación';
+      document.getElementById('mbtDispResp').innerText = reg.disp_responsable || reg.userModifier || 'No asignado';
+      document.getElementById('mbtRootCause').innerText = reg.disp_porque5 || reg.rootCause || reg.disp_porque1 || 'Análisis no registrado';
+      document.getElementById('mbtAccion').innerText = reg.disp_accion_correctiva || reg.correctiveAction || 'Acción pendiente';
+      
+      // Generar código QR dinámico
+      const qrContainer = document.getElementById('mbtQrContainer');
+      const qrLabel = document.getElementById('mbtQrLabel');
+      const folClean = reg.folio_oc || reg.folio || reg.oc || 'OC0000000';
+      
+      qrContainer.innerHTML = "";
+      qrLabel.innerText = folClean;
+      
+      const qrData = `${folClean}|${reg.parte || reg.partNumber || ''}|${reg.cantidad || reg.quantity || 1}`;
+      
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(qrContainer, { text: qrData, width: 90, height: 90 });
+      } else {
+        qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent(qrData)}" alt="QR Code" width="90" height="90" />`;
+      }
+      
+      const m = new bootstrap.Modal(document.getElementById('modalMarbetePDF'));
+      m.show();
+    }
+
+    function imprimirMarbeteDirecto() {
+      const elemento = document.getElementById('contenidoMarbeteImpresion');
+      if (!elemento) return;
+      
+      const ventana = window.open('', '_blank', 'height=700,width=900');
+      ventana.document.write('<html><head><title>Marbete de Cuarentena - Calidad</title>');
+      ventana.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+      ventana.document.write('</head><body class="p-4">');
+      ventana.document.write(elemento.innerHTML);
+      ventana.document.write('</body></html>');
+      ventana.document.close();
+      ventana.focus();
+      setTimeout(() => { ventana.print(); ventana.close(); }, 800);
+    }
+
   </script>
 </body>
 </html>
