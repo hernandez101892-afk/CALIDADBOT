@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>CalidadBot PWA v58 - Control Industrial & Disposición</title>
+  <title>CalidadBot PWA v60 - Control Industrial & Disposición</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#00008a">
   
@@ -1270,8 +1270,6 @@
       } catch (err) {
         return { status: "offline", mensaje: "No se pudo contactar al servidor proxy (Modo Offline)" };
       }
-    });
-      } catch (err) {}
     }
 
     function resetForm() {
@@ -1475,32 +1473,6 @@
       cargarTarjetasDisposicion();
       cargarGaleriaFotos();
       if (typeof actualizarDashboardKPI === 'function') actualizarDashboardKPI();
-    });
-          if (res.ok) csvText = await res.text();
-        } catch(e) {}
-      }
-
-      if (!csvText) {
-        try {
-          const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/${path}?t=${Date.now()}`);
-          if (res.ok) csvText = await res.text();
-        } catch(e) {}
-      }
-
-      if (csvText) {
-        const lineas = csvText.split(/\r?\n/).filter(l => l.trim().length > 0 && !l.startsWith("sep="));
-        if (lineas.length > 1) {
-          const headers = parseCsvLineRobust(lineas[0]);
-          const remotos = lineas.slice(1).map(l => parsearFilaCsv(l, headers));
-          remotos.forEach(r => {
-            if (r.folio_oc && r.folio_oc !== 'N/A') guardarRegistroPersistenteLocal(r);
-          });
-          renderizarTablaRegistros();
-        }
-      }
-
-      if (loading) loading.style.display = 'none';
-      cargarTarjetasDisposicion();
     }
 
     function cargarTarjetasDisposicion() {
